@@ -2,17 +2,20 @@
 .SYNOPSIS
     WIN-TOOLBOX-TUI V1.0 — Caixa de Ferramentas e Pós-Instalação para Windows 11
 .DESCRIPTION
-    Script interativo modular (TUI) com múltiplos menus e navegação direta entre
-    telas (Principal, Dev e Manutenção). Exibe cabeçalho completo de telemetria
-    local (Data, Hora, Hostname, Usuário e IP). Exclusivo para Windows 11 (Build 22000+).
+    Script interativo com interface TUI moderna (Unicode Box Drawing), múltiplos menus,
+    navegação cruzada direta (Principal, Dev e Manutenção), winget silencioso e tweaks.
+    Exclusivo para Windows 11 (Build 22000+).
 .AUTHOR
     Bruno César Medeiros Siqueira <bruno.cesar@outlook.it>
 .VERSION
-    1.0.0 — Windows 11 Edition (2026)
+    1.0.0 — Modern TUI Edition (Windows 11)
 #>
 
 [CmdletBinding()]
 param()
+
+# Configuração de codificação UTF-8 para suporte a caracteres Unicode
+[Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 # ==============================================================================
 # 1. VERIFICAÇÃO DE ELEVAÇÃO (ADMINISTRADOR)
@@ -38,7 +41,7 @@ if ($osBuild -lt 22000) {
 }
 
 # ==============================================================================
-# 3. CABEÇALHO COM TELEMETRIA LOCAL (DATA, HORA, HOST, USER, IP)
+# 3. CABEÇALHO COM TELEMETRIA LOCAL (DATA, HOST, USER, IP)
 # ==============================================================================
 function Show-Header {
     param([string]$subtitulo = "MENU PRINCIPAL")
@@ -56,10 +59,13 @@ function Show-Header {
 
     if ([string]::IsNullOrWhiteSpace($ip)) { $ip = "N/A" }
 
-    Write-Host "============================================================================================================" -ForegroundColor Cyan
-    Write-Host "   WIN-TOOLBOX-TUI V1.0  |  WINDOWS 11  |  $subtitulo" -ForegroundColor Cyan
-    Write-Host "   Data: $data  |  Computador: $env:computername  |  Usuario: $env:username  |  IP: $ip" -ForegroundColor White
-    Write-Host "============================================================================================================" -ForegroundColor Cyan
+    $subLine = ("│ TELA: $subtitulo").PadRight(89) + "│"
+    $infoLine = ("│ Data: $data  |  Computador: $env:computername  |  Usuario: $env:username  |  IP: $ip").PadRight(89) + "│"
+
+    Write-Host "╭─ WIN-TOOLBOX-TUI V1.0 ──────────────────────────────────────────────── [ WINDOWS 11 ] ─╮" -ForegroundColor Cyan
+    Write-Host $subLine -ForegroundColor White
+    Write-Host $infoLine -ForegroundColor Gray
+    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
 }
 
 function Wait-User {
@@ -237,14 +243,12 @@ function Enable-OpenSSHServer {
         New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' `
             -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22 -Profile Any | Out-Null
     }
-    # Fallback via netsh para garantir que o firewall libere mesmo com GPO restritiva
     $validaRegra = netsh advfirewall firewall show rule name="OpenSSH-Server-In-TCP" 2>$null
     if ($validaRegra -notmatch "OpenSSH-Server-In-TCP") {
         netsh advfirewall firewall add rule name="OpenSSH-Server-In-TCP" dir=in action=allow protocol=TCP localport=22 | Out-Null
     }
     Write-Host "[✔] Porta 22 liberada no Firewall para todos os perfis de rede!" -ForegroundColor Green
 
-    # Instrução prática de conexão para o usuário
     $ip = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { 
         $_.IPAddress -ne "127.0.0.1" -and 
         $_.IPAddress -notlike "169.254*" -and 
@@ -266,7 +270,7 @@ function Apply-Win11Tweaks {
     Write-Host "[*] APLICANDO TWEAKS DE SISTEMA E PERFORMANCE NO WIN 11" -ForegroundColor Cyan
     Write-Host "========================================================" -ForegroundColor Cyan
 
-    # 1. Restaurar Menu de Contexto Clássico (Windows 10 style sem "Mostrar mais opções")
+    # 1. Restaurar Menu de Contexto Clássico
     Write-Host "[+] Ativando Menu de Contexto Clássico completo..." -ForegroundColor Gray
     $regPath = "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
     if (-not (Test-Path $regPath)) {
@@ -368,35 +372,35 @@ function Invoke-ModoBRNCZZR {
 }
 
 # ==============================================================================
-# 8. TELAS DE MENU (ESTRUTURA FSM - FINITE STATE MACHINE)
+# 8. TELAS DE MENU COM POLIMENTO TUI MODERNO (UNICODE BOX DRAWING)
 # ==============================================================================
 function Invoke-MenuPrincipal {
-    Show-Header "MENU PRINCIPAL — SOFTWARES ESSENCIAIS"
-    Write-Host @"
-+------------------------------------------------------------------------------------------------------------+
-|   0.  UPDATE ALL (Winget)              |       I M A G E M                 |       U T I L I T A R I O S   |
-|                                        |   3A. GIMP                        |   6A. AnyDesk                 |
-|       C O M P A C T A C A O            |   3B. Lightshot                   |   6B. qBittorrent             |
-|   1A. 7-Zip                            |   3C. ShareX                      |   6C. Rufus                   |
-|   1B. WinRAR                           |                                   |   6D. RustDesk                |
-|                                        |       M I D I A                   |   6E. Transmission            |
-|       D O C U M E N T O S              |   4A. HandBrake                   |   6F. RealVNC Viewer          |
-|   2A. Adobe Acrobat Reader             |   4B. K-Lite Codec Full           |                               |
-|   2B. Foxit PDF Reader                 |   4C. VLC Media Player            |                               |
-|   2C. LibreOffice LTS                  |                                   |                               |
-+------------------------------------------------------------------------------------------------------------+
-|       R U N T I M E S   W I N D O W S   1 1                                                                |
-|   5A. .NET 8 Desktop Runtime (LTS)     |   5C. Visual C++ 2015-2022 (x64)  |   5E. Visual C++ All-in-One   |
-|   5B. .NET 9 Desktop Runtime           |   5D. Visual C++ 2015-2022 (x86)  |   5F. Java Temurin 17 JRE     |
-+------------------------------------------------------------------------------------------------------------+
-|   D.  💻 IR PARA MENU DESENVOLVIMENTO (DEV)                                                                |
-|   M.  🛠️ IR PARA MENU MANUTENÇÃO, TWEAKS & PERFIS AUTOMÁTICOS                                              |
-|   Q.  🚪 SAIR                                                                                              |
-+------------------------------------------------------------------------------------------------------------+
-  (Dica: você pode selecionar múltiplos itens separados por vírgula. Ex: 0, 1A, 2C, 5E, 6D)
-"@ -ForegroundColor Gray
+    Show-Header "MENU PRINCIPAL — SOFTWARES ESSENCIAIS & RUNTIMES"
 
-    $escolha = Read-Host "OPÇÃO [D para Dev, M para Manutenção, Q para Sair]"
+    Write-Host "╭────────────────────────────────────────────────────────────────────────────────────────╮" -ForegroundColor Cyan
+    Write-Host "│ [0] ATUALIZAÇÃO GERAL: Atualizar todos os pacotes instalados via Winget                │" -ForegroundColor Yellow
+    Write-Host "├─────────────────────────┬─────────────────────────────┬────────────────────────────────┤" -ForegroundColor Cyan
+    Write-Host "│ COMPACTAÇÃO             │ DOCUMENTOS                  │ IMAGEM & VÍDEO                 │" -ForegroundColor Cyan
+    Write-Host "│ [1A] 7-Zip              │ [2A] Adobe Acrobat Reader   │ [3A] GIMP                      │" -ForegroundColor White
+    Write-Host "│ [1B] WinRAR             │ [2B] Foxit PDF Reader       │ [3B] Lightshot                 │" -ForegroundColor White
+    Write-Host "│                         │ [2C] LibreOffice LTS        │ [3C] ShareX                    │" -ForegroundColor White
+    Write-Host "│                         │                             │ [4A] HandBrake                 │" -ForegroundColor White
+    Write-Host "│                         │                             │ [4B] K-Lite Codec Full         │" -ForegroundColor White
+    Write-Host "│                         │                             │ [4C] VLC Media Player          │" -ForegroundColor White
+    Write-Host "├─────────────────────────┼─────────────────────────────┴────────────────────────────────┤" -ForegroundColor Cyan
+    Write-Host "│ RUNTIMES WINDOWS 11     │ ACESSO REMOTO & UTILITÁRIOS                                  │" -ForegroundColor Cyan
+    Write-Host "│ [5A] .NET 8 Desktop LTS │ [6A] RustDesk               [6D] qBittorrent                 │" -ForegroundColor White
+    Write-Host "│ [5B] .NET 9 Desktop     │ [6B] AnyDesk                [6E] Transmission                │" -ForegroundColor White
+    Write-Host "│ [5C] VC++ 2015-2022 x64 │ [6C] Rufus (Pendrive Boot)  [6F] RealVNC Viewer              │" -ForegroundColor White
+    Write-Host "│ [5D] VC++ 2015-2022 x86 │                                                              │" -ForegroundColor White
+    Write-Host "│ [5E] VC++ All-in-One    │                                                              │" -ForegroundColor White
+    Write-Host "│ [5F] Java Temurin 17 JRE│                                                              │" -ForegroundColor White
+    Write-Host "├─────────────────────────┴──────────────────────────────────────────────────────────────┤" -ForegroundColor Cyan
+    Write-Host "│ NAVEGAÇÃO:   [D] Menu Dev    │    [M] Menu Manutenção & Perfis    │    [Q] Sair        │" -ForegroundColor Yellow
+    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
+    Write-Host "╭─ Digite as opções desejadas separadas por vírgula (ex: 0, 1A, 2C, 5E, 6D)" -ForegroundColor Cyan
+    $escolha = Read-Host "╰─❯ "
+    
     if ([string]::IsNullOrWhiteSpace($escolha)) { return }
     $escolhaUpper = $escolha.Trim().ToUpper()
 
@@ -442,24 +446,25 @@ function Invoke-MenuPrincipal {
 
 function Invoke-MenuDev {
     Show-Header "MENU DESENVOLVIMENTO (DEV)"
-    Write-Host @"
-+------------------------------------------------------------------------------------------------------------+
-|       I D E s   &   E D I T O R E S    |       V E R S I O N A M E N T O  &  S E R V I D O R               |
-|   D1. Visual Studio Code               |   D5. Git SCM                                                     |
-|   D2. Notepad++                        |   D6. XAMPP (PHP 8.2 & MySQL / Apache)                            |
-|   D3. Visual Studio 2022 Community     |                                                                   |
-|   D4. Android Studio                   |       J A V A   J D K   ( E C L I P S E   T E M U R I N )         |
-|                                        |   D7. Java Temurin 8 JDK          D9.  Java Temurin 17 JDK (LTS)  |
-|                                        |   D8. Java Temurin 11 JDK         D10. Java Temurin 21 JDK (LTS)  |
-+------------------------------------------------------------------------------------------------------------+
-|   D0. PACOTE DEV COMPLETO (VS Code + Git + Notepad++ + JDK 17)                                             |
-+------------------------------------------------------------------------------------------------------------+
-|   V.  ⬅️ Voltar ao Menu Principal     |   M.  🛠️ Ir para Menu Manutenção   |   Q.  🚪 Sair                  |
-+------------------------------------------------------------------------------------------------------------+
-  (Dica: você pode selecionar múltiplos itens separados por vírgula. Ex: D1, D5, D9)
-"@ -ForegroundColor Gray
 
-    $escolha = Read-Host "DEV SELEÇÃO [V para Principal, M para Manutenção, Q para Sair]"
+    Write-Host "╭────────────────────────────────────────────────────────────────────────────────────────╮" -ForegroundColor Cyan
+    Write-Host "│ [D0] PACOTE DEV COMPLETO: Instalar VS Code + Git + Notepad++ + JDK 17                  │" -ForegroundColor Yellow
+    Write-Host "├────────────────────────────────────────┬───────────────────────────────────────────────┤" -ForegroundColor Cyan
+    Write-Host "│ IDEs & EDITORES                        │ VERSIONAMENTO & SERVIDORES                    │" -ForegroundColor Cyan
+    Write-Host "│ [D1] Visual Studio Code                │ [D5] Git SCM                                  │" -ForegroundColor White
+    Write-Host "│ [D2] Notepad++                         │ [D6] XAMPP (PHP 8.2 & MySQL / Apache)         │" -ForegroundColor White
+    Write-Host "│ [D3] Visual Studio 2022 Community      │                                               │" -ForegroundColor White
+    Write-Host "│ [D4] Android Studio                    │ JAVA DEVELOPMENT KIT (JDK)                    │" -ForegroundColor Cyan
+    Write-Host "│                                        │ [D7] Java Temurin 8 JDK                       │" -ForegroundColor White
+    Write-Host "│                                        │ [D8] Java Temurin 11 JDK                      │" -ForegroundColor White
+    Write-Host "│                                        │ [D9] Java Temurin 17 JDK (LTS)                │" -ForegroundColor White
+    Write-Host "│                                        │ [D10] Java Temurin 21 JDK (LTS)               │" -ForegroundColor White
+    Write-Host "├────────────────────────────────────────┴───────────────────────────────────────────────┤" -ForegroundColor Cyan
+    Write-Host "│ NAVEGAÇÃO:   [V] Menu Principal    │    [M] Menu Manutenção & Perfis    │    [Q] Sair  │" -ForegroundColor Yellow
+    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
+    Write-Host "╭─ Selecione ferramentas de DEV (ex: D0 ou D1, D5, D9)" -ForegroundColor Cyan
+    $escolha = Read-Host "╰─❯ "
+
     if ([string]::IsNullOrWhiteSpace($escolha)) { return }
     $escolhaUpper = $escolha.Trim().ToUpper()
 
@@ -497,28 +502,27 @@ function Invoke-MenuDev {
 
 function Invoke-MenuManutencao {
     Show-Header "MENU MANUTENÇÃO, TWEAKS & PERFIS AUTO"
-    Write-Host @"
-+------------------------------------------------------------------------------------------------------------+
-|       D I A G N O S T I C O   &   R E P A R O  |       C O N F I G U R A C O E S   &   R E D E             |
-|   M1. Reparo Completo (DISM + SFC Scannow)     |   M5. Habilitar Administrador Nativo (SID 500)            |
-|   M2. Diagnóstico Online Volume C: (Scan)      |   M6. Mapear Credencial de Rede (Windows Vault)           |
-|   M3. Reset Completo de Pilha de Rede (DHCP)   |   M7. Renomear Computador & Reiniciar                     |
-|   M4. Forçar Atualização GPO (gpupdate)        |   M8. Habilitar Servidor OpenSSH (Porta 22)               |
-+------------------------------------------------------------------------------------------------------------+
-|       T W E A K S   E S S E N C I A I S   W I N D O W S   1 1                                              |
-|   M9. Aplicar Tweaks Completos de Produtividade & Performance                                              |
-|       (Menu Clássico, Barra à Esquerda, Extensões Visíveis, Pastas Ocultas, Dark Mode, Hibernação OFF)    |
-+------------------------------------------------------------------------------------------------------------+
-|       P E R F I S   A U T O M A T I Z A D O S   ( I N S T A L A C A O   E M   L O T E )                    |
-|   P1. 🏛️ MODO PMA (Prefeitura Win 11: Apps Corp + Runtimes + Admin + Tweaks Win 11)                        |
-|   P2. 🚀 MODO BRNCZZR (Dev Workstation: Apps Dev + Produtividade + Runtimes + Tweaks)                      |
-+------------------------------------------------------------------------------------------------------------+
-|   V.  ⬅️ Voltar ao Menu Principal     |   D.  💻 Ir para Menu Dev          |   Q.  🚪 Sair                  |
-+------------------------------------------------------------------------------------------------------------+
-  (Dica: você pode selecionar múltiplos itens separados por vírgula. Ex: M1, M8, M9)
-"@ -ForegroundColor Gray
 
-    $escolha = Read-Host "MANUTENÇÃO SELEÇÃO [V para Principal, D para Dev, Q para Sair]"
+    Write-Host "╭────────────────────────────────────────┬───────────────────────────────────────────────╮" -ForegroundColor Cyan
+    Write-Host "│ DIAGNÓSTICO & REPARO                   │ CONFIGURAÇÕES, REDE & ACESSO                  │" -ForegroundColor Cyan
+    Write-Host "│ [M1] Reparo Completo (DISM + SFC)      │ [M5] Habilitar Administrador (SID 500)        │" -ForegroundColor White
+    Write-Host "│ [M2] Diagnóstico Volume C: (Scan)      │ [M6] Mapear Credencial de Rede (Vault)        │" -ForegroundColor White
+    Write-Host "│ [M3] Reset Pilha de Rede (DHCP/DNS)    │ [M7] Renomear Computador & Reiniciar          │" -ForegroundColor White
+    Write-Host "│ [M4] Forçar Atualização GPO (gpupdate) │ [M8] Habilitar Servidor OpenSSH (Porta 22)    │" -ForegroundColor White
+    Write-Host "├────────────────────────────────────────┴───────────────────────────────────────────────┤" -ForegroundColor Cyan
+    Write-Host "│ TWEAKS DE SISTEMA E PERFORMANCE DO WINDOWS 11                                          │" -ForegroundColor Cyan
+    Write-Host "│ [M9] Aplicar Tweaks Completos (Menu Clássico, Barra à Esquerda, Extensões Visíveis,    │" -ForegroundColor White
+    Write-Host "│      Pastas Ocultas, Tema Escuro, Hibernação Desativada, Ocultar Widgets & Copilot)    │" -ForegroundColor White
+    Write-Host "├────────────────────────────────────────────────────────────────────────────────────────┤" -ForegroundColor Cyan
+    Write-Host "│ PERFIS AUTOMATIZADOS (INSTALAÇÃO EM LOTE)                                              │" -ForegroundColor Cyan
+    Write-Host "│ [P1] MODO PMA: Padrão Prefeitura Win 11 (Apps Corporativos + Runtimes + Admin + Tweaks)│" -ForegroundColor White
+    Write-Host "│ [P2] MODO BRNCZZR: Dev Workstation (Apps Dev + Produtividade + Runtimes + Tweaks)      │" -ForegroundColor White
+    Write-Host "├────────────────────────────────────────────────────────────────────────────────────────┤" -ForegroundColor Cyan
+    Write-Host "│ NAVEGAÇÃO:   [V] Menu Principal    │    [D] Menu Desenvolvimento (DEV)   │    [Q] Sair │" -ForegroundColor Yellow
+    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
+    Write-Host "╭─ Selecione tarefas de manutenção ou perfis (ex: M1, M8 ou P1)" -ForegroundColor Cyan
+    $escolha = Read-Host "╰─❯ "
+
     if ([string]::IsNullOrWhiteSpace($escolha)) { return }
     $escolhaUpper = $escolha.Trim().ToUpper()
 
