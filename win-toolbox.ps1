@@ -217,12 +217,20 @@ function Write-TuiRow3Col {
 
 function Write-TuiHeader3Col {
     param([string]$h1, [string]$h2, [string]$h3)
+    $esc = [char]27
+    $bold = "$esc[1;93m"
+    $reset = "$esc[0m"
+    
+    $p1 = $h1.PadRight(25)
+    $p2 = $h2.PadRight(29)
+    $p3 = $h3.PadRight(32)
+    
     Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ($h1.PadRight(25)) -NoNewline -ForegroundColor Yellow
+    Write-Host "$bold$p1$reset" -NoNewline
     Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ($h2.PadRight(29)) -NoNewline -ForegroundColor Yellow
+    Write-Host "$bold$p2$reset" -NoNewline
     Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ($h3.PadRight(32)) -NoNewline -ForegroundColor Yellow
+    Write-Host "$bold$p3$reset" -NoNewline
     Write-Host "│" -ForegroundColor Cyan
 }
 
@@ -251,10 +259,17 @@ function Write-TuiRowSplit {
 
 function Write-TuiHeaderSplit {
     param([string]$h1, [string]$h2)
+    $esc = [char]27
+    $bold = "$esc[1;93m"
+    $reset = "$esc[0m"
+    
+    $p1 = $h1.PadRight(25)
+    $p2 = $h2.PadRight(62)
+    
     Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ($h1.PadRight(25)) -NoNewline -ForegroundColor Yellow
+    Write-Host "$bold$p1$reset" -NoNewline
     Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ($h2.PadRight(62)) -NoNewline -ForegroundColor Yellow
+    Write-Host "$bold$p2$reset" -NoNewline
     Write-Host "│" -ForegroundColor Cyan
 }
 
@@ -265,9 +280,14 @@ function Write-TuiRow2Col {
         [string]$title1 = "",
         [string]$title2 = ""
     )
+    $esc = [char]27
+    $bold = "$esc[1;93m"
+    $reset = "$esc[0m"
+    
     Write-Host "│" -NoNewline -ForegroundColor Cyan
     if (-not [string]::IsNullOrWhiteSpace($title1)) {
-        Write-Host ($title1.PadRight(40)) -NoNewline -ForegroundColor Yellow
+        $p1 = $title1.PadRight(40)
+        Write-Host "$bold$p1$reset" -NoNewline
     } elseif ($it1 -and $it1.Text) {
         Write-Host ($it1.Text.PadRight(40)) -NoNewline -ForegroundColor $it1.Color
     } else {
@@ -276,7 +296,8 @@ function Write-TuiRow2Col {
     
     Write-Host "│" -NoNewline -ForegroundColor Cyan
     if (-not [string]::IsNullOrWhiteSpace($title2)) {
-        Write-Host ($title2.PadRight(47)) -NoNewline -ForegroundColor Yellow
+        $p2 = $title2.PadRight(47)
+        Write-Host "$bold$p2$reset" -NoNewline
     } elseif ($it2 -and $it2.Text) {
         Write-Host ($it2.Text.PadRight(47)) -NoNewline -ForegroundColor $it2.Color
     } else {
@@ -287,10 +308,17 @@ function Write-TuiRow2Col {
 
 function Write-TuiHeader2Col {
     param([string]$h1, [string]$h2)
+    $esc = [char]27
+    $bold = "$esc[1;93m"
+    $reset = "$esc[0m"
+    
+    $p1 = $h1.PadRight(40)
+    $p2 = $h2.PadRight(47)
+    
     Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ($h1.PadRight(40)) -NoNewline -ForegroundColor Yellow
+    Write-Host "$bold$p1$reset" -NoNewline
     Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ($h2.PadRight(47)) -NoNewline -ForegroundColor Yellow
+    Write-Host "$bold$p2$reset" -NoNewline
     Write-Host "│" -ForegroundColor Cyan
 }
 
@@ -310,8 +338,13 @@ function Write-TuiRowFull {
 
 function Write-TuiHeaderFull {
     param([string]$h)
+    $esc = [char]27
+    $bold = "$esc[1;93m"
+    $reset = "$esc[0m"
+    
+    $p = $h.PadRight(88)
     Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ($h.PadRight(88)) -NoNewline -ForegroundColor Yellow
+    Write-Host "$bold$p$reset" -NoNewline
     Write-Host "│" -ForegroundColor Cyan
 }
 
@@ -733,7 +766,7 @@ function Invoke-MenuPrincipal {
     Write-Host "│ [0] ATUALIZAÇÃO GERAL: Atualizar todos os pacotes instalados via Winget                │" -ForegroundColor Yellow
     Write-Host "├─────────────────────────┬─────────────────────────────┬────────────────────────────────┤" -ForegroundColor Cyan
     
-    Write-TuiHeader3Col " ■ COMPACTAÇÃO" " ■ DOCUMENTOS" " ■ IMAGEM & VÍDEO"
+    Write-TuiHeader3Col " COMPACTAÇÃO" " DOCUMENTOS" " IMAGEM & VÍDEO"
     Write-TuiRow3Col $i1A $i2A $i3A
     Write-TuiRow3Col $i1B $i2B $i3B
     Write-TuiRow3Col $null $i2C $i3C
@@ -742,7 +775,7 @@ function Invoke-MenuPrincipal {
     Write-TuiRow3Col $null $null $i4C
     
     Write-Host "├─────────────────────────┼─────────────────────────────┴────────────────────────────────┤" -ForegroundColor Cyan
-    Write-TuiHeaderSplit " ■ RUNTIMES WIN 11" " ■ ACESSO REMOTO & UTILITÁRIOS"
+    Write-TuiHeaderSplit " RUNTIMES WIN 11" " ACESSO REMOTO & UTILITÁRIOS"
     Write-TuiRowSplit $i5A $i6A $i6D
     Write-TuiRowSplit $i5B $i6B $i6E
     Write-TuiRowSplit $i5C $i6C $i6F
@@ -838,12 +871,12 @@ function Invoke-MenuDev {
     Write-Host "│ [D0] PACOTE DEV COMPLETO: Instalar VS Code + Git + Notepad++ + JDK 17 + Fonte Omarchy  │" -ForegroundColor Yellow
     Write-Host "├────────────────────────────────────────┬───────────────────────────────────────────────┤" -ForegroundColor Cyan
     
-    Write-TuiHeader2Col " ■ IDEs & EDITORES" " ■ VERSIONAMENTO & SERVIDORES"
+    Write-TuiHeader2Col " IDEs & EDITORES" " VERSIONAMENTO & SERVIDORES"
     Write-TuiRow2Col $iD1 $iD5
     Write-TuiRow2Col $iD2 $iD6
-    Write-TuiRow2Col $iD3 $null "" " ■ JAVA DEVELOPMENT KIT (JDK)"
+    Write-TuiRow2Col $iD3 $null "" " JAVA DEVELOPMENT KIT (JDK)"
     Write-TuiRow2Col $iD4 $iD7
-    Write-TuiRow2Col $null $iD8 " ■ FONTE OMARCHY LINUX" ""
+    Write-TuiRow2Col $null $iD8 " FONTE OMARCHY LINUX" ""
     Write-TuiRow2Col $iD11 $iD9
     Write-TuiRow2Col $null $iD10
     
@@ -936,16 +969,16 @@ function Invoke-MenuManutencao {
     $iP2 = Get-ItemDisplay "perfil_brnczzr" "P2" "MODO BRNCZZR (Dev Workstation: Apps Dev + Runtimes + Tweaks)"
 
     Write-Host "╭────────────────────────────────────────┬───────────────────────────────────────────────╮" -ForegroundColor Cyan
-    Write-TuiHeader2Col " ■ DIAGNÓSTICO & REPARO" " ■ CONFIGURAÇÕES, REDE & ACESSO"
+    Write-TuiHeader2Col " DIAGNÓSTICO & REPARO" " CONFIGURAÇÕES, REDE & ACESSO"
     Write-TuiRow2Col $iM1 $iM5
     Write-TuiRow2Col $iM2 $iM6
     Write-TuiRow2Col $iM3 $iM7
     Write-TuiRow2Col $iM4 $iM8
     Write-Host "├────────────────────────────────────────┴───────────────────────────────────────────────┤" -ForegroundColor Cyan
-    Write-TuiHeaderFull " ■ TWEAKS DE SISTEMA E PERFORMANCE DO WINDOWS 11"
+    Write-TuiHeaderFull " TWEAKS DE SISTEMA E PERFORMANCE DO WINDOWS 11"
     Write-TuiRowFull $iM9
     Write-Host "├────────────────────────────────────────────────────────────────────────────────────────┤" -ForegroundColor Cyan
-    Write-TuiHeaderFull " ■ PERFIS AUTOMATIZADOS (INSTALAÇÃO EM LOTE)"
+    Write-TuiHeaderFull " PERFIS AUTOMATIZADOS (INSTALAÇÃO EM LOTE)"
     Write-TuiRowFull $iP1
     Write-TuiRowFull $iP2
     Write-Host "├────────────────────────────────────────────────────────────────────────────────────────┤" -ForegroundColor Cyan
