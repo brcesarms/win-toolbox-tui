@@ -1,7 +1,7 @@
 # 🪟 win-toolbox-tui — Caixa de Ferramentas & Pós-Instalação para Windows 11
 
 > **Exclusivo para Windows 11 (Build 22000+)**  
-> Interface interativa de terminal (TUI) com **múltiplos menus organizados**, **indicadores dinâmicos de status em tempo real (`[✔]` Verde / `[ ]` Branco)**, categorias em alto contraste, suporte à **fonte Nerd do Omarchy Linux**, barra de progresso gráfica em lote e telemetria de rede para estações de trabalho.
+> Interface interativa de terminal (TUI) com **múltiplos menus organizados**, **indicadores dinâmicos de status em tempo real (`[✔]` Verde / `[ ]` Branco)**, categorias em alto contraste (negrito ANSI), barra de progresso gráfica em lote e telemetria de rede para estações de trabalho.
 
 ---
 
@@ -28,7 +28,7 @@ powershell -ExecutionPolicy Bypass -File .\win-toolbox.ps1
 * 🟢 **Status Dinâmico em Tempo Real:** Cada aplicativo e tarefa exibe `[✔]` em Verde se já estiver instalado/concluído no Windows 11, ou `[ ]` em Branco se pendente.
 * 🟡 **Títulos em Negrito e Alto Contraste:** Seções e categorias formatadas em negrito ANSI de alto contraste, facilitando a leitura imediata sem poluição visual.
 * 📐 **Alinhamento Perfeito de 90 Colunas:** Grid milimetricamente calibrado com bordas Unicode arredondadas (`╭─`, `│`, `╰─`).
-* 🔡 **Fonte Omarchy Linux (`D11`):** Instalação direta da *JetBrains Mono Nerd Font* (`DEVCOM.JetBrainsMonoNerdFont`) para estética terminal de alto nível.
+* 🔡 **Tipografia Personalizável:** Compatível 100% com fontes modernas do Windows Terminal (como JetBrains Mono, Nerd Fonts e Cascadia Code).
 * 📊 **Barra de Progresso Dinâmica:** Feedback visual em tempo real para instalações em lote (`0, 1A, 2C...`) e perfis automatizados.
 
 ---
@@ -47,10 +47,10 @@ A interface é dividida em **3 telas dedicadas e organizadas**:
 * **Navegação**: `D` Menu Dev · `M` Menu Manutenção & Perfis · `Q` Sair
 
 ### 2️⃣ Menu Desenvolvimento (`D`)
-* **`D0`**: 🚀 **Pacote Dev Completo** (VS Code + Git + Notepad++ + JDK 17 + Fonte Omarchy)
+* **`D0`**: 🚀 **Pacote Dev Completo** (VS Code + Git + Notepad++ + JDK 17)
 * **IDEs & EDITORES (`D1–D4`)**: `D1` VS Code · `D2` Notepad++ · `D3` VS 2022 Community · `D4` Android Studio
-* **FONTE OMARCHY LINUX (`D11`)**: `D11` JetBrains Mono Nerd Font
-* **VERSIONAMENTO & SERVIDORES (`D5–D6`)**: `D5` Git SCM · `D6` XAMPP (PHP 8.2 & MySQL)
+* **VERSIONAMENTO & CONTROLE (`D5`)**: `D5` Git SCM
+* **SERVIDORES & AMBIENTES (`D6`)**: `D6` XAMPP (PHP 8.2 & MySQL)
 * **JAVA DEVELOPMENT KIT (`D7–D10`)**: `D7` JDK 8 · `D8` JDK 11 · `D9` JDK 17 (LTS) · `D10` JDK 21 (LTS)
 * **Navegação**: `V` Menu Principal · `M` Menu Manutenção & Perfis · `Q` Sair
 
@@ -74,7 +74,7 @@ A interface é dividida em **3 telas dedicadas e organizadas**:
   * Ocultação de Widgets e botão Copilot
 * **PERFIS AUTOMATIZADOS (`P1–P2`)**:
   * `P1`: 🏛️ **MODO PMA** (Padrão corporativo Prefeitura: Apps + Runtimes + Admin + Tweaks Win 11)
-  * `P2`: 🚀 **MODO BRNCZZR** (Padrão Dev Workstation + Produtividade + Runtimes + Fonte Omarchy + Tweaks)
+  * `P2`: 🚀 **MODO BRNCZZR** (Padrão Dev Workstation + Produtividade + Runtimes + Tweaks)
 * **Navegação**: `V` Menu Principal · `D` Menu Dev · `Q` Sair
 
 ---

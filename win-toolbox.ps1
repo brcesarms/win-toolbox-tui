@@ -3,13 +3,13 @@
     WIN-TOOLBOX-TUI V1.0 — Caixa de Ferramentas e Pós-Instalação para Windows 11
 .DESCRIPTION
     Script interativo com interface TUI moderna (Unicode Box Drawing), múltiplos menus,
-    status dinâmico de instalação em tempo real ([✔] Verde / [ ] Branco), títulos em destaque,
-    barra de progresso dinâmica em lote, suporte a fontes Nerd (Omarchy Linux) e telemetria de rede.
+    status dinâmico de instalação em tempo real ([✔] Verde / [ ] Branco), títulos em negrito ANSI,
+    barra de progresso dinâmica em lote, telemetria de rede e suporte nativo ao Windows Terminal.
     Exclusivo para Windows 11 (Build 22000+).
 .AUTHOR
     Bruno César Medeiros Siqueira <bruno.cesar@outlook.it>
 .VERSION
-    1.2.0 — Live Status Indicators, High-Contrast Categories & Omarchy Font (Windows 11)
+    1.3.0 — Live Status Indicators, ANSI Bold Headers & Clean Dev Grid (Windows 11)
 #>
 
 [CmdletBinding()]
@@ -157,7 +157,6 @@ function Test-IsInstalled {
             "temurin11jdk"    { $result = (Test-Path "$env:ProgramFiles\Eclipse Adoptium\jdk-11*") }
             "temurin17jdk"    { $result = (Test-Path "$env:ProgramFiles\Eclipse Adoptium\jdk-17*") }
             "temurin21jdk"    { $result = (Test-Path "$env:ProgramFiles\Eclipse Adoptium\jdk-21*") }
-            "omarchy_font"    { $result = (Test-Path "C:\Windows\Fonts\*JetBrainsMono*") -or (Test-Path "$env:LOCALAPPDATA\Microsoft\Windows\Fonts\*JetBrainsMono*") }
             "admin500"        { $result = ((Get-LocalUser -ErrorAction SilentlyContinue | Where-Object { $_.SID -like "*-500" -and $_.Enabled -eq $true }) -ne $null) }
             "sshd"            { $result = ((Get-Service sshd -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'Running' }) -ne $null) }
             "win11_tweaks"    { $result = (Test-Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32") }
@@ -382,26 +381,6 @@ function Install-WingetApp {
         }
     } else {
         Write-Host "[!] Falha ou aviso ao instalar $nomeAmigavel (Exit Code: $LASTEXITCODE)." -ForegroundColor Yellow
-    }
-}
-
-function Install-OmarchyFont {
-    Write-Host "`n========================================================" -ForegroundColor Cyan
-    Write-Host "[*] INSTALANDO FONTE OMARCHY (JETBRAINS MONO NERD FONT)" -ForegroundColor Cyan
-    Write-Host "========================================================" -ForegroundColor Cyan
-    
-    Write-Host "[*] Tentando instalar DEVCOM.JetBrainsMonoNerdFont via Winget..." -ForegroundColor Gray
-    winget install --id DEVCOM.JetBrainsMonoNerdFont --exact --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
-    if ($LASTEXITCODE -ne 0) {
-        Write-Host "[!] Tentando identificador alternativo NerdFonts.JetBrainsMono..." -ForegroundColor Yellow
-        winget install --id "NerdFonts.JetBrainsMono" --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
-    }
-    
-    if ($LASTEXITCODE -eq 0) {
-        Write-Host "[✔] JetBrains Mono Nerd Font instalada com sucesso!" -ForegroundColor Green
-        $script:InstalledCache["omarchy_font"] = $true
-    } else {
-        Write-Host "[!] Falha ao instalar fonte via winget (Exit Code: $LASTEXITCODE)." -ForegroundColor Yellow
     }
 }
 
@@ -677,7 +656,7 @@ function Invoke-ModoBRNCZZR {
     Write-Host "   EXECUTANDO PERFIL: MODO BRNCZZR (DEV & WORKSTATION)" -ForegroundColor Cyan
     Write-Host "========================================================" -ForegroundColor Cyan
 
-    $totalPassos = 13
+    $totalPassos = 12
 
     Show-ProgressBar -Current 1 -Total $totalPassos -Activity "Instalando Git SCM"
     Install-WingetApp "Git.Git" "Git SCM" "git"
@@ -715,10 +694,7 @@ function Invoke-ModoBRNCZZR {
     Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 (x64)" "vcredist_x64"
     Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 (x86)" "vcredist_x86"
 
-    Show-ProgressBar -Current 12 -Total $totalPassos -Activity "Instalando Fonte Omarchy Linux"
-    Install-OmarchyFont
-
-    Show-ProgressBar -Current 13 -Total $totalPassos -Activity "Configurando Admin & Tweaks Win 11"
+    Show-ProgressBar -Current 12 -Total $totalPassos -Activity "Configurando Admin & Tweaks Win 11"
     Enable-BuiltinAdmin
     Apply-Win11Tweaks
 
@@ -858,7 +834,6 @@ function Invoke-MenuDev {
     $iD2  = Get-ItemDisplay "notepadplusplus" "D2" "Notepad++"
     $iD3  = Get-ItemDisplay "vs2022" "D3" "VS 2022 Community"
     $iD4  = Get-ItemDisplay "androidstudio" "D4" "Android Studio"
-    $iD11 = Get-ItemDisplay "omarchy_font" "D11" "JetBrains Mono Nerd Font"
 
     $iD5  = Get-ItemDisplay "git" "D5" "Git SCM"
     $iD6  = Get-ItemDisplay "xampp" "D6" "XAMPP (PHP 8.2 & MySQL)"
@@ -868,17 +843,16 @@ function Invoke-MenuDev {
     $iD10 = Get-ItemDisplay "temurin21jdk" "D10" "Java Temurin 21 JDK (LTS)"
 
     Write-Host "╭────────────────────────────────────────────────────────────────────────────────────────╮" -ForegroundColor Cyan
-    Write-Host "│ [D0] PACOTE DEV COMPLETO: Instalar VS Code + Git + Notepad++ + JDK 17 + Fonte Omarchy  │" -ForegroundColor Yellow
+    Write-Host "│ [D0] PACOTE DEV COMPLETO: Instalar VS Code + Git + Notepad++ + JDK 17                  │" -ForegroundColor Yellow
     Write-Host "├────────────────────────────────────────┬───────────────────────────────────────────────┤" -ForegroundColor Cyan
     
-    Write-TuiHeader2Col " IDEs & EDITORES" " VERSIONAMENTO & SERVIDORES"
-    Write-TuiRow2Col $iD1 $iD5
-    Write-TuiRow2Col $iD2 $iD6
-    Write-TuiRow2Col $iD3 $null "" " JAVA DEVELOPMENT KIT (JDK)"
-    Write-TuiRow2Col $iD4 $iD7
-    Write-TuiRow2Col $null $iD8 " FONTE OMARCHY LINUX" ""
-    Write-TuiRow2Col $iD11 $iD9
-    Write-TuiRow2Col $null $iD10
+    Write-TuiHeader2Col " IDEs & EDITORES" " SERVIDORES & AMBIENTES"
+    Write-TuiRow2Col $iD1 $iD6
+    Write-TuiRow2Col $iD2 $null "" " JAVA DEVELOPMENT KIT (JDK)"
+    Write-TuiRow2Col $iD3 $iD7
+    Write-TuiRow2Col $iD4 $iD8
+    Write-TuiRow2Col $null $iD9 " VERSIONAMENTO & CONTROLE" ""
+    Write-TuiRow2Col $iD5 $iD10
     
     Write-Host "├────────────────────────────────────────┴───────────────────────────────────────────────┤" -ForegroundColor Cyan
     Write-Host "│ NAVEGAÇÃO:   [V] Menu Principal    │    [M] Menu Manutenção & Perfis    │    [Q] Sair  │" -ForegroundColor Yellow
@@ -895,7 +869,7 @@ function Invoke-MenuDev {
     Write-Host ($statusText.PadRight(89) + "│") -ForegroundColor Gray
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor DarkCyan
 
-    Write-Host "╭─ Selecione ferramentas de DEV (ex: D0 ou D1, D5, D9, D11)" -ForegroundColor Cyan
+    Write-Host "╭─ Selecione ferramentas de DEV (ex: D0 ou D1, D5, D9)" -ForegroundColor Cyan
     $escolha = Read-Host "╰─❯ "
 
     if ([string]::IsNullOrWhiteSpace($escolha)) { return }
@@ -917,20 +891,17 @@ function Invoke-MenuDev {
         
         switch ($opcao) {
             "D0" {
-                Show-ProgressBar -Current 1 -Total 5 -Activity "Instalando VS Code"
+                Show-ProgressBar -Current 1 -Total 4 -Activity "Instalando VS Code"
                 Install-WingetApp "Microsoft.VisualStudioCode" "VS Code" "vscode"
                 
-                Show-ProgressBar -Current 2 -Total 5 -Activity "Instalando Git SCM"
+                Show-ProgressBar -Current 2 -Total 4 -Activity "Instalando Git SCM"
                 Install-WingetApp "Git.Git" "Git SCM" "git"
                 
-                Show-ProgressBar -Current 3 -Total 5 -Activity "Instalando Notepad++"
+                Show-ProgressBar -Current 3 -Total 4 -Activity "Instalando Notepad++"
                 Install-WingetApp "Notepad++.Notepad++" "Notepad++" "notepadplusplus"
                 
-                Show-ProgressBar -Current 4 -Total 5 -Activity "Instalando Java Temurin 17 JDK"
+                Show-ProgressBar -Current 4 -Total 4 -Activity "Instalando Java Temurin 17 JDK"
                 Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK" "temurin17jdk"
-
-                Show-ProgressBar -Current 5 -Total 5 -Activity "Instalando Fonte Omarchy Linux"
-                Install-OmarchyFont
             }
             "D1"  { Install-WingetApp "Microsoft.VisualStudioCode" "VS Code" "vscode" }
             "D2"  { Install-WingetApp "Notepad++.Notepad++" "Notepad++" "notepadplusplus" }
@@ -942,7 +913,6 @@ function Invoke-MenuDev {
             "D8"  { Install-WingetApp "EclipseAdoptium.Temurin.11.JDK" "Java Temurin 11 JDK" "temurin11jdk" }
             "D9"  { Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK" "temurin17jdk" }
             "D10" { Install-WingetApp "EclipseAdoptium.Temurin.21.JDK" "Java Temurin 21 JDK" "temurin21jdk" }
-            "D11" { Install-OmarchyFont }
             default {
                 Write-Host "[!] Opção '$opcao' inválida no menu Dev." -ForegroundColor Red
             }
