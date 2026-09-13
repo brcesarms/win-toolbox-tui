@@ -60,12 +60,17 @@ function Show-Header {
 
     if ([string]::IsNullOrWhiteSpace($ip)) { $ip = "N/A" }
 
-    $subLine = ("│ TELA: $subtitulo").PadRight(89) + "│"
-    $infoLine = ("│ Data: $data  |  Computador: $env:computername  |  Usuario: $env:username  |  IP: $ip").PadRight(89) + "│"
+    $esc = [char]27
+    $norm = "$esc[22m"
+    $reset = "$esc[0m"
 
     Write-Host "╭─ WIN-TOOLBOX-TUI V1.0 ──────────────────────────────────────────────── [ WINDOWS 11 ] ─╮" -ForegroundColor Cyan
-    Write-Host $subLine -ForegroundColor White
-    Write-Host $infoLine -ForegroundColor Gray
+    Write-Host "│" -NoNewline -ForegroundColor Cyan
+    Write-Host ("$norm" + " TELA: $subtitulo".PadRight(88) + "$reset") -NoNewline -ForegroundColor Cyan
+    Write-Host "│" -ForegroundColor Cyan
+    Write-Host "│" -NoNewline -ForegroundColor Cyan
+    Write-Host ("$norm" + " Data: $data  |  Computador: $env:computername  |  Usuario: $env:username  |  IP: $ip".PadRight(88) + "$reset") -NoNewline -ForegroundColor Gray
+    Write-Host "│" -ForegroundColor Cyan
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
 }
 
@@ -185,7 +190,7 @@ function Get-ItemDisplay {
     } else {
         return @{
             Text = " [ ] $Code. $Title"
-            Color = "White"
+            Color = "Gray"
         }
     }
 }
@@ -196,21 +201,25 @@ function Write-TuiRow3Col {
         [hashtable]$it2,
         [hashtable]$it3
     )
+    $esc = [char]27
+    $norm = "$esc[22m"
+    $reset = "$esc[0m"
+
     $t1 = if ($it1 -and $it1.Text) { $it1.Text } else { "" }
-    $c1 = if ($it1 -and $it1.Color) { $it1.Color } else { "White" }
+    $c1 = if ($it1 -and $it1.Color) { $it1.Color } else { "Gray" }
     
     $t2 = if ($it2 -and $it2.Text) { $it2.Text } else { "" }
-    $c2 = if ($it2 -and $it2.Color) { $it2.Color } else { "White" }
+    $c2 = if ($it2 -and $it2.Color) { $it2.Color } else { "Gray" }
     
     $t3 = if ($it3 -and $it3.Text) { $it3.Text } else { "" }
-    $c3 = if ($it3 -and $it3.Color) { $it3.Color } else { "White" }
+    $c3 = if ($it3 -and $it3.Color) { $it3.Color } else { "Gray" }
     
     Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ($t1.PadRight(25)) -NoNewline -ForegroundColor $c1
+    Write-Host ("$norm" + $t1.PadRight(25) + "$reset") -NoNewline -ForegroundColor $c1
     Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ($t2.PadRight(29)) -NoNewline -ForegroundColor $c2
+    Write-Host ("$norm" + $t2.PadRight(29) + "$reset") -NoNewline -ForegroundColor $c2
     Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ($t3.PadRight(32)) -NoNewline -ForegroundColor $c3
+    Write-Host ("$norm" + $t3.PadRight(32) + "$reset") -NoNewline -ForegroundColor $c3
     Write-Host "│" -ForegroundColor Cyan
 }
 
@@ -239,20 +248,24 @@ function Write-TuiRowSplit {
         [hashtable]$it2a,
         [hashtable]$it2b
     )
+    $esc = [char]27
+    $norm = "$esc[22m"
+    $reset = "$esc[0m"
+
     $t1 = if ($it1 -and $it1.Text) { $it1.Text } else { "" }
-    $c1 = if ($it1 -and $it1.Color) { $it1.Color } else { "White" }
+    $c1 = if ($it1 -and $it1.Color) { $it1.Color } else { "Gray" }
     
     $t2a = if ($it2a -and $it2a.Text) { $it2a.Text } else { "" }
-    $c2a = if ($it2a -and $it2a.Color) { $it2a.Color } else { "White" }
+    $c2a = if ($it2a -and $it2a.Color) { $it2a.Color } else { "Gray" }
     
     $t2b = if ($it2b -and $it2b.Text) { $it2b.Text } else { "" }
-    $c2b = if ($it2b -and $it2b.Color) { $it2b.Color } else { "White" }
+    $c2b = if ($it2b -and $it2b.Color) { $it2b.Color } else { "Gray" }
     
     Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ($t1.PadRight(25)) -NoNewline -ForegroundColor $c1
+    Write-Host ("$norm" + $t1.PadRight(25) + "$reset") -NoNewline -ForegroundColor $c1
     Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ($t2a.PadRight(30)) -NoNewline -ForegroundColor $c2a
-    Write-Host ($t2b.PadRight(32)) -NoNewline -ForegroundColor $c2b
+    Write-Host ("$norm" + $t2a.PadRight(30) + "$reset") -NoNewline -ForegroundColor $c2a
+    Write-Host ("$norm" + $t2b.PadRight(32) + "$reset") -NoNewline -ForegroundColor $c2b
     Write-Host "│" -ForegroundColor Cyan
 }
 
@@ -281,6 +294,7 @@ function Write-TuiRow2Col {
     )
     $esc = [char]27
     $bold = "$esc[1;93m"
+    $norm = "$esc[22m"
     $reset = "$esc[0m"
     
     Write-Host "│" -NoNewline -ForegroundColor Cyan
@@ -288,9 +302,10 @@ function Write-TuiRow2Col {
         $p1 = $title1.PadRight(40)
         Write-Host "$bold$p1$reset" -NoNewline
     } elseif ($it1 -and $it1.Text) {
-        Write-Host ($it1.Text.PadRight(40)) -NoNewline -ForegroundColor $it1.Color
+        $c1 = if ($it1.Color) { $it1.Color } else { "Gray" }
+        Write-Host ("$norm" + $it1.Text.PadRight(40) + "$reset") -NoNewline -ForegroundColor $c1
     } else {
-        Write-Host ("".PadRight(40)) -NoNewline -ForegroundColor White
+        Write-Host ("".PadRight(40)) -NoNewline -ForegroundColor Gray
     }
     
     Write-Host "│" -NoNewline -ForegroundColor Cyan
@@ -298,9 +313,10 @@ function Write-TuiRow2Col {
         $p2 = $title2.PadRight(47)
         Write-Host "$bold$p2$reset" -NoNewline
     } elseif ($it2 -and $it2.Text) {
-        Write-Host ($it2.Text.PadRight(47)) -NoNewline -ForegroundColor $it2.Color
+        $c2 = if ($it2.Color) { $it2.Color } else { "Gray" }
+        Write-Host ("$norm" + $it2.Text.PadRight(47) + "$reset") -NoNewline -ForegroundColor $c2
     } else {
-        Write-Host ("".PadRight(47)) -NoNewline -ForegroundColor White
+        Write-Host ("".PadRight(47)) -NoNewline -ForegroundColor Gray
     }
     Write-Host "│" -ForegroundColor Cyan
 }
@@ -325,13 +341,17 @@ function Write-TuiRowFull {
     param(
         [hashtable]$it,
         [string]$text = "",
-        [string]$color = "White"
+        [string]$color = "Gray"
     )
+    $esc = [char]27
+    $norm = "$esc[22m"
+    $reset = "$esc[0m"
+
     $finalText = if ($it -and $it.Text) { $it.Text } else { $text }
     $finalColor = if ($it -and $it.Color) { $it.Color } else { $color }
     
     Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ($finalText.PadRight(88)) -NoNewline -ForegroundColor $finalColor
+    Write-Host ("$norm" + $finalText.PadRight(88) + "$reset") -NoNewline -ForegroundColor $finalColor
     Write-Host "│" -ForegroundColor Cyan
 }
 
@@ -739,7 +759,7 @@ function Invoke-MenuPrincipal {
     $i6F = Get-ItemDisplay "realvnc" "6F" "RealVNC Viewer"
 
     Write-Host "╭────────────────────────────────────────────────────────────────────────────────────────╮" -ForegroundColor Cyan
-    Write-Host "│ [0] ATUALIZAÇÃO GERAL: Atualizar todos os pacotes instalados via Winget                │" -ForegroundColor Yellow
+    Write-TuiRowFull -text " [0] ATUALIZAÇÃO GERAL: Atualizar todos os pacotes instalados via Winget" -color "Yellow"
     Write-Host "├─────────────────────────┬─────────────────────────────┬────────────────────────────────┤" -ForegroundColor Cyan
     
     Write-TuiHeader3Col " COMPACTAÇÃO" " DOCUMENTOS" " IMAGEM & VÍDEO"
@@ -760,18 +780,20 @@ function Invoke-MenuPrincipal {
     Write-TuiRowSplit $i5F $null $null
     
     Write-Host "├─────────────────────────┴──────────────────────────────────────────────────────────────┤" -ForegroundColor Cyan
-    Write-Host "│ NAVEGAÇÃO:   [D] Menu Dev    │    [M] Menu Manutenção & Perfis    │    [Q] Sair        │" -ForegroundColor Yellow
+    Write-TuiRowFull -text " NAVEGAÇÃO:   [D] Menu Dev    │    [M] Menu Manutenção & Perfis    │    [Q] Sair" -color "Yellow"
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
     
     $instCount = ($script:InstalledCache.Values | Where-Object { $_ -eq $true }).Count
     $statusText = if ($instCount -gt 0) {
-        "  [✔] Verde = Instalado/Concluído ($instCount detectados) | [ ] Branco = Pendente"
+        " [✔] Verde = Instalado/Concluído ($instCount detectados) | [ ] Branco = Pendente"
     } else {
-        "  [✔] Verde = Instalado/Concluído | [ ] Branco = Pendente. Suporta execução em lote."
+        " [✔] Verde = Instalado/Concluído | [ ] Branco = Pendente. Suporta execução em lote."
     }
     
     Write-Host "╭─ STATUS DO SISTEMA ─────────────────────────────────────────────────────── [ PRONTO ] ─╮" -ForegroundColor DarkCyan
-    Write-Host ($statusText.PadRight(89) + "│") -ForegroundColor Gray
+    Write-Host "│" -NoNewline -ForegroundColor DarkCyan
+    Write-Host ($statusText.PadRight(88)) -NoNewline -ForegroundColor Gray
+    Write-Host "│" -ForegroundColor DarkCyan
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor DarkCyan
     
     Write-Host "╭─ Digite as opções desejadas separadas por vírgula (ex: 0, 1A, 2C, 5E, 6D)" -ForegroundColor Cyan
@@ -843,30 +865,33 @@ function Invoke-MenuDev {
     $iD10 = Get-ItemDisplay "temurin21jdk" "D10" "Java Temurin 21 JDK (LTS)"
 
     Write-Host "╭────────────────────────────────────────────────────────────────────────────────────────╮" -ForegroundColor Cyan
-    Write-Host "│ [D0] PACOTE DEV COMPLETO: Instalar VS Code + Git + Notepad++ + JDK 17                  │" -ForegroundColor Yellow
+    Write-TuiRowFull -text " [D0] PACOTE DEV COMPLETO: Instalar VS Code + Git + Notepad++ + JDK 17" -color "Yellow"
     Write-Host "├────────────────────────────────────────┬───────────────────────────────────────────────┤" -ForegroundColor Cyan
     
-    Write-TuiHeader2Col " IDEs & EDITORES" " SERVIDORES & AMBIENTES"
-    Write-TuiRow2Col $iD1 $iD6
-    Write-TuiRow2Col $iD2 $null "" " JAVA DEVELOPMENT KIT (JDK)"
-    Write-TuiRow2Col $iD3 $iD7
-    Write-TuiRow2Col $iD4 $iD8
-    Write-TuiRow2Col $null $iD9 " VERSIONAMENTO & CONTROLE" ""
-    Write-TuiRow2Col $iD5 $iD10
+    Write-TuiHeader2Col " IDEs & EDITORES" " VERSIONAMENTO & SERVIDORES"
+    Write-TuiRow2Col $iD1 $iD5
+    Write-TuiRow2Col $iD2 $iD6
+    Write-TuiRow2Col $iD3 $null "" " JAVA DEVELOPMENT KIT (JDK)"
+    Write-TuiRow2Col $iD4 $iD7
+    Write-TuiRow2Col $null $iD8
+    Write-TuiRow2Col $null $iD9
+    Write-TuiRow2Col $null $iD10
     
     Write-Host "├────────────────────────────────────────┴───────────────────────────────────────────────┤" -ForegroundColor Cyan
-    Write-Host "│ NAVEGAÇÃO:   [V] Menu Principal    │    [M] Menu Manutenção & Perfis    │    [Q] Sair  │" -ForegroundColor Yellow
+    Write-TuiRowFull -text " NAVEGAÇÃO:   [V] Menu Principal    │    [M] Menu Manutenção & Perfis    │    [Q] Sair" -color "Yellow"
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
     
     $instCount = ($script:InstalledCache.Values | Where-Object { $_ -eq $true }).Count
     $statusText = if ($instCount -gt 0) {
-        "  [✔] Verde = Instalado/Concluído ($instCount detectados) | [ ] Branco = Pendente"
+        " [✔] Verde = Instalado/Concluído ($instCount detectados) | [ ] Branco = Pendente"
     } else {
-        "  [✔] Verde = Instalado/Concluído | [ ] Branco = Pendente. Suporta execução em lote."
+        " [✔] Verde = Instalado/Concluído | [ ] Branco = Pendente. Suporta execução em lote."
     }
 
     Write-Host "╭─ STATUS DO SISTEMA ─────────────────────────────────────────────────────── [ PRONTO ] ─╮" -ForegroundColor DarkCyan
-    Write-Host ($statusText.PadRight(89) + "│") -ForegroundColor Gray
+    Write-Host "│" -NoNewline -ForegroundColor DarkCyan
+    Write-Host ($statusText.PadRight(88)) -NoNewline -ForegroundColor Gray
+    Write-Host "│" -ForegroundColor DarkCyan
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor DarkCyan
 
     Write-Host "╭─ Selecione ferramentas de DEV (ex: D0 ou D1, D5, D9)" -ForegroundColor Cyan
@@ -952,18 +977,20 @@ function Invoke-MenuManutencao {
     Write-TuiRowFull $iP1
     Write-TuiRowFull $iP2
     Write-Host "├────────────────────────────────────────────────────────────────────────────────────────┤" -ForegroundColor Cyan
-    Write-Host "│ NAVEGAÇÃO:   [V] Menu Principal    │    [D] Menu Desenvolvimento (DEV)   │    [Q] Sair │" -ForegroundColor Yellow
+    Write-TuiRowFull -text " NAVEGAÇÃO:   [V] Menu Principal    │    [D] Menu Desenvolvimento (DEV)   │    [Q] Sair" -color "Yellow"
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
     
     $instCount = ($script:InstalledCache.Values | Where-Object { $_ -eq $true }).Count
     $statusText = if ($instCount -gt 0) {
-        "  [✔] Verde = Instalado/Concluído ($instCount detectados) | [ ] Branco = Pendente"
+        " [✔] Verde = Instalado/Concluído ($instCount detectados) | [ ] Branco = Pendente"
     } else {
-        "  [✔] Verde = Instalado/Concluído | [ ] Branco = Pendente. Suporta execução em lote."
+        " [✔] Verde = Instalado/Concluído | [ ] Branco = Pendente. Suporta execução em lote."
     }
 
     Write-Host "╭─ STATUS DO SISTEMA ─────────────────────────────────────────────────────── [ PRONTO ] ─╮" -ForegroundColor DarkCyan
-    Write-Host ($statusText.PadRight(89) + "│") -ForegroundColor Gray
+    Write-Host "│" -NoNewline -ForegroundColor DarkCyan
+    Write-Host ($statusText.PadRight(88)) -NoNewline -ForegroundColor Gray
+    Write-Host "│" -ForegroundColor DarkCyan
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor DarkCyan
 
     Write-Host "╭─ Selecione tarefas de manutenção ou perfis (ex: M1, M8 ou P1)" -ForegroundColor Cyan
