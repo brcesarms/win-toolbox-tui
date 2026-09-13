@@ -2,13 +2,13 @@
 .SYNOPSIS
     win-toolbox-tui — Caixa de Ferramentas e Pós-Instalação para Windows 11
 .DESCRIPTION
-    Script interativo (TUI) para automação de manutenção, diagnóstico, instalação
-    de softwares via winget, tweaks de sistema e perfis automatizados (PMA / Dev).
+    Script interativo modular (TUI) com múltiplos menus para manutenção, diagnóstico,
+    instalação de softwares via winget, tweaks de sistema e perfis automatizados (PMA / Dev).
     Exclusivo para Windows 11 (Build 22000+).
 .AUTHOR
     Bruno César Medeiros Siqueira <bruno.cesar@outlook.it>
 .VERSION
-    6.0.0 — Windows 11 Edition (2026)
+    6.1.0 — Multi-Menu Edition (Windows 11)
 #>
 
 [CmdletBinding()]
@@ -41,11 +41,17 @@ if ($osBuild -lt 22000) {
 # 3. FUNÇÕES AUXILIARES & WINGET
 # ==============================================================================
 function Show-Header {
+    param([string]$subtitulo = "MENU PRINCIPAL")
     Clear-Host
     $dataHora = (Get-Date).ToString("dd/MM/yyyy HH:mm")
     Write-Host "============================================================================================================" -ForegroundColor Cyan
-    Write-Host "   WIN-TOOLBOX-TUI v6.0  |  EXCLUSIVO WINDOWS 11  |  $dataHora  |  Host: $env:computername  |  User: $env:username" -ForegroundColor White
+    Write-Host "   WIN-TOOLBOX-TUI v6.1  |  WINDOWS 11  |  $subtitulo  |  $dataHora  |  Host: $env:computername" -ForegroundColor White
     Write-Host "============================================================================================================" -ForegroundColor Cyan
+}
+
+function Wait-User {
+    Write-Host "`n[Pressione ENTER para continuar...]" -ForegroundColor DarkGray
+    $null = Read-Host
 }
 
 function Install-WingetApp {
@@ -57,7 +63,6 @@ function Install-WingetApp {
     
     Write-Host "[*] Verificando: $nomeAmigavel ($idApp)..." -NoNewline -ForegroundColor Gray
     
-    # Valida se o winget localiza o pacote já instalado
     $check = winget list --id $idApp --exact 2>$null | Select-String $idApp
     if ($check) {
         Write-Host " [JA INSTALADO]" -ForegroundColor Yellow
@@ -301,106 +306,211 @@ function Invoke-ModoBRNCZZR {
 }
 
 # ==============================================================================
-# 7. INTERFACE TUI PRINCIPAL (LOOP INTERATIVO)
+# 7. SUBMENU: DESENVOLVIMENTO (DEV)
 # ==============================================================================
-while ($true) {
-    Show-Header
-    Write-Host @"
+function Show-MenuDev {
+    while ($true) {
+        Show-Header "MENU DESENVOLVIMENTO (DEV)"
+        Write-Host @"
 +------------------------------------------------------------------------------------------------------------+
-|   0.  UPDATE ALL (Winget)              |       I M A G E M        |       U T I L I T A R I O S            |
-|                                        |   4A. GIMP               |   7A. AnyDesk                          |
-|       C O M P A C T A C A O            |   4B. Lightshot          |   7B. qBittorrent                      |
-|   1A. 7-Zip                            |   4C. ShareX             |   7C. Rufus                            |
-|   1B. WinRAR                           |                          |   7D. RustDesk                         |
-|                                        |       M I D I A          |   7E. Transmission                     |
-|       D E V                            |   5A. HandBrake          |   7F. RealVNC Viewer                   |
-|   2A. Android Studio                   |   5B. K-Lite Codec Full  |                                        |
-|   2B. Java Temurin 8 JDK               |   5C. VLC Media Player   |       M A N U T E N C A O              |
-|   2C. Java Temurin 11 JDK              |                          |    8. Mapear Credencial de Rede        |
-|   2D. Java Temurin 17 JDK (LTS)        |       R U N T I M E S    |    9. Habilitar Admin Local (SID 500)  |
-|   2E. Java Temurin 21 JDK (LTS)        |   6A. .NET 8 Desktop LTS |   10. Renomear Computador              |
-|   2F. Git                              |   6B. .NET 9 Desktop     |   11. Diagnóstico de Disco (Scan C:)   |
-|   2G. Notepad++                        |   6C. VC++ 2015-2022 x64 |   12. Reparo Completo (DISM + SFC)     |
-|   2H. VS Code                          |   6D. VC++ 2015-2022 x86 |   13. Forçar Atualização GPO           |
-|   2I. Visual Studio Community          |   6E. VC++ All-in-One    |   14. Reset Pilha de Rede              |
-|                                        |   6F. Java Temurin 17 JRE|   15. Tweaks Essenciais Windows 11     |
-|       D O C U M E N T O S              |                          |                                        |
-|   3A. Adobe Acrobat Reader             |                          |       P E R F I S   A U T O            |
-|   3B. Foxit PDF Reader                 |                          |   16. MODO PMA (Prefeitura Win 11)     |
-|   3C. LibreOffice LTS                  |                          |   17. MODO BRNCZZR (Dev Workstation)   |
+|       I D E s   &   E D I T O R E S    |       V E R S I O N A M E N T O  &  S E R V I D O R               |
+|   D1. Visual Studio Code               |   D5. Git SCM                                                     |
+|   D2. Notepad++                        |   D6. XAMPP (PHP 8.2 & MySQL / Apache)                            |
+|   D3. Visual Studio 2022 Community     |                                                                   |
+|   D4. Android Studio                   |       J A V A   J D K   ( E C L I P S E   T E M U R I N )         |
+|                                        |   D7. Java Temurin 8 JDK          D9.  Java Temurin 17 JDK (LTS)  |
+|                                        |   D8. Java Temurin 11 JDK         D10. Java Temurin 21 JDK (LTS)  |
 +------------------------------------------------------------------------------------------------------------+
-  (Dica: você pode digitar múltiplos itens separados por vírgula. Ex: 1A, 2F, 6A, 15)
+|   D0. PACOTE DEV COMPLETO (VS Code + Git + Notepad++ + JDK 17)                                             |
++------------------------------------------------------------------------------------------------------------+
+|   V.  Voltar ao Menu Principal         |   Q.  Sair                                                        |
++------------------------------------------------------------------------------------------------------------+
+  (Dica: você pode selecionar múltiplos itens separados por vírgula. Ex: D1, D5, D9)
 "@ -ForegroundColor Gray
 
-    $escolha = Read-Host "SELEÇÃO [Q para Sair]"
+        $escolha = Read-Host "DEV SELEÇÃO [V para Voltar, Q para Sair]"
+        if ([string]::IsNullOrWhiteSpace($escolha)) { continue }
+        if ($escolha.Trim().ToUpper() -eq "V") { break }
+        if ($escolha.Trim().ToUpper() -eq "Q") { exit }
+
+        $itens = $escolha -split ","
+        foreach ($item in $itens) {
+            $opcao = $item.Trim().ToUpper()
+            switch ($opcao) {
+                "D0" {
+                    Install-WingetApp "Microsoft.VisualStudioCode" "VS Code"
+                    Install-WingetApp "Git.Git" "Git SCM"
+                    Install-WingetApp "Notepad++.Notepad++" "Notepad++"
+                    Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK"
+                }
+                "D1"  { Install-WingetApp "Microsoft.VisualStudioCode" "VS Code" }
+                "D2"  { Install-WingetApp "Notepad++.Notepad++" "Notepad++" }
+                "D3"  { Install-WingetApp "Microsoft.VisualStudio.2022.Community" "Visual Studio 2022 Community" }
+                "D4"  { Install-WingetApp "Google.AndroidStudio" "Android Studio" }
+                "D5"  { Install-WingetApp "Git.Git" "Git SCM" }
+                "D6"  { Install-WingetApp "ApacheFriends.Xampp.8.2" "XAMPP (PHP 8.2 & MySQL)" }
+                "D7"  { Install-WingetApp "EclipseAdoptium.Temurin.8.JDK" "Java Temurin 8 JDK" }
+                "D8"  { Install-WingetApp "EclipseAdoptium.Temurin.11.JDK" "Java Temurin 11 JDK" }
+                "D9"  { Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK" }
+                "D10" { Install-WingetApp "EclipseAdoptium.Temurin.21.JDK" "Java Temurin 21 JDK" }
+                default {
+                    Write-Host "[!] Opção '$opcao' inválida no menu Dev." -ForegroundColor Red
+                }
+            }
+        }
+        Wait-User
+    }
+}
+
+# ==============================================================================
+# 8. SUBMENU: MANUTENÇÃO & PERFIS AUTOMATIZADOS
+# ==============================================================================
+function Show-MenuManutencao {
+    while ($true) {
+        Show-Header "MENU MANUTENÇÃO, TWEAKS & PERFIS AUTO"
+        Write-Host @"
++------------------------------------------------------------------------------------------------------------+
+|       D I A G N O S T I C O   &   R E P A R O  |       C O N F I G U R A C O E S   &   R E D E             |
+|   M1. Reparo Completo (DISM + SFC Scannow)     |   M5. Habilitar Administrador Nativo (SID 500)            |
+|   M2. Diagnóstico Online Volume C: (Scan)      |   M6. Mapear Credencial de Rede (Windows Vault)           |
+|   M3. Reset Completo de Pilha de Rede (DHCP)   |   M7. Renomear Computador & Reiniciar                     |
+|   M4. Forçar Atualização GPO (gpupdate)        |                                                           |
++------------------------------------------------------------------------------------------------------------+
+|       T W E A K S   E S S E N C I A I S   W I N D O W S   1 1                                              |
+|   M8. Aplicar Tweaks Completos de Produtividade & Performance                                              |
+|       (Menu Clássico, Barra à Esquerda, Extensões Visíveis, Pastas Ocultas, Dark Mode, Hibernação OFF)    |
++------------------------------------------------------------------------------------------------------------+
+|       P E R F I S   A U T O M A T I Z A D O S   ( I N S T A L A C A O   E M   L O T E )                    |
+|   P1. 🏛️ MODO PMA (Prefeitura Win 11: Apps Corp + Runtimes + Admin + Tweaks Win 11)                        |
+|   P2. 🚀 MODO BRNCZZR (Dev Workstation: Apps Dev + Produtividade + Runtimes + Tweaks)                      |
++------------------------------------------------------------------------------------------------------------+
+|   V.  Voltar ao Menu Principal                 |   Q.  Sair                                                |
++------------------------------------------------------------------------------------------------------------+
+  (Dica: você pode selecionar múltiplos itens separados por vírgula. Ex: M1, M8)
+"@ -ForegroundColor Gray
+
+        $escolha = Read-Host "MANUTENÇÃO SELEÇÃO [V para Voltar, Q para Sair]"
+        if ([string]::IsNullOrWhiteSpace($escolha)) { continue }
+        if ($escolha.Trim().ToUpper() -eq "V") { break }
+        if ($escolha.Trim().ToUpper() -eq "Q") { exit }
+
+        $itens = $escolha -split ","
+        foreach ($item in $itens) {
+            $opcao = $item.Trim().ToUpper()
+            switch ($opcao) {
+                "M1" { Invoke-SystemRepair }
+                "M2" { Invoke-DiskCheck }
+                "M3" { Invoke-NetworkReset }
+                "M4" { Invoke-UpdateGPO }
+                "M5" { Enable-BuiltinAdmin }
+                "M6" { Add-NetworkCredential }
+                "M7" { Set-MachineName }
+                "M8" { Apply-Win11Tweaks }
+                "P1" { Invoke-ModoPMA }
+                "P2" { Invoke-ModoBRNCZZR }
+                default {
+                    Write-Host "[!] Opção '$opcao' inválida no menu de Manutenção." -ForegroundColor Red
+                }
+            }
+        }
+        Wait-User
+    }
+}
+
+# ==============================================================================
+# 9. MENU PRINCIPAL (SOFTWARES ESSENCIAIS & NAVEGAÇÃO)
+# ==============================================================================
+while ($true) {
+    Show-Header "MENU PRINCIPAL — SOFTWARES ESSENCIAIS"
+    Write-Host @"
++------------------------------------------------------------------------------------------------------------+
+|   0.  UPDATE ALL (Winget)              |       I M A G E M                 |       U T I L I T A R I O S   |
+|                                        |   3A. GIMP                        |   6A. AnyDesk                 |
+|       C O M P A C T A C A O            |   3B. Lightshot                   |   6B. qBittorrent             |
+|   1A. 7-Zip                            |   3C. ShareX                      |   6C. Rufus                   |
+|   1B. WinRAR                           |                                   |   6D. RustDesk                |
+|                                        |       M I D I A                   |   6E. Transmission            |
+|       D O C U M E N T O S              |   4A. HandBrake                   |   6F. RealVNC Viewer          |
+|   2A. Adobe Acrobat Reader             |   4B. K-Lite Codec Full           |                               |
+|   2B. Foxit PDF Reader                 |   4C. VLC Media Player            |                               |
+|   2C. LibreOffice LTS                  |                                   |                               |
++------------------------------------------------------------------------------------------------------------+
+|       R U N T I M E S   W I N D O W S   1 1                                                                |
+|   5A. .NET 8 Desktop Runtime (LTS)     |   5C. Visual C++ 2015-2022 (x64)  |   5E. Visual C++ All-in-One   |
+|   5B. .NET 9 Desktop Runtime           |   5D. Visual C++ 2015-2022 (x86)  |   5F. Java Temurin 17 JRE     |
++------------------------------------------------------------------------------------------------------------+
+|   D.  💻 IR PARA MENU DESENVOLVIMENTO (DEV)                                                                |
+|   M.  🛠️ IR PARA MENU MANUTENÇÃO, TWEAKS & PERFIS AUTOMÁTICOS                                              |
+|   Q.  🚪 SAIR                                                                                              |
++------------------------------------------------------------------------------------------------------------+
+  (Dica: você pode selecionar múltiplos itens separados por vírgula. Ex: 0, 1A, 2C, 5E, 6D)
+"@ -ForegroundColor Gray
+
+    $escolha = Read-Host "OPÇÃO [D para Dev, M para Manutenção, Q para Sair]"
     if ([string]::IsNullOrWhiteSpace($escolha)) { continue }
-    if ($escolha.Trim().ToUpper() -eq "Q") {
+
+    $escolhaUpper = $escolha.Trim().ToUpper()
+
+    if ($escolhaUpper -eq "Q") {
         Write-Host "`n[+] Encerrando win-toolbox-tui. Até logo!`n" -ForegroundColor Green
         break
     }
+    if ($escolhaUpper -eq "D") {
+        Show-MenuDev
+        continue
+    }
+    if ($escolhaUpper -eq "M") {
+        Show-MenuManutencao
+        continue
+    }
 
+    # Se forem opções de instalação do menu principal (suporte a vírgula)
     $itens = $escolha -split ","
     foreach ($item in $itens) {
         $opcao = $item.Trim().ToUpper()
         switch ($opcao) {
             "0"  { Update-AllWinget }
+            
+            # Compactação
             "1A" { Install-WingetApp "7zip.7zip" "7-Zip" }
             "1B" { Install-WingetApp "RARLab.WinRAR" "WinRAR" }
             
-            "2A" { Install-WingetApp "Google.AndroidStudio" "Android Studio" }
-            "2B" { Install-WingetApp "EclipseAdoptium.Temurin.8.JDK" "Java Temurin 8 JDK" }
-            "2C" { Install-WingetApp "EclipseAdoptium.Temurin.11.JDK" "Java Temurin 11 JDK" }
-            "2D" { Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK" }
-            "2E" { Install-WingetApp "EclipseAdoptium.Temurin.21.JDK" "Java Temurin 21 JDK" }
-            "2F" { Install-WingetApp "Git.Git" "Git SCM" }
-            "2G" { Install-WingetApp "Notepad++.Notepad++" "Notepad++" }
-            "2H" { Install-WingetApp "Microsoft.VisualStudioCode" "VS Code" }
-            "2I" { Install-WingetApp "Microsoft.VisualStudio.2022.Community" "Visual Studio 2022 Community" }
+            # Documentos
+            "2A" { Install-WingetApp "Adobe.Acrobat.Reader.64-bit" "Adobe Acrobat Reader" }
+            "2B" { Install-WingetApp "Foxit.FoxitReader" "Foxit PDF Reader" }
+            "2C" { Install-WingetApp "TheDocumentFoundation.LibreOffice.LTS" "LibreOffice LTS" }
             
-            "3A" { Install-WingetApp "Adobe.Acrobat.Reader.64-bit" "Adobe Acrobat Reader" }
-            "3B" { Install-WingetApp "Foxit.FoxitReader" "Foxit PDF Reader" }
-            "3C" { Install-WingetApp "TheDocumentFoundation.LibreOffice.LTS" "LibreOffice LTS" }
+            # Imagem
+            "3A" { Install-WingetApp "GIMP.GIMP" "GIMP" }
+            "3B" { Install-WingetApp "Skillbrains.Lightshot" "Lightshot" }
+            "3C" { Install-WingetApp "ShareX.ShareX" "ShareX" }
             
-            "4A" { Install-WingetApp "GIMP.GIMP" "GIMP" }
-            "4B" { Install-WingetApp "Skillbrains.Lightshot" "Lightshot" }
-            "4C" { Install-WingetApp "ShareX.ShareX" "ShareX" }
+            # Mídia
+            "4A" { Install-WingetApp "HandBrake.HandBrake" "HandBrake" }
+            "4B" { Install-WingetApp "CodecGuide.K-LiteCodecPack.Full" "K-Lite Codec Pack Full" }
+            "4C" { Install-WingetApp "VideoLAN.VLC" "VLC Media Player" }
             
-            "5A" { Install-WingetApp "HandBrake.HandBrake" "HandBrake" }
-            "5B" { Install-WingetApp "CodecGuide.K-LiteCodecPack.Full" "K-Lite Codec Pack Full" }
-            "5C" { Install-WingetApp "VideoLAN.VLC" "VLC Media Player" }
+            # Runtimes Win 11
+            "5A" { Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)" }
+            "5B" { Install-WingetApp "Microsoft.DotNet.DesktopRuntime.9" ".NET 9 Desktop Runtime" }
+            "5C" { Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 x64" }
+            "5D" { Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 x86" }
+            "5E" { Install-WingetApp "abbodi1406.vcredist" "Visual C++ All-in-One Runtime" }
+            "5F" { Install-WingetApp "EclipseAdoptium.Temurin.17.JRE" "Java Temurin 17 JRE" }
             
-            "6A" { Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)" }
-            "6B" { Install-WingetApp "Microsoft.DotNet.DesktopRuntime.9" ".NET 9 Desktop Runtime" }
-            "6C" { Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 x64" }
-            "6D" { Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 x86" }
-            "6E" { Install-WingetApp "abbodi1406.vcredist" "Visual C++ All-in-One Runtime" }
-            "6F" { Install-WingetApp "EclipseAdoptium.Temurin.17.JRE" "Java Temurin 17 JRE" }
-            
-            "7A" { Install-WingetApp "AnyDeskSoftwareGmbH.AnyDesk" "AnyDesk" }
-            "7B" { Install-WingetApp "qBittorrent.qBittorrent" "qBittorrent" }
-            "7C" { Install-WingetApp "Rufus.Rufus" "Rufus" }
-            "7D" { Install-WingetApp "RustDesk.RustDesk" "RustDesk" }
-            "7E" { Install-WingetApp "Transmission.Transmission" "Transmission" }
-            "7F" { Install-WingetApp "RealVNC.VNCViewer" "RealVNC Viewer" }
-            
-            "8"  { Add-NetworkCredential }
-            "9"  { Enable-BuiltinAdmin }
-            "10" { Set-MachineName }
-            "11" { Invoke-DiskCheck }
-            "12" { Invoke-SystemRepair }
-            "13" { Invoke-UpdateGPO }
-            "14" { Invoke-NetworkReset }
-            "15" { Apply-Win11Tweaks }
-            
-            "16" { Invoke-ModoPMA }
-            "17" { Invoke-ModoBRNCZZR }
+            # Utilitários
+            "6A" { Install-WingetApp "AnyDeskSoftwareGmbH.AnyDesk" "AnyDesk" }
+            "6B" { Install-WingetApp "qBittorrent.qBittorrent" "qBittorrent" }
+            "6C" { Install-WingetApp "Rufus.Rufus" "Rufus" }
+            "6D" { Install-WingetApp "RustDesk.RustDesk" "RustDesk" }
+            "6E" { Install-WingetApp "Transmission.Transmission" "Transmission" }
+            "6F" { Install-WingetApp "RealVNC.VNCViewer" "RealVNC Viewer" }
             
             default {
-                Write-Host "[!] Opção '$opcao' inválida ou não reconhecida." -ForegroundColor Red
+                Write-Host "[!] Opção '$opcao' inválida ou não reconhecida no menu principal." -ForegroundColor Red
             }
         }
     }
 
-    Write-Host "`nProcessamento da seleção concluído." -ForegroundColor Cyan
-    Start-Sleep -Seconds 3
+    Wait-User
 }

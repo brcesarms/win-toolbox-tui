@@ -1,7 +1,7 @@
 # 🪟 win-toolbox-tui — Caixa de Ferramentas & Pós-Instalação para Windows 11
 
 > **Exclusivo para Windows 11 (Build 22000+)**  
-> Interface interativa de terminal (TUI) em PowerShell para diagnóstico, manutenção, instalação em lote via Winget, tweaks essenciais de sistema e perfis automatizados de estações de trabalho.
+> Interface interativa de terminal (TUI) com **múltiplos menus organizados** em PowerShell para diagnóstico, manutenção, instalação em lote via Winget, tweaks essenciais de sistema e perfis automatizados de estações de trabalho.
 
 ---
 
@@ -23,52 +23,70 @@ powershell -ExecutionPolicy Bypass -File .\win-toolbox.ps1
 
 ---
 
-## 🎯 Destaques e Recursos do Windows 11
+## 🎯 Estrutura Modular dos Menus
 
-- 🛡️ **100% Focado no Windows 11:** Verificação de Build nativa (impede execução em sistemas legados).
-- 🧩 **Seleção Múltipla Inteligente:** Digite múltiplos comandos separados por vírgula no menu (ex: `1A, 2F, 6A, 15`).
-- 📦 **Instalações Silenciosas via Winget:** Sem janelas ou popups roubando o foco do técnico durante a instalação.
-- 🩺 **Reparo de Sistema com Ordem Oficial:** DISM RestoreHealth executado antes do SFC Scannow para garantir consistência.
-- 👤 **Ativação Universal de Administrador:** Detecção pelo SID `*-500` (funciona em Windows PT-BR, EN-US ou qualquer idioma).
-- 🚀 **Tweaks de Performance e Produtividade:**
-  - Restauração do menu de contexto clássico (sem "Mostrar mais opções").
-  - Barra de tarefas alinhada à esquerda.
-  - Exibição de extensões de arquivos e pastas ocultas.
-  - Desativação de hibernação (`powercfg -h off` liberando 8GB–32GB de SSD).
-  - Tema escuro ativado por padrão.
-  - Ocultação de Widgets e botão Copilot.
+A interface foi redesenhada em **3 telas dedicadas e limpas**, evitando poluição visual:
+
+### 1️⃣ Menu Principal — Softwares Essenciais & Runtimes
+Contém as ferramentas do dia a dia e instaladores base:
+* **`0`**: Atualizar todos os pacotes via Winget
+* **Compactação (`1A–1B`)**: 7-Zip, WinRAR
+* **Documentos (`2A–2C`)**: Adobe Acrobat Reader, Foxit Reader, LibreOffice LTS
+* **Imagem (`3A–3C`)**: GIMP, Lightshot, ShareX
+* **Mídia (`4A–4C`)**: HandBrake, K-Lite Codec Pack Full, VLC Media Player
+* **Runtimes Win 11 (`5A–5F`)**: .NET 8 Desktop (LTS), .NET 9 Desktop, VC++ 2015-2022 (x64/x86), VC++ All-in-One, Java Temurin 17 JRE
+* **Utilitários (`6A–6F`)**: AnyDesk, qBittorrent, Rufus, RustDesk, Transmission, RealVNC Viewer
+* **Atalhos de Navegação**:
+  * Digite **`D`** ➔ Abre o Menu Desenvolvimento
+  * Digite **`M`** ➔ Abre o Menu Manutenção & Perfis
+  * Digite **`Q`** ➔ Encerra a ferramenta
+
+### 2️⃣ Menu Desenvolvimento (`D`)
+Focado estritamente em ferramentas para programadores e técnicos avançados:
+* **`D0`**: Instalar Pacote Dev Completo (VS Code + Git + Notepad++ + JDK 17)
+* **IDEs & Editores (`D1–D4`)**: VS Code, Notepad++, Visual Studio 2022 Community, Android Studio
+* **Versionamento & Servidor (`D5–D6`)**: Git SCM, XAMPP (PHP 8.2 & MySQL)
+* **Java Development Kits (`D7–D10`)**: Eclipse Temurin JDK 8, 11, 17 (LTS), 21 (LTS)
+* **Navegação**: Digite **`V`** para voltar ao Menu Principal ou **`Q`** para sair.
+
+### 3️⃣ Menu Manutenção, Tweaks & Perfis Auto (`M`)
+Focado em reparo do Windows 11, configuração corporativa e automações em lote:
+* **Diagnóstico & Reparo (`M1–M4`)**:
+  * `M1`: Reparo Completo (DISM RestoreHealth primeiro + SFC Scannow)
+  * `M2`: Diagnóstico Online do Volume C: (Repair-Volume sem reiniciar)
+  * `M3`: Reset de Pilha de Rede (Flush DNS, DHCP Release/Renew, reinício dinâmico de adaptadores)
+  * `M4`: Atualização de Diretivas (gpupdate /force)
+* **Configurações & Rede (`M5–M7`)**:
+  * `M5`: Ativação Universal de Administrador Local (Detecção por SID `*-500`)
+  * `M6`: Mapeamento seguro de credenciais de rede no Windows Vault
+  * `M7`: Renomear computador com opção de reboot imediato ou posterior
+* **Tweaks Essenciais Windows 11 (`M8`)**:
+  * Restauração do menu de contexto clássico (sem "Mostrar mais opções")
+  * Alinhamento da barra de tarefas à esquerda
+  * Exibição de extensões de arquivos e pastas ocultas
+  * Desativação de hibernação (`powercfg -h off` liberando 8GB–32GB no SSD/NVMe)
+  * Ativação nativa do Tema Escuro
+  * Ocultação de Widgets e botão Copilot
+* **Perfis Automatizados (`P1–P2`)**:
+  * `P1`: 🏛️ **MODO PMA** (Padrão corporativo da Prefeitura: Apps essenciais + Runtimes + Admin + Tweaks Win 11)
+  * `P2`: 🚀 **MODO BRNCZZR** (Padrão Dev Workstation completa)
+* **Navegação**: Digite **`V`** para voltar ao Menu Principal ou **`Q`** para sair.
 
 ---
 
-## 📋 Tabela de Opções do Menu TUI
+## 🧩 Seleção Múltipla Inteligente
 
-| Código | Categoria | Descrição / Softwares |
-| :---: | :--- | :--- |
-| **`0`** | 🔄 **Update All** | Atualiza todos os pacotes do sistema via Winget |
-| **`1A–1B`** | 🗜️ **Compactação** | 7-Zip, WinRAR |
-| **`2A–2I`** | 💻 **Dev & IDEs** | VS Code, Git, Notepad++, Android Studio, Visual Studio, Java JDK (8, 11, 17, 21) |
-| **`3A–3C`** | 📄 **Documentos** | Adobe Acrobat Reader, Foxit Reader, LibreOffice LTS |
-| **`4A–4C`** | 🎨 **Imagem** | GIMP, Lightshot, ShareX |
-| **`5A–5C`** | 🎬 **Mídia** | VLC Media Player, HandBrake, K-Lite Codec Pack Full |
-| **`6A–6F`** | ⚙️ **Runtimes Win 11**| .NET 8 Desktop (LTS), .NET 9 Desktop, VC++ 2015-2022 (x64/x86), VC++ AIO, Java 17 JRE |
-| **`7A–7F`** | 🛠️ **Utilitários Remotos**| RustDesk, AnyDesk, Rufus, qBittorrent, Transmission, RealVNC Viewer |
-| **`8`** | 🔒 **Credencial de Rede** | Mapeia credenciais no Windows Credential Manager de forma segura |
-| **`9`** | 👑 **Admin Local** | Habilita a conta de Administrador nativa pelo SID 500 |
-| **`10`** | 🏷️ **Renomear PC** | Altera hostname da estação e agenda reinicialização |
-| **`11`** | 💾 **Diagnóstico C:** | Scan online do volume C: sem travar ou forçar reboot imediato |
-| **`12`** | 🩺 **Reparo do Sistema** | DISM `/Online /Cleanup-Image /RestoreHealth` + `sfc /scannow` |
-| **`13`** | 📜 **Atualizar GPO** | Executa `gpupdate /force` |
-| **`14`** | 🌐 **Reset de Rede** | Limpeza de cache DNS, liberação/renovação de IP e reinicialização de placas de rede |
-| **`15`** | ⚡ **Tweaks Win 11** | Menu clássico, barra à esquerda, extensões visíveis, tema escuro e SSD boost |
-| **`16`** | 🏛️ **MODO PMA** | Perfil automatizado padrão corporativo para Prefeitura Municipal de Ariquemes |
-| **`17`** | 🚀 **MODO BRNCZZR** | Perfil automatizado completo para estação de desenvolvedor |
+Em qualquer um dos menus, você pode digitar vários comandos separados por vírgula para execução sequencial silenciosa:
+- No Menu Principal: `0, 1A, 2C, 5E, 6D`
+- No Menu Dev: `D1, D5, D9`
+- No Menu Manutenção: `M1, M8`
 
 ---
 
 ## 🔒 Segurança
 
-- Nenhuma credencial ou senha corporativa é gravada em texto puro. A opção `8` solicita a senha em tempo de execução via `SecureString`.
-- Todos os pacotes são baixados diretamente dos repositórios oficiais e verificados pela infraestrutura do Microsoft Winget.
+- Nenhuma credencial ou senha corporativa é gravada em texto puro.
+- Todos os pacotes são validados pela infraestrutura oficial do Microsoft Winget.
 
 ---
 
