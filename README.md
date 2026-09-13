@@ -75,12 +75,21 @@ Focado em reparo do Windows 11, configuração corporativa e automações em lot
 
 ---
 
-## 🧩 Seleção Múltipla Inteligente
+## 🧩 Seleção Múltipla Inteligente & Barra de Progresso
 
 Em qualquer um dos menus, você pode digitar vários comandos separados por vírgula para execução sequencial silenciosa:
 - No Menu Principal: `0, 1A, 2C, 5E, 6D`
 - No Menu Dev: `D1, D5, D9`
 - No Menu Manutenção: `M1, M8`
+
+### 📊 Barra de Progresso Dinâmica (Unicode)
+Durante a execução de tarefas em lote ou perfis automatizados (`P1` e `P2`), o script desenha uma barra de progresso gráfica com preenchimento em tempo real e cálculo percentual:
+
+```text
+╭─ PROGRESSO [ 3 / 8 ] ──────────────────────────────────────────────────────── [ 38% ] ─╮
+│ [███████████░░░░░░░░░░░░░░░░░░░] Processando opção: [2C]                              │
+╰────────────────────────────────────────────────────────────────────────────────────────╯
+```
 
 ---
 

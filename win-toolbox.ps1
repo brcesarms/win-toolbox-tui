@@ -3,12 +3,12 @@
     WIN-TOOLBOX-TUI V1.0 — Caixa de Ferramentas e Pós-Instalação para Windows 11
 .DESCRIPTION
     Script interativo com interface TUI moderna (Unicode Box Drawing), múltiplos menus,
-    navegação cruzada direta (Principal, Dev e Manutenção), winget silencioso e tweaks.
+    barra de progresso dinâmica em lote, telemetria de sistema e suporte completo a Winget.
     Exclusivo para Windows 11 (Build 22000+).
 .AUTHOR
     Bruno César Medeiros Siqueira <bruno.cesar@outlook.it>
 .VERSION
-    1.0.0 — Modern TUI Edition (Windows 11)
+    1.1.0 — Progress Bar & Modern TUI Edition (Windows 11)
 #>
 
 [CmdletBinding()]
@@ -41,7 +41,7 @@ if ($osBuild -lt 22000) {
 }
 
 # ==============================================================================
-# 3. CABEÇALHO COM TELEMETRIA LOCAL (DATA, HOST, USER, IP)
+# 3. CABEÇALHO E BARRA DE PROGRESSO DINÂMICA
 # ==============================================================================
 function Show-Header {
     param([string]$subtitulo = "MENU PRINCIPAL")
@@ -66,6 +66,41 @@ function Show-Header {
     Write-Host $subLine -ForegroundColor White
     Write-Host $infoLine -ForegroundColor Gray
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
+}
+
+function Show-ProgressBar {
+    param(
+        [Parameter(Mandatory=$true)] [int]$Current,
+        [Parameter(Mandatory=$true)] [int]$Total,
+        [Parameter(Mandatory=$false)] [string]$Activity = "Processando..."
+    )
+    if ($Total -le 0) { return }
+    $percent = [math]::Round(($Current / $Total) * 100)
+    if ($percent -gt 100) { $percent = 100 }
+    
+    $barWidth = 30
+    $filled = [math]::Round(($percent / 100) * $barWidth)
+    if ($filled -gt $barWidth) { $filled = $barWidth }
+    $empty = $barWidth - $filled
+    
+    $bar = ("█" * $filled) + ("░" * $empty)
+    
+    $badgeLeft = "╭─ PROGRESSO [ $Current / $Total ] "
+    $badgeRight = " [ $percent% ] ─╮"
+    $dashesCount = 90 - ($badgeLeft.Length + $badgeRight.Length)
+    if ($dashesCount -lt 2) { $dashesCount = 2 }
+    $dashes = "─" * $dashesCount
+    
+    $topLine = "$badgeLeft$dashes$badgeRight"
+    $content = "│ [$bar] $Activity"
+    $padded = $content.PadRight(89) + "│"
+    $botLine = "╰────────────────────────────────────────────────────────────────────────────────────────╯"
+    
+    Write-Host ""
+    Write-Host $topLine -ForegroundColor Cyan
+    Write-Host $padded -ForegroundColor Yellow
+    Write-Host $botLine -ForegroundColor Cyan
+    Write-Host ""
 }
 
 function Wait-User {
@@ -129,11 +164,9 @@ function Invoke-SystemRepair {
     Write-Host "[*] INICIANDO REPARO DO SISTEMA (ORDEM OFICIAL MICROSOFT)" -ForegroundColor Cyan
     Write-Host "========================================================" -ForegroundColor Cyan
     
-    # 1. DISM primeiro: repara o repositório de componentes do Windows 11
     Write-Host "`n[Passo 1/2] Executando DISM /Online /Cleanup-Image /RestoreHealth..." -ForegroundColor Yellow
     DISM /Online /Cleanup-Image /RestoreHealth
     
-    # 2. SFC segundo: repara arquivos de sistema usando o repositório sadio
     Write-Host "`n[Passo 2/2] Executando SFC /scannow..." -ForegroundColor Yellow
     sfc /scannow
     
@@ -216,7 +249,6 @@ function Enable-OpenSSHServer {
     Write-Host "[*] HABILITANDO SERVIDOR OPENSSH NO WINDOWS 11" -ForegroundColor Cyan
     Write-Host "========================================================" -ForegroundColor Cyan
 
-    # 1. Instalar recurso nativo OpenSSH Server se ausente
     Write-Host "[1/3] Verificando capacidade nativa OpenSSH.Server..." -ForegroundColor Gray
     $sshCap = Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH.Server*'
     if ($sshCap.State -ne 'Installed') {
@@ -227,7 +259,6 @@ function Enable-OpenSSHServer {
         Write-Host "[✔] Recurso OpenSSH Server já está instalado." -ForegroundColor Green
     }
 
-    # 2. Configurar e iniciar serviços sshd e ssh-agent
     Write-Host "[2/3] Configurando serviço sshd para inicialização automática..." -ForegroundColor Gray
     Start-Service sshd -ErrorAction SilentlyContinue
     Set-Service -Name sshd -StartupType 'Automatic'
@@ -236,7 +267,6 @@ function Enable-OpenSSHServer {
     Set-Service -Name ssh-agent -StartupType 'Automatic'
     Write-Host "[✔] Serviço sshd em execução e configurado como Automático!" -ForegroundColor Green
 
-    # 3. Regra de Firewall para porta 22 (TCP Inbound em todos os perfis)
     Write-Host "[3/3] Configurando regra de Firewall (Porta 22 TCP)..." -ForegroundColor Gray
     $regraExiste = Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -ErrorAction SilentlyContinue
     if (-not $regraExiste) {
@@ -270,7 +300,6 @@ function Apply-Win11Tweaks {
     Write-Host "[*] APLICANDO TWEAKS DE SISTEMA E PERFORMANCE NO WIN 11" -ForegroundColor Cyan
     Write-Host "========================================================" -ForegroundColor Cyan
 
-    # 1. Restaurar Menu de Contexto Clássico
     Write-Host "[+] Ativando Menu de Contexto Clássico completo..." -ForegroundColor Gray
     $regPath = "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32"
     if (-not (Test-Path $regPath)) {
@@ -278,37 +307,29 @@ function Apply-Win11Tweaks {
         Set-ItemProperty -Path $regPath -Name "(Default)" -Value "" | Out-Null
     }
 
-    # 2. Alinhar barra de tarefas à esquerda
     Write-Host "[+] Alinhando Barra de Tarefas à Esquerda..." -ForegroundColor Gray
     Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarAl" -Value 0 -Type DWord -Force
 
-    # 3. Desativar Widgets e botão do Copilot na barra
     Write-Host "[+] Ocultando Widgets e botão Copilot da barra de tarefas..." -ForegroundColor Gray
     Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "TaskbarDa" -Value 0 -Type DWord -Force -ErrorAction SilentlyContinue
     Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "ShowCopilotButton" -Value 0 -Type DWord -Force -ErrorAction SilentlyContinue
 
-    # 4. Mostrar extensões conhecidas de arquivos (.exe, .ps1, .txt)
     Write-Host "[+] Exibindo extensões de arquivos no Explorer..." -ForegroundColor Gray
     Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "HideFileExt" -Value 0 -Type DWord -Force
 
-    # 5. Mostrar arquivos e pastas ocultos
     Write-Host "[+] Exibindo pastas e arquivos ocultos..." -ForegroundColor Gray
     Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "Hidden" -Value 1 -Type DWord -Force
 
-    # 6. Abrir Explorer em 'Este Computador' em vez de 'Acesso Rápido'
     Write-Host "[+] Definindo 'Este Computador' como padrão no Explorer..." -ForegroundColor Gray
     Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" -Name "LaunchTo" -Value 1 -Type DWord -Force
 
-    # 7. Desativar Hibernação (Economiza de 8GB a 32GB em SSD/NVMe)
     Write-Host "[+] Desativando hibernação (liberação de espaço no SSD)..." -ForegroundColor Gray
     powercfg -h off
 
-    # 8. Ativar Tema Escuro no Sistema e Aplicativos
     Write-Host "[+] Ativando Tema Escuro..." -ForegroundColor Gray
     Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -Name "AppsUseLightTheme" -Value 0 -Type DWord -Force
     Set-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize" -Name "SystemUsesLightTheme" -Value 0 -Type DWord -Force
 
-    # Reiniciar explorer para aplicar alterações visuais
     Write-Host "[+] Reiniciando Windows Explorer para aplicar alterações..." -ForegroundColor Gray
     Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
 
@@ -316,28 +337,55 @@ function Apply-Win11Tweaks {
 }
 
 # ==============================================================================
-# 7. PERFIS AUTOMATIZADOS (MODO PMA & MODO DEV)
+# 7. PERFIS AUTOMATIZADOS COM PROGRESSO PASSO A PASSO
 # ==============================================================================
 function Invoke-ModoPMA {
     Write-Host "`n========================================================" -ForegroundColor Cyan
     Write-Host "   EXECUTANDO PERFIL: MODO PMA (PADRÃO PREFEITURA WIN 11)" -ForegroundColor Cyan
     Write-Host "========================================================" -ForegroundColor Cyan
 
+    $totalPassos = 14
+    
+    Show-ProgressBar -Current 1 -Total $totalPassos -Activity "Instalando 7-Zip"
     Install-WingetApp "7zip.7zip" "7-Zip"
+    
+    Show-ProgressBar -Current 2 -Total $totalPassos -Activity "Instalando Mozilla Firefox"
     Install-WingetApp "Mozilla.Firefox" "Mozilla Firefox"
+    
+    Show-ProgressBar -Current 3 -Total $totalPassos -Activity "Instalando Google Chrome"
     Install-WingetApp "Google.Chrome" "Google Chrome"
+    
+    Show-ProgressBar -Current 4 -Total $totalPassos -Activity "Instalando Foxit Reader"
     Install-WingetApp "Foxit.FoxitReader" "Foxit PDF Reader"
+    
+    Show-ProgressBar -Current 5 -Total $totalPassos -Activity "Instalando LibreOffice LTS"
     Install-WingetApp "TheDocumentFoundation.LibreOffice.LTS" "LibreOffice LTS"
+    
+    Show-ProgressBar -Current 6 -Total $totalPassos -Activity "Instalando Lightshot"
     Install-WingetApp "Skillbrains.Lightshot" "Lightshot (Captura)"
+    
+    Show-ProgressBar -Current 7 -Total $totalPassos -Activity "Instalando RustDesk"
     Install-WingetApp "RustDesk.RustDesk" "RustDesk (Acesso Remoto)"
+    
+    Show-ProgressBar -Current 8 -Total $totalPassos -Activity "Instalando VLC Media Player"
     Install-WingetApp "VideoLAN.VLC" "VLC Media Player"
 
+    Show-ProgressBar -Current 9 -Total $totalPassos -Activity "Instalando .NET 8 Desktop Runtime"
     Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)"
+    
+    Show-ProgressBar -Current 10 -Total $totalPassos -Activity "Instalando Visual C++ x64"
     Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 (x64)"
+    
+    Show-ProgressBar -Current 11 -Total $totalPassos -Activity "Instalando Visual C++ x86"
     Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 (x86)"
+    
+    Show-ProgressBar -Current 12 -Total $totalPassos -Activity "Instalando Java Temurin 17 JRE"
     Install-WingetApp "EclipseAdoptium.Temurin.17.JRE" "Java Temurin 17 JRE (LTS)"
 
+    Show-ProgressBar -Current 13 -Total $totalPassos -Activity "Habilitando Administrador Local"
     Enable-BuiltinAdmin
+    
+    Show-ProgressBar -Current 14 -Total $totalPassos -Activity "Aplicando Tweaks do Windows 11"
     Apply-Win11Tweaks
 
     Write-Host "`n[✔] Perfil MODO PMA concluído com sucesso!" -ForegroundColor Green
@@ -348,23 +396,45 @@ function Invoke-ModoBRNCZZR {
     Write-Host "   EXECUTANDO PERFIL: MODO BRNCZZR (DEV & WORKSTATION)" -ForegroundColor Cyan
     Write-Host "========================================================" -ForegroundColor Cyan
 
+    $totalPassos = 12
+
+    Show-ProgressBar -Current 1 -Total $totalPassos -Activity "Instalando Git SCM"
     Install-WingetApp "Git.Git" "Git SCM"
+    
+    Show-ProgressBar -Current 2 -Total $totalPassos -Activity "Instalando Visual Studio Code"
     Install-WingetApp "Microsoft.VisualStudioCode" "Visual Studio Code"
+    
+    Show-ProgressBar -Current 3 -Total $totalPassos -Activity "Instalando Notepad++"
     Install-WingetApp "Notepad++.Notepad++" "Notepad++"
+    
+    Show-ProgressBar -Current 4 -Total $totalPassos -Activity "Instalando Java Temurin 17 JDK"
     Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK (LTS)"
+    
+    Show-ProgressBar -Current 5 -Total $totalPassos -Activity "Instalando XAMPP"
     Install-WingetApp "ApacheFriends.Xampp.8.2" "XAMPP (PHP & MySQL)"
 
+    Show-ProgressBar -Current 6 -Total $totalPassos -Activity "Instalando 7-Zip"
     Install-WingetApp "7zip.7zip" "7-Zip"
+    
+    Show-ProgressBar -Current 7 -Total $totalPassos -Activity "Instalando Google Chrome"
     Install-WingetApp "Google.Chrome" "Google Chrome"
+    
+    Show-ProgressBar -Current 8 -Total $totalPassos -Activity "Instalando Mozilla Firefox"
     Install-WingetApp "Mozilla.Firefox" "Mozilla Firefox"
+    
+    Show-ProgressBar -Current 9 -Total $totalPassos -Activity "Instalando LibreOffice LTS"
     Install-WingetApp "TheDocumentFoundation.LibreOffice.LTS" "LibreOffice LTS"
+    
+    Show-ProgressBar -Current 10 -Total $totalPassos -Activity "Instalando RustDesk & VLC"
     Install-WingetApp "RustDesk.RustDesk" "RustDesk"
     Install-WingetApp "VideoLAN.VLC" "VLC Media Player"
 
+    Show-ProgressBar -Current 11 -Total $totalPassos -Activity "Instalando Runtimes .NET 8 & VC++"
     Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)"
     Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 (x64)"
     Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 (x86)"
 
+    Show-ProgressBar -Current 12 -Total $totalPassos -Activity "Configurando Admin & Tweaks Win 11"
     Enable-BuiltinAdmin
     Apply-Win11Tweaks
 
@@ -372,7 +442,7 @@ function Invoke-ModoBRNCZZR {
 }
 
 # ==============================================================================
-# 8. TELAS DE MENU COM POLIMENTO TUI MODERNO (UNICODE BOX DRAWING)
+# 8. TELAS DE MENU COM POLIMENTO TUI MODERNO
 # ==============================================================================
 function Invoke-MenuPrincipal {
     Show-Header "MENU PRINCIPAL — SOFTWARES ESSENCIAIS & RUNTIMES"
@@ -398,6 +468,11 @@ function Invoke-MenuPrincipal {
     Write-Host "├─────────────────────────┴──────────────────────────────────────────────────────────────┤" -ForegroundColor Cyan
     Write-Host "│ NAVEGAÇÃO:   [D] Menu Dev    │    [M] Menu Manutenção & Perfis    │    [Q] Sair        │" -ForegroundColor Yellow
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
+    
+    Write-Host "╭─ STATUS DO SISTEMA ─────────────────────────────────────────────────────── [ PRONTO ] ─╮" -ForegroundColor DarkCyan
+    Write-Host "│  Selecione os itens para iniciar. Execuções em lote exibirão a barra de progresso.     │" -ForegroundColor Gray
+    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor DarkCyan
+    
     Write-Host "╭─ Digite as opções desejadas separadas por vírgula (ex: 0, 1A, 2C, 5E, 6D)" -ForegroundColor Cyan
     $escolha = Read-Host "╰─❯ "
     
@@ -408,9 +483,16 @@ function Invoke-MenuPrincipal {
     if ($escolhaUpper -eq "D") { $script:menuAtual = "DEV"; return }
     if ($escolhaUpper -eq "M") { $script:menuAtual = "MANUTENCAO"; return }
 
-    $itens = $escolha -split ","
+    $itens = @($escolha -split "," | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    $totalItens = $itens.Count
+    $itemAtual = 0
+
     foreach ($item in $itens) {
+        $itemAtual++
         $opcao = $item.Trim().ToUpper()
+        
+        Show-ProgressBar -Current $itemAtual -Total $totalItens -Activity "Processando opção: [$opcao]"
+        
         switch ($opcao) {
             "0"  { Update-AllWinget }
             "1A" { Install-WingetApp "7zip.7zip" "7-Zip" }
@@ -462,6 +544,11 @@ function Invoke-MenuDev {
     Write-Host "├────────────────────────────────────────┴───────────────────────────────────────────────┤" -ForegroundColor Cyan
     Write-Host "│ NAVEGAÇÃO:   [V] Menu Principal    │    [M] Menu Manutenção & Perfis    │    [Q] Sair  │" -ForegroundColor Yellow
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
+    
+    Write-Host "╭─ STATUS DO SISTEMA ─────────────────────────────────────────────────────── [ PRONTO ] ─╮" -ForegroundColor DarkCyan
+    Write-Host "│  Selecione os itens para iniciar. Execuções em lote exibirão a barra de progresso.     │" -ForegroundColor Gray
+    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor DarkCyan
+
     Write-Host "╭─ Selecione ferramentas de DEV (ex: D0 ou D1, D5, D9)" -ForegroundColor Cyan
     $escolha = Read-Host "╰─❯ "
 
@@ -472,14 +559,28 @@ function Invoke-MenuDev {
     if ($escolhaUpper -eq "V") { $script:menuAtual = "MAIN"; return }
     if ($escolhaUpper -eq "M") { $script:menuAtual = "MANUTENCAO"; return }
 
-    $itens = $escolha -split ","
+    $itens = @($escolha -split "," | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    $totalItens = $itens.Count
+    $itemAtual = 0
+
     foreach ($item in $itens) {
+        $itemAtual++
         $opcao = $item.Trim().ToUpper()
+        
+        Show-ProgressBar -Current $itemAtual -Total $totalItens -Activity "Processando opção: [$opcao]"
+        
         switch ($opcao) {
             "D0" {
+                Show-ProgressBar -Current 1 -Total 4 -Activity "Instalando VS Code"
                 Install-WingetApp "Microsoft.VisualStudioCode" "VS Code"
+                
+                Show-ProgressBar -Current 2 -Total 4 -Activity "Instalando Git SCM"
                 Install-WingetApp "Git.Git" "Git SCM"
+                
+                Show-ProgressBar -Current 3 -Total 4 -Activity "Instalando Notepad++"
                 Install-WingetApp "Notepad++.Notepad++" "Notepad++"
+                
+                Show-ProgressBar -Current 4 -Total 4 -Activity "Instalando Java Temurin 17 JDK"
                 Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK"
             }
             "D1"  { Install-WingetApp "Microsoft.VisualStudioCode" "VS Code" }
@@ -520,6 +621,11 @@ function Invoke-MenuManutencao {
     Write-Host "├────────────────────────────────────────────────────────────────────────────────────────┤" -ForegroundColor Cyan
     Write-Host "│ NAVEGAÇÃO:   [V] Menu Principal    │    [D] Menu Desenvolvimento (DEV)   │    [Q] Sair │" -ForegroundColor Yellow
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
+    
+    Write-Host "╭─ STATUS DO SISTEMA ─────────────────────────────────────────────────────── [ PRONTO ] ─╮" -ForegroundColor DarkCyan
+    Write-Host "│  Selecione os itens para iniciar. Execuções em lote exibirão a barra de progresso.     │" -ForegroundColor Gray
+    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor DarkCyan
+
     Write-Host "╭─ Selecione tarefas de manutenção ou perfis (ex: M1, M8 ou P1)" -ForegroundColor Cyan
     $escolha = Read-Host "╰─❯ "
 
@@ -530,9 +636,16 @@ function Invoke-MenuManutencao {
     if ($escolhaUpper -eq "V") { $script:menuAtual = "MAIN"; return }
     if ($escolhaUpper -eq "D") { $script:menuAtual = "DEV"; return }
 
-    $itens = $escolha -split ","
+    $itens = @($escolha -split "," | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    $totalItens = $itens.Count
+    $itemAtual = 0
+
     foreach ($item in $itens) {
+        $itemAtual++
         $opcao = $item.Trim().ToUpper()
+        
+        Show-ProgressBar -Current $itemAtual -Total $totalItens -Activity "Processando opção: [$opcao]"
+        
         switch ($opcao) {
             "M1" { Invoke-SystemRepair }
             "M2" { Invoke-DiskCheck }
