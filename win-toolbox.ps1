@@ -1,14 +1,14 @@
 <#
 .SYNOPSIS
-    win-toolbox-tui — Caixa de Ferramentas e Pós-Instalação para Windows 11
+    WIN-TOOLBOX-TUI V1.0 — Caixa de Ferramentas e Pós-Instalação para Windows 11
 .DESCRIPTION
     Script interativo modular (TUI) com múltiplos menus e navegação direta entre
-    telas (Principal, Dev e Manutenção). Suporte a execução em lote e winget silencioso.
-    Exclusivo para Windows 11 (Build 22000+).
+    telas (Principal, Dev e Manutenção). Exibe cabeçalho completo de telemetria
+    local (Data, Hora, Hostname, Usuário e IP). Exclusivo para Windows 11 (Build 22000+).
 .AUTHOR
     Bruno César Medeiros Siqueira <bruno.cesar@outlook.it>
 .VERSION
-    6.2.0 — Cross-Menu Navigation Edition (Windows 11)
+    1.0.0 — Windows 11 Edition (2026)
 #>
 
 [CmdletBinding()]
@@ -38,14 +38,28 @@ if ($osBuild -lt 22000) {
 }
 
 # ==============================================================================
-# 3. FUNÇÕES AUXILIARES & WINGET
+# 3. CABEÇALHO COM TELEMETRIA LOCAL (DATA, HORA, HOST, USER, IP)
 # ==============================================================================
 function Show-Header {
     param([string]$subtitulo = "MENU PRINCIPAL")
     Clear-Host
-    $dataHora = (Get-Date).ToString("dd/MM/yyyy HH:mm")
+
+    $data = (Get-Date).ToString("dd/MM/yyyy")
+    $hora = (Get-Date).ToString("HH:mm:ss")
+
+    # Obter o IPv4 principal ativo da máquina
+    $ip = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { 
+        $_.IPAddress -ne "127.0.0.1" -and 
+        $_.IPAddress -notlike "169.254*" -and 
+        $_.InterfaceAlias -notlike "*Loopback*" -and
+        $_.InterfaceAlias -notlike "*vEthernet*"
+    } | Select-Object -ExpandProperty IPAddress -First 1)
+
+    if ([string]::IsNullOrWhiteSpace($ip)) { $ip = "N/A" }
+
     Write-Host "============================================================================================================" -ForegroundColor Cyan
-    Write-Host "   WIN-TOOLBOX-TUI v6.2  |  WINDOWS 11  |  $subtitulo  |  $dataHora  |  Host: $env:computername" -ForegroundColor White
+    Write-Host "   WIN-TOOLBOX-TUI V1.0  |  WINDOWS 11  |  $subtitulo" -ForegroundColor Cyan
+    Write-Host "   Data: $data  |  Hora: $hora  |  Computador: $env:computername  |  Usuario: $env:username  |  IP: $ip" -ForegroundColor White
     Write-Host "============================================================================================================" -ForegroundColor Cyan
 }
 
@@ -54,6 +68,9 @@ function Wait-User {
     $null = Read-Host
 }
 
+# ==============================================================================
+# 4. FUNÇÕES AUXILIARES & WINGET
+# ==============================================================================
 function Install-WingetApp {
     param(
         [Parameter(Mandatory=$true)] [string]$idApp,
@@ -85,7 +102,7 @@ function Update-AllWinget {
 }
 
 # ==============================================================================
-# 4. MANUTENÇÃO, REDE E REPAROS (BOAS PRÁTICAS WIN 11)
+# 5. MANUTENÇÃO, REDE E REPAROS (BOAS PRÁTICAS WIN 11)
 # ==============================================================================
 function Enable-BuiltinAdmin {
     Write-Host "`n[*] Habilitando conta de Administrador nativa (Detecção por SID 500)..." -ForegroundColor Cyan
@@ -190,7 +207,7 @@ function Set-MachineName {
 }
 
 # ==============================================================================
-# 5. TWEAKS EXCLUSIVOS DO WINDOWS 11
+# 6. TWEAKS EXCLUSIVOS DO WINDOWS 11
 # ==============================================================================
 function Apply-Win11Tweaks {
     Write-Host "`n========================================================" -ForegroundColor Cyan
@@ -243,7 +260,7 @@ function Apply-Win11Tweaks {
 }
 
 # ==============================================================================
-# 6. PERFIS AUTOMATIZADOS (MODO PMA & MODO DEV)
+# 7. PERFIS AUTOMATIZADOS (MODO PMA & MODO DEV)
 # ==============================================================================
 function Invoke-ModoPMA {
     Write-Host "`n========================================================" -ForegroundColor Cyan
@@ -299,7 +316,7 @@ function Invoke-ModoBRNCZZR {
 }
 
 # ==============================================================================
-# 7. TELAS DE MENU (ESTRUTURA FSM - FINITE STATE MACHINE)
+# 8. TELAS DE MENU (ESTRUTURA FSM - FINITE STATE MACHINE)
 # ==============================================================================
 function Invoke-MenuPrincipal {
     Show-Header "MENU PRINCIPAL — SOFTWARES ESSENCIAIS"
@@ -480,7 +497,7 @@ function Invoke-MenuManutencao {
 }
 
 # ==============================================================================
-# 8. LOOP PRINCIPAL DE CONTROLE (MÁQUINA DE ESTADOS)
+# 9. LOOP PRINCIPAL DE CONTROLE (MÁQUINA DE ESTADOS)
 # ==============================================================================
 $script:menuAtual = "MAIN"
 
