@@ -3,7 +3,7 @@
     WIN-TOOLBOX-TUI V1.0 — Caixa de Ferramentas e Pós-Instalação para Windows 11
 .DESCRIPTION
     Script interativo com interface TUI moderna (Unicode Box Drawing), múltiplos menus,
-    status dinâmico de instalação em tempo real ([✔] Verde / [ ] Branco), títulos em negrito ANSI,
+    status dinâmico de instalação em tempo real ([✓] Verde / [ ] Branco), títulos em negrito ANSI,
     barra de progresso dinâmica em lote, telemetria de rede e suporte nativo ao Windows Terminal.
     Exclusivo para Windows 11 (Build 22000+).
 .AUTHOR
@@ -184,7 +184,7 @@ function Get-ItemDisplay {
     $isInst = Test-IsInstalled $Key
     if ($isInst) {
         return @{
-            Text = " [✔] $Code. $Title"
+            Text = " [✓] $Code. $Title"
             Color = "Green"
         }
     } else {
@@ -395,7 +395,7 @@ function Install-WingetApp {
     Write-Host " [INSTALANDO]" -ForegroundColor Green
     winget install --id $idApp --exact --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
     if ($LASTEXITCODE -eq 0) {
-        Write-Host "[✔] $nomeAmigavel instalado com sucesso!" -ForegroundColor Green
+        Write-Host "[✓] $nomeAmigavel instalado com sucesso!" -ForegroundColor Green
         if (-not [string]::IsNullOrWhiteSpace($cacheKey)) {
             $script:InstalledCache[$cacheKey] = $true
         }
@@ -407,7 +407,7 @@ function Install-WingetApp {
 function Update-AllWinget {
     Write-Host "`n[*] Atualizando todos os pacotes instalados via Winget..." -ForegroundColor Cyan
     winget upgrade --all --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
-    Write-Host "[✔] Atualizações concluídas." -ForegroundColor Green
+    Write-Host "[✓] Atualizações concluídas." -ForegroundColor Green
 }
 
 # ==============================================================================
@@ -419,7 +419,7 @@ function Enable-BuiltinAdmin {
         $admin = Get-LocalUser | Where-Object { $_.SID -like "*-500" }
         if ($admin) {
             Enable-LocalUser -SID $admin.SID
-            Write-Host "[✔] Conta de Administrador ($($admin.Name)) ativada com sucesso!" -ForegroundColor Green
+            Write-Host "[✓] Conta de Administrador ($($admin.Name)) ativada com sucesso!" -ForegroundColor Green
             $script:InstalledCache["admin500"] = $true
         } else {
             Write-Host "[!] Conta com SID final 500 não encontrada." -ForegroundColor Red
@@ -440,7 +440,7 @@ function Invoke-SystemRepair {
     Write-Host "`n[Passo 2/2] Executando SFC /scannow..." -ForegroundColor Yellow
     sfc /scannow
     
-    Write-Host "`n[✔] Reparo de integridade do sistema concluído!" -ForegroundColor Green
+    Write-Host "`n[✓] Reparo de integridade do sistema concluído!" -ForegroundColor Green
     $script:InstalledCache["system_repair"] = $true
 }
 
@@ -448,7 +448,7 @@ function Invoke-DiskCheck {
     Write-Host "`n[*] Executando diagnóstico online do volume C: (Repair-Volume Scan)..." -ForegroundColor Cyan
     try {
         Repair-Volume -DriveLetter C -Scan
-        Write-Host "[✔] Verificação de integridade do disco C: concluída sem necessidade de reiniciar." -ForegroundColor Green
+        Write-Host "[✓] Verificação de integridade do disco C: concluída sem necessidade de reiniciar." -ForegroundColor Green
     } catch {
         Write-Host "[!] Executando chkdsk C: /scan..." -ForegroundColor Yellow
         chkdsk C: /scan
@@ -473,14 +473,14 @@ function Invoke-NetworkReset {
         Write-Host "[+] Reiniciando adaptador: $($adapter.Name)..." -ForegroundColor Gray
         Restart-NetAdapter -Name $adapter.Name -Confirm:$false
     }
-    Write-Host "[✔] Rede atualizada com sucesso!" -ForegroundColor Green
+    Write-Host "[✓] Rede atualizada com sucesso!" -ForegroundColor Green
     $script:InstalledCache["net_reset"] = $true
 }
 
 function Invoke-UpdateGPO {
     Write-Host "`n[*] Forçando atualização de diretivas de grupo (gpupdate /force)..." -ForegroundColor Cyan
     gpupdate /force
-    Write-Host "[✔] GPO atualizada!" -ForegroundColor Green
+    Write-Host "[✓] GPO atualizada!" -ForegroundColor Green
     $script:InstalledCache["gpo_update"] = $true
 }
 
@@ -497,7 +497,7 @@ function Add-NetworkCredential {
     
     if (-not [string]::IsNullOrWhiteSpace($passPlain)) {
         cmdkey /add:$ip /user:$user /pass:$passPlain | Out-Null
-        Write-Host "[✔] Credencial para $ip salva com segurança no Windows!" -ForegroundColor Green
+        Write-Host "[✓] Credencial para $ip salva com segurança no Windows!" -ForegroundColor Green
         $script:InstalledCache["net_cred"] = $true
     } else {
         Write-Host "[!] Senha não informada. Credencial não foi criada." -ForegroundColor Yellow
@@ -509,7 +509,7 @@ function Set-MachineName {
     $novoNome = Read-Host "Digite o novo nome para esta estação de trabalho"
     if (-not [string]::IsNullOrWhiteSpace($novoNome)) {
         Rename-Computer -NewName $novoNome -Force
-        Write-Host "[✔] Computador renomeado para: $novoNome" -ForegroundColor Green
+        Write-Host "[✓] Computador renomeado para: $novoNome" -ForegroundColor Green
         $script:InstalledCache["rename_pc"] = $true
         $reiniciar = Read-Host "Deseja reiniciar o Windows agora para aplicar a alteração? (S/N)"
         if ($reiniciar -match "^[sSyY]") {
@@ -530,9 +530,9 @@ function Enable-OpenSSHServer {
     if ($sshCap.State -ne 'Installed') {
         Write-Host "[+] Instalando OpenSSH.Server (aguarde alguns instantes)..." -ForegroundColor Yellow
         Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0 | Out-Null
-        Write-Host "[✔] Recurso OpenSSH Server instalado!" -ForegroundColor Green
+        Write-Host "[✓] Recurso OpenSSH Server instalado!" -ForegroundColor Green
     } else {
-        Write-Host "[✔] Recurso OpenSSH Server já está instalado." -ForegroundColor Green
+        Write-Host "[✓] Recurso OpenSSH Server já está instalado." -ForegroundColor Green
     }
 
     Write-Host "[2/3] Configurando serviço sshd para inicialização automática..." -ForegroundColor Gray
@@ -541,7 +541,7 @@ function Enable-OpenSSHServer {
     
     Start-Service ssh-agent -ErrorAction SilentlyContinue
     Set-Service -Name ssh-agent -StartupType 'Automatic'
-    Write-Host "[✔] Serviço sshd em execução e configurado como Automático!" -ForegroundColor Green
+    Write-Host "[✓] Serviço sshd em execução e configurado como Automático!" -ForegroundColor Green
 
     Write-Host "[3/3] Configurando regra de Firewall (Porta 22 TCP)..." -ForegroundColor Gray
     $regraExiste = Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -ErrorAction SilentlyContinue
@@ -553,7 +553,7 @@ function Enable-OpenSSHServer {
     if ($validaRegra -notmatch "OpenSSH-Server-In-TCP") {
         netsh advfirewall firewall add rule name="OpenSSH-Server-In-TCP" dir=in action=allow protocol=TCP localport=22 | Out-Null
     }
-    Write-Host "[✔] Porta 22 liberada no Firewall para todos os perfis de rede!" -ForegroundColor Green
+    Write-Host "[✓] Porta 22 liberada no Firewall para todos os perfis de rede!" -ForegroundColor Green
 
     $ip = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { 
         $_.IPAddress -ne "127.0.0.1" -and 
@@ -564,7 +564,7 @@ function Enable-OpenSSHServer {
     $script:InstalledCache["sshd"] = $true
 
     Write-Host "`n========================================================" -ForegroundColor Green
-    Write-Host " [✔] SERVIDOR SSH CONFIGURADO E PRONTO PARA CONEXÃO!" -ForegroundColor Green
+    Write-Host " [✓] SERVIDOR SSH CONFIGURADO E PRONTO PARA CONEXÃO!" -ForegroundColor Green
     Write-Host "     Comando para conectar do Linux/Mac/Terminal:" -ForegroundColor White
     Write-Host "     ssh $env:username@$ip" -ForegroundColor Yellow
     Write-Host "========================================================" -ForegroundColor Green
@@ -612,7 +612,7 @@ function Apply-Win11Tweaks {
     Stop-Process -Name explorer -Force -ErrorAction SilentlyContinue
 
     $script:InstalledCache["win11_tweaks"] = $true
-    Write-Host "[✔] Tweaks do Windows 11 aplicados com sucesso!" -ForegroundColor Green
+    Write-Host "[✓] Tweaks do Windows 11 aplicados com sucesso!" -ForegroundColor Green
 }
 
 # ==============================================================================
@@ -668,7 +668,7 @@ function Invoke-ModoPMA {
     Apply-Win11Tweaks
 
     $script:InstalledCache["perfil_pma"] = $true
-    Write-Host "`n[✔] Perfil MODO PMA concluído com sucesso!" -ForegroundColor Green
+    Write-Host "`n[✓] Perfil MODO PMA concluído com sucesso!" -ForegroundColor Green
 }
 
 function Invoke-ModoBRNCZZR {
@@ -719,7 +719,7 @@ function Invoke-ModoBRNCZZR {
     Apply-Win11Tweaks
 
     $script:InstalledCache["perfil_brnczzr"] = $true
-    Write-Host "`n[✔] Perfil MODO BRNCZZR concluído com sucesso!" -ForegroundColor Green
+    Write-Host "`n[✓] Perfil MODO BRNCZZR concluído com sucesso!" -ForegroundColor Green
 }
 
 # ==============================================================================
@@ -785,9 +785,9 @@ function Invoke-MenuPrincipal {
     
     $instCount = ($script:InstalledCache.Values | Where-Object { $_ -eq $true }).Count
     $statusText = if ($instCount -gt 0) {
-        " [✔] Verde = Instalado/Concluído ($instCount detectados) | [ ] Branco = Pendente"
+        " [✓] Verde = Instalado/Concluído ($instCount detectados) | [ ] Branco = Pendente"
     } else {
-        " [✔] Verde = Instalado/Concluído | [ ] Branco = Pendente. Suporta execução em lote."
+        " [✓] Verde = Instalado/Concluído | [ ] Branco = Pendente. Suporta execução em lote."
     }
     
     Write-Host "╭─ STATUS DO SISTEMA ─────────────────────────────────────────────────────── [ PRONTO ] ─╮" -ForegroundColor DarkCyan
@@ -883,9 +883,9 @@ function Invoke-MenuDev {
     
     $instCount = ($script:InstalledCache.Values | Where-Object { $_ -eq $true }).Count
     $statusText = if ($instCount -gt 0) {
-        " [✔] Verde = Instalado/Concluído ($instCount detectados) | [ ] Branco = Pendente"
+        " [✓] Verde = Instalado/Concluído ($instCount detectados) | [ ] Branco = Pendente"
     } else {
-        " [✔] Verde = Instalado/Concluído | [ ] Branco = Pendente. Suporta execução em lote."
+        " [✓] Verde = Instalado/Concluído | [ ] Branco = Pendente. Suporta execução em lote."
     }
 
     Write-Host "╭─ STATUS DO SISTEMA ─────────────────────────────────────────────────────── [ PRONTO ] ─╮" -ForegroundColor DarkCyan
@@ -982,9 +982,9 @@ function Invoke-MenuManutencao {
     
     $instCount = ($script:InstalledCache.Values | Where-Object { $_ -eq $true }).Count
     $statusText = if ($instCount -gt 0) {
-        " [✔] Verde = Instalado/Concluído ($instCount detectados) | [ ] Branco = Pendente"
+        " [✓] Verde = Instalado/Concluído ($instCount detectados) | [ ] Branco = Pendente"
     } else {
-        " [✔] Verde = Instalado/Concluído | [ ] Branco = Pendente. Suporta execução em lote."
+        " [✓] Verde = Instalado/Concluído | [ ] Branco = Pendente. Suporta execução em lote."
     }
 
     Write-Host "╭─ STATUS DO SISTEMA ─────────────────────────────────────────────────────── [ PRONTO ] ─╮" -ForegroundColor DarkCyan
