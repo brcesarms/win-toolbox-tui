@@ -1,0 +1,14 @@
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# PowerShell
+*.log
+*.tmp
+*.bak
+
+# VS Code / JetBrains
+.vscode/
+.idea/
