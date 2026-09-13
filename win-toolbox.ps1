@@ -4,16 +4,19 @@
 .DESCRIPTION
     Script interativo com interface TUI moderna (Unicode Box Drawing), múltiplos menus,
     status dinâmico de instalação em tempo real ([✓] Verde / [ ] Branco), títulos em negrito ANSI,
-    barra de progresso dinâmica em lote, telemetria de rede e suporte nativo ao Windows Terminal.
+    janela de execução desacoplada (sem poluir o menu), telemetria de rede e suporte nativo ao Windows Terminal.
     Exclusivo para Windows 11 (Build 22000+).
 .AUTHOR
     Bruno César Medeiros Siqueira <bruno.cesar@outlook.it>
 .VERSION
-    1.3.0 — Live Status Indicators, ANSI Bold Headers & Clean Dev Grid (Windows 11)
+    1.4.0 — Decoupled Execution Window, Zero-Scroll Menu & Native Progress (Windows 11)
 #>
 
 [CmdletBinding()]
-param()
+param(
+    [Parameter(Mandatory=$false)] [string]$ExecutarLote = "",
+    [Parameter(Mandatory=$false)] [switch]$JanelaFilha
+)
 
 # Configuração de codificação UTF-8 para suporte a caracteres Unicode
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -25,7 +28,10 @@ $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIden
 if (-not $isAdmin) {
     Write-Host "`n[!] Privilégios de Administrador são necessários." -ForegroundColor Yellow
     Write-Host "[*] Reiniciando com elevação de privilégios...`n" -ForegroundColor Cyan
-    Start-Process powershell.exe "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`"" -Verb RunAs
+    $argList = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
+    if (-not [string]::IsNullOrEmpty($ExecutarLote)) { $argList += " -ExecutarLote `"$ExecutarLote`"" }
+    if ($JanelaFilha) { $argList += " -JanelaFilha" }
+    Start-Process powershell.exe $argList -Verb RunAs
     Exit
 }
 
@@ -74,40 +80,6 @@ function Show-Header {
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
 }
 
-function Show-ProgressBar {
-    param(
-        [Parameter(Mandatory=$true)] [int]$Current,
-        [Parameter(Mandatory=$true)] [int]$Total,
-        [Parameter(Mandatory=$false)] [string]$Activity = "Processando..."
-    )
-    if ($Total -le 0) { return }
-    $percent = [math]::Round(($Current / $Total) * 100)
-    if ($percent -gt 100) { $percent = 100 }
-    
-    $barWidth = 30
-    $filled = [math]::Round(($percent / 100) * $barWidth)
-    if ($filled -gt $barWidth) { $filled = $barWidth }
-    $empty = $barWidth - $filled
-    
-    $bar = ("█" * $filled) + ("░" * $empty)
-    
-    $badgeLeft = "╭─ PROGRESSO [ $Current / $Total ] "
-    $badgeRight = " [ $percent% ] ─╮"
-    $dashesCount = 90 - ($badgeLeft.Length + $badgeRight.Length)
-    if ($dashesCount -lt 2) { $dashesCount = 2 }
-    $dashes = "─" * $dashesCount
-    
-    $topLine = "$badgeLeft$dashes$badgeRight"
-    $content = "│ [$bar] $Activity"
-    $padded = $content.PadRight(89) + "│"
-    $botLine = "╰────────────────────────────────────────────────────────────────────────────────────────╯"
-    
-    Write-Host ""
-    Write-Host $topLine -ForegroundColor Cyan
-    Write-Host $padded -ForegroundColor Yellow
-    Write-Host $botLine -ForegroundColor Cyan
-    Write-Host ""
-}
 
 function Wait-User {
     Write-Host "`n[Pressione ENTER para continuar...]" -ForegroundColor DarkGray
@@ -623,48 +595,19 @@ function Invoke-ModoPMA {
     Write-Host "   EXECUTANDO PERFIL: MODO PMA (PADRÃO PREFEITURA WIN 11)" -ForegroundColor Cyan
     Write-Host "========================================================" -ForegroundColor Cyan
 
-    $totalPassos = 14
-    
-    Show-ProgressBar -Current 1 -Total $totalPassos -Activity "Instalando 7-Zip"
     Install-WingetApp "7zip.7zip" "7-Zip" "7zip"
-    
-    Show-ProgressBar -Current 2 -Total $totalPassos -Activity "Instalando Mozilla Firefox"
     Install-WingetApp "Mozilla.Firefox" "Mozilla Firefox"
-    
-    Show-ProgressBar -Current 3 -Total $totalPassos -Activity "Instalando Google Chrome"
     Install-WingetApp "Google.Chrome" "Google Chrome"
-    
-    Show-ProgressBar -Current 4 -Total $totalPassos -Activity "Instalando Foxit Reader"
     Install-WingetApp "Foxit.FoxitReader" "Foxit PDF Reader" "foxit"
-    
-    Show-ProgressBar -Current 5 -Total $totalPassos -Activity "Instalando LibreOffice LTS"
     Install-WingetApp "TheDocumentFoundation.LibreOffice.LTS" "LibreOffice LTS" "libreoffice"
-    
-    Show-ProgressBar -Current 6 -Total $totalPassos -Activity "Instalando Lightshot"
     Install-WingetApp "Skillbrains.Lightshot" "Lightshot (Captura)" "lightshot"
-    
-    Show-ProgressBar -Current 7 -Total $totalPassos -Activity "Instalando RustDesk"
     Install-WingetApp "RustDesk.RustDesk" "RustDesk (Acesso Remoto)" "rustdesk"
-    
-    Show-ProgressBar -Current 8 -Total $totalPassos -Activity "Instalando VLC Media Player"
     Install-WingetApp "VideoLAN.VLC" "VLC Media Player" "vlc"
-
-    Show-ProgressBar -Current 9 -Total $totalPassos -Activity "Instalando .NET 8 Desktop Runtime"
     Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)" "dotnet8"
-    
-    Show-ProgressBar -Current 10 -Total $totalPassos -Activity "Instalando Visual C++ x64"
     Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 (x64)" "vcredist_x64"
-    
-    Show-ProgressBar -Current 11 -Total $totalPassos -Activity "Instalando Visual C++ x86"
     Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 (x86)" "vcredist_x86"
-    
-    Show-ProgressBar -Current 12 -Total $totalPassos -Activity "Instalando Java Temurin 17 JRE"
     Install-WingetApp "EclipseAdoptium.Temurin.17.JRE" "Java Temurin 17 JRE (LTS)" "temurin17jre"
-
-    Show-ProgressBar -Current 13 -Total $totalPassos -Activity "Habilitando Administrador Local"
     Enable-BuiltinAdmin
-    
-    Show-ProgressBar -Current 14 -Total $totalPassos -Activity "Aplicando Tweaks do Windows 11"
     Apply-Win11Tweaks
 
     $script:InstalledCache["perfil_pma"] = $true
@@ -676,45 +619,20 @@ function Invoke-ModoBRNCZZR {
     Write-Host "   EXECUTANDO PERFIL: MODO BRNCZZR (DEV & WORKSTATION)" -ForegroundColor Cyan
     Write-Host "========================================================" -ForegroundColor Cyan
 
-    $totalPassos = 12
-
-    Show-ProgressBar -Current 1 -Total $totalPassos -Activity "Instalando Git SCM"
     Install-WingetApp "Git.Git" "Git SCM" "git"
-    
-    Show-ProgressBar -Current 2 -Total $totalPassos -Activity "Instalando Visual Studio Code"
     Install-WingetApp "Microsoft.VisualStudioCode" "Visual Studio Code" "vscode"
-    
-    Show-ProgressBar -Current 3 -Total $totalPassos -Activity "Instalando Notepad++"
     Install-WingetApp "Notepad++.Notepad++" "Notepad++" "notepadplusplus"
-    
-    Show-ProgressBar -Current 4 -Total $totalPassos -Activity "Instalando Java Temurin 17 JDK"
     Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK (LTS)" "temurin17jdk"
-    
-    Show-ProgressBar -Current 5 -Total $totalPassos -Activity "Instalando XAMPP"
     Install-WingetApp "ApacheFriends.Xampp.8.2" "XAMPP (PHP & MySQL)" "xampp"
-
-    Show-ProgressBar -Current 6 -Total $totalPassos -Activity "Instalando 7-Zip"
     Install-WingetApp "7zip.7zip" "7-Zip" "7zip"
-    
-    Show-ProgressBar -Current 7 -Total $totalPassos -Activity "Instalando Google Chrome"
     Install-WingetApp "Google.Chrome" "Google Chrome"
-    
-    Show-ProgressBar -Current 8 -Total $totalPassos -Activity "Instalando Mozilla Firefox"
     Install-WingetApp "Mozilla.Firefox" "Mozilla Firefox"
-    
-    Show-ProgressBar -Current 9 -Total $totalPassos -Activity "Instalando LibreOffice LTS"
     Install-WingetApp "TheDocumentFoundation.LibreOffice.LTS" "LibreOffice LTS" "libreoffice"
-    
-    Show-ProgressBar -Current 10 -Total $totalPassos -Activity "Instalando RustDesk & VLC"
     Install-WingetApp "RustDesk.RustDesk" "RustDesk" "rustdesk"
     Install-WingetApp "VideoLAN.VLC" "VLC Media Player" "vlc"
-
-    Show-ProgressBar -Current 11 -Total $totalPassos -Activity "Instalando Runtimes .NET 8 & VC++"
     Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)" "dotnet8"
     Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 (x64)" "vcredist_x64"
     Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 (x86)" "vcredist_x86"
-
-    Show-ProgressBar -Current 12 -Total $totalPassos -Activity "Configurando Admin & Tweaks Win 11"
     Enable-BuiltinAdmin
     Apply-Win11Tweaks
 
@@ -723,7 +641,122 @@ function Invoke-ModoBRNCZZR {
 }
 
 # ==============================================================================
-# 8. TELAS DE MENU COM POLIMENTO TUI MODERNO
+# 8. MOTOR DE EXECUÇÃO DE TAREFAS & DISPATCHER DESACOPLADO
+# ==============================================================================
+function Execute-SingleOption {
+    param([Parameter(Mandatory=$true)] [string]$opcao)
+    
+    $op = $opcao.Trim().ToUpper()
+    switch ($op) {
+        "0"   { Update-AllWinget }
+        "1A"  { Install-WingetApp "7zip.7zip" "7-Zip" "7zip" }
+        "1B"  { Install-WingetApp "RARLab.WinRAR" "WinRAR" "winrar" }
+        "2A"  { Install-WingetApp "Adobe.Acrobat.Reader.64-bit" "Adobe Acrobat Reader" "adobe" }
+        "2B"  { Install-WingetApp "Foxit.FoxitReader" "Foxit PDF Reader" "foxit" }
+        "2C"  { Install-WingetApp "TheDocumentFoundation.LibreOffice.LTS" "LibreOffice LTS" "libreoffice" }
+        "3A"  { Install-WingetApp "GIMP.GIMP" "GIMP" "gimp" }
+        "3B"  { Install-WingetApp "Skillbrains.Lightshot" "Lightshot" "lightshot" }
+        "3C"  { Install-WingetApp "ShareX.ShareX" "ShareX" "sharex" }
+        "4A"  { Install-WingetApp "HandBrake.HandBrake" "HandBrake" "handbrake" }
+        "4B"  { Install-WingetApp "CodecGuide.K-LiteCodecPack.Full" "K-Lite Codec Pack Full" "klite" }
+        "4C"  { Install-WingetApp "VideoLAN.VLC" "VLC Media Player" "vlc" }
+        "5A"  { Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)" "dotnet8" }
+        "5B"  { Install-WingetApp "Microsoft.DotNet.DesktopRuntime.9" ".NET 9 Desktop Runtime" "dotnet9" }
+        "5C"  { Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 x64" "vcredist_x64" }
+        "5D"  { Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 x86" "vcredist_x86" }
+        "5E"  { Install-WingetApp "abbodi1406.vcredist" "Visual C++ All-in-One Runtime" "vcredist_all" }
+        "5F"  { Install-WingetApp "EclipseAdoptium.Temurin.17.JRE" "Java Temurin 17 JRE" "temurin17jre" }
+        "6A"  { Install-WingetApp "AnyDeskSoftwareGmbH.AnyDesk" "AnyDesk" "anydesk" }
+        "6B"  { Install-WingetApp "qBittorrent.qBittorrent" "qBittorrent" "qbittorrent" }
+        "6C"  { Install-WingetApp "Rufus.Rufus" "Rufus" "rufus" }
+        "6D"  { Install-WingetApp "RustDesk.RustDesk" "RustDesk" "rustdesk" }
+        "6E"  { Install-WingetApp "Transmission.Transmission" "Transmission" "transmission" }
+        "6F"  { Install-WingetApp "RealVNC.VNCViewer" "RealVNC Viewer" "realvnc" }
+        
+        "D0"  { 
+            Install-WingetApp "Microsoft.VisualStudioCode" "VS Code" "vscode"
+            Install-WingetApp "Git.Git" "Git SCM" "git"
+            Install-WingetApp "Notepad++.Notepad++" "Notepad++" "notepadplusplus"
+            Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK" "temurin17jdk"
+        }
+        "D1"  { Install-WingetApp "Microsoft.VisualStudioCode" "VS Code" "vscode" }
+        "D2"  { Install-WingetApp "Notepad++.Notepad++" "Notepad++" "notepadplusplus" }
+        "D3"  { Install-WingetApp "Microsoft.VisualStudio.2022.Community" "Visual Studio 2022 Community" "vs2022" }
+        "D4"  { Install-WingetApp "Google.AndroidStudio" "Android Studio" "androidstudio" }
+        "D5"  { Install-WingetApp "Git.Git" "Git SCM" "git" }
+        "D6"  { Install-WingetApp "ApacheFriends.Xampp.8.2" "XAMPP (PHP 8.2 & MySQL)" "xampp" }
+        "D7"  { Install-WingetApp "EclipseAdoptium.Temurin.8.JDK" "Java Temurin 8 JDK" "temurin8jdk" }
+        "D8"  { Install-WingetApp "EclipseAdoptium.Temurin.11.JDK" "Java Temurin 11 JDK" "temurin11jdk" }
+        "D9"  { Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK" "temurin17jdk" }
+        "D10" { Install-WingetApp "EclipseAdoptium.Temurin.21.JDK" "Java Temurin 21 JDK" "temurin21jdk" }
+        
+        "M1"  { Invoke-SystemRepair }
+        "M2"  { Invoke-DiskCheck }
+        "M3"  { Invoke-NetworkReset }
+        "M4"  { Invoke-UpdateGPO }
+        "M5"  { Enable-BuiltinAdmin }
+        "M6"  { Add-NetworkCredential }
+        "M7"  { Set-MachineName }
+        "M8"  { Enable-OpenSSHServer }
+        "M9"  { Apply-Win11Tweaks }
+        "P1"  { Invoke-ModoPMA }
+        "P2"  { Invoke-ModoBRNCZZR }
+        
+        default {
+            Write-Host "[!] Opção '$op' não reconhecida." -ForegroundColor Red
+        }
+    }
+}
+
+function Execute-BatchOptions {
+    param([Parameter(Mandatory=$true)] [string]$lote)
+    
+    $itens = @($lote -split "," | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+    foreach ($item in $itens) {
+        $op = $item.Trim()
+        if (-not [string]::IsNullOrWhiteSpace($op)) {
+            Execute-SingleOption $op
+        }
+    }
+}
+
+function Dispatch-Execution {
+    param([Parameter(Mandatory=$true)] [string]$escolha)
+    if ([string]::IsNullOrWhiteSpace($escolha)) { return }
+    
+    $isSSH = (-not [string]::IsNullOrEmpty($env:SSH_CONNECTION)) -or (-not [string]::IsNullOrEmpty($env:SSH_CLIENT))
+    
+    if ($isSSH) {
+        Clear-Host
+        Write-Host ("╭─ EXECUTANDO TAREFAS SELECIONADAS " + ("─" * 39) + " [ SSH MODO ] ─╮") -ForegroundColor Cyan
+        Write-Host "│" -NoNewline -ForegroundColor Cyan
+        Write-Host (" Lote em andamento: $escolha".PadRight(88)) -NoNewline -ForegroundColor Yellow
+        Write-Host "│" -ForegroundColor Cyan
+        Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
+        Write-Host ""
+        Execute-BatchOptions $escolha
+        Wait-User
+    } else {
+        $scriptPath = $PSCommandPath
+        if ([string]::IsNullOrWhiteSpace($scriptPath)) {
+            $scriptPath = $MyInvocation.PSCommandPath
+        }
+        if ([string]::IsNullOrWhiteSpace($scriptPath) -and $PSScriptRoot) {
+            $scriptPath = Join-Path $PSScriptRoot "win-toolbox.ps1"
+        }
+        if ([string]::IsNullOrWhiteSpace($scriptPath)) {
+            $scriptPath = (Get-Item "win-toolbox.ps1" -ErrorAction SilentlyContinue).FullName
+        }
+        
+        $procArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -ExecutarLote `"$escolha`" -JanelaFilha"
+        Start-Process powershell.exe -ArgumentList $procArgs -Wait
+    }
+    
+    $script:InstalledCache.Clear()
+}
+
+# ==============================================================================
+# 9. TELAS DE MENU COM POLIMENTO TUI MODERNO
 # ==============================================================================
 function Invoke-MenuPrincipal {
     Show-Header "MENU PRINCIPAL — SOFTWARES ESSENCIAIS & RUNTIMES"
@@ -805,48 +838,7 @@ function Invoke-MenuPrincipal {
     if ($escolhaUpper -eq "Q") { $script:menuAtual = "EXIT"; return }
     if ($escolhaUpper -eq "D") { $script:menuAtual = "DEV"; return }
     if ($escolhaUpper -eq "M") { $script:menuAtual = "MANUTENCAO"; return }
-
-    $itens = @($escolha -split "," | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-    $totalItens = $itens.Count
-    $itemAtual = 0
-
-    foreach ($item in $itens) {
-        $itemAtual++
-        $opcao = $item.Trim().ToUpper()
-        
-        Show-ProgressBar -Current $itemAtual -Total $totalItens -Activity "Processando opção: [$opcao]"
-        
-        switch ($opcao) {
-            "0"  { Update-AllWinget }
-            "1A" { Install-WingetApp "7zip.7zip" "7-Zip" "7zip" }
-            "1B" { Install-WingetApp "RARLab.WinRAR" "WinRAR" "winrar" }
-            "2A" { Install-WingetApp "Adobe.Acrobat.Reader.64-bit" "Adobe Acrobat Reader" "adobe" }
-            "2B" { Install-WingetApp "Foxit.FoxitReader" "Foxit PDF Reader" "foxit" }
-            "2C" { Install-WingetApp "TheDocumentFoundation.LibreOffice.LTS" "LibreOffice LTS" "libreoffice" }
-            "3A" { Install-WingetApp "GIMP.GIMP" "GIMP" "gimp" }
-            "3B" { Install-WingetApp "Skillbrains.Lightshot" "Lightshot" "lightshot" }
-            "3C" { Install-WingetApp "ShareX.ShareX" "ShareX" "sharex" }
-            "4A" { Install-WingetApp "HandBrake.HandBrake" "HandBrake" "handbrake" }
-            "4B" { Install-WingetApp "CodecGuide.K-LiteCodecPack.Full" "K-Lite Codec Pack Full" "klite" }
-            "4C" { Install-WingetApp "VideoLAN.VLC" "VLC Media Player" "vlc" }
-            "5A" { Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)" "dotnet8" }
-            "5B" { Install-WingetApp "Microsoft.DotNet.DesktopRuntime.9" ".NET 9 Desktop Runtime" "dotnet9" }
-            "5C" { Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 x64" "vcredist_x64" }
-            "5D" { Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 x86" "vcredist_x86" }
-            "5E" { Install-WingetApp "abbodi1406.vcredist" "Visual C++ All-in-One Runtime" "vcredist_all" }
-            "5F" { Install-WingetApp "EclipseAdoptium.Temurin.17.JRE" "Java Temurin 17 JRE" "temurin17jre" }
-            "6A" { Install-WingetApp "AnyDeskSoftwareGmbH.AnyDesk" "AnyDesk" "anydesk" }
-            "6B" { Install-WingetApp "qBittorrent.qBittorrent" "qBittorrent" "qbittorrent" }
-            "6C" { Install-WingetApp "Rufus.Rufus" "Rufus" "rufus" }
-            "6D" { Install-WingetApp "RustDesk.RustDesk" "RustDesk" "rustdesk" }
-            "6E" { Install-WingetApp "Transmission.Transmission" "Transmission" "transmission" }
-            "6F" { Install-WingetApp "RealVNC.VNCViewer" "RealVNC Viewer" "realvnc" }
-            default {
-                Write-Host "[!] Opção '$opcao' não reconhecida no Menu Principal." -ForegroundColor Red
-            }
-        }
-    }
-    Wait-User
+    Dispatch-Execution $escolha
 }
 
 function Invoke-MenuDev {
@@ -904,46 +896,7 @@ function Invoke-MenuDev {
     if ($escolhaUpper -eq "V") { $script:menuAtual = "MAIN"; return }
     if ($escolhaUpper -eq "M") { $script:menuAtual = "MANUTENCAO"; return }
 
-    $itens = @($escolha -split "," | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-    $totalItens = $itens.Count
-    $itemAtual = 0
-
-    foreach ($item in $itens) {
-        $itemAtual++
-        $opcao = $item.Trim().ToUpper()
-        
-        Show-ProgressBar -Current $itemAtual -Total $totalItens -Activity "Processando opção: [$opcao]"
-        
-        switch ($opcao) {
-            "D0" {
-                Show-ProgressBar -Current 1 -Total 4 -Activity "Instalando VS Code"
-                Install-WingetApp "Microsoft.VisualStudioCode" "VS Code" "vscode"
-                
-                Show-ProgressBar -Current 2 -Total 4 -Activity "Instalando Git SCM"
-                Install-WingetApp "Git.Git" "Git SCM" "git"
-                
-                Show-ProgressBar -Current 3 -Total 4 -Activity "Instalando Notepad++"
-                Install-WingetApp "Notepad++.Notepad++" "Notepad++" "notepadplusplus"
-                
-                Show-ProgressBar -Current 4 -Total 4 -Activity "Instalando Java Temurin 17 JDK"
-                Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK" "temurin17jdk"
-            }
-            "D1"  { Install-WingetApp "Microsoft.VisualStudioCode" "VS Code" "vscode" }
-            "D2"  { Install-WingetApp "Notepad++.Notepad++" "Notepad++" "notepadplusplus" }
-            "D3"  { Install-WingetApp "Microsoft.VisualStudio.2022.Community" "Visual Studio 2022 Community" "vs2022" }
-            "D4"  { Install-WingetApp "Google.AndroidStudio" "Android Studio" "androidstudio" }
-            "D5"  { Install-WingetApp "Git.Git" "Git SCM" "git" }
-            "D6"  { Install-WingetApp "ApacheFriends.Xampp.8.2" "XAMPP (PHP 8.2 & MySQL)" "xampp" }
-            "D7"  { Install-WingetApp "EclipseAdoptium.Temurin.8.JDK" "Java Temurin 8 JDK" "temurin8jdk" }
-            "D8"  { Install-WingetApp "EclipseAdoptium.Temurin.11.JDK" "Java Temurin 11 JDK" "temurin11jdk" }
-            "D9"  { Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK" "temurin17jdk" }
-            "D10" { Install-WingetApp "EclipseAdoptium.Temurin.21.JDK" "Java Temurin 21 JDK" "temurin21jdk" }
-            default {
-                Write-Host "[!] Opção '$opcao' inválida no menu Dev." -ForegroundColor Red
-            }
-        }
-    }
-    Wait-User
+    Dispatch-Execution $escolha
 }
 
 function Invoke-MenuManutencao {
@@ -1002,40 +955,44 @@ function Invoke-MenuManutencao {
     if ($escolhaUpper -eq "Q") { $script:menuAtual = "EXIT"; return }
     if ($escolhaUpper -eq "V") { $script:menuAtual = "MAIN"; return }
     if ($escolhaUpper -eq "D") { $script:menuAtual = "DEV"; return }
-
-    $itens = @($escolha -split "," | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
-    $totalItens = $itens.Count
-    $itemAtual = 0
-
-    foreach ($item in $itens) {
-        $itemAtual++
-        $opcao = $item.Trim().ToUpper()
-        
-        Show-ProgressBar -Current $itemAtual -Total $totalItens -Activity "Processando opção: [$opcao]"
-        
-        switch ($opcao) {
-            "M1" { Invoke-SystemRepair }
-            "M2" { Invoke-DiskCheck }
-            "M3" { Invoke-NetworkReset }
-            "M4" { Invoke-UpdateGPO }
-            "M5" { Enable-BuiltinAdmin }
-            "M6" { Add-NetworkCredential }
-            "M7" { Set-MachineName }
-            "M8" { Enable-OpenSSHServer }
-            "M9" { Apply-Win11Tweaks }
-            "P1" { Invoke-ModoPMA }
-            "P2" { Invoke-ModoBRNCZZR }
-            default {
-                Write-Host "[!] Opção '$opcao' inválida no menu de Manutenção." -ForegroundColor Red
-            }
-        }
-    }
-    Wait-User
+    Dispatch-Execution $escolha
 }
 
 # ==============================================================================
-# 9. LOOP PRINCIPAL DE CONTROLE (MÁQUINA DE ESTADOS)
+# 10. DISPATCHER E LOOP PRINCIPAL DE CONTROLE (MÁQUINA DE ESTADOS)
 # ==============================================================================
+if (-not [string]::IsNullOrWhiteSpace($ExecutarLote)) {
+    $host.UI.RawUI.WindowTitle = "WIN-TOOLBOX-TUI — [Executando: $ExecutarLote]"
+    Clear-Host
+    Write-Host ("╭─ EXECUTANDO TAREFAS SELECIONADAS " + ("─" * 33) + " [ PROCESSO ATIVO ] ─╮") -ForegroundColor Cyan
+    Write-Host "│" -NoNewline -ForegroundColor Cyan
+    Write-Host (" Lote em andamento: $ExecutarLote".PadRight(88)) -NoNewline -ForegroundColor Yellow
+    Write-Host "│" -ForegroundColor Cyan
+    Write-Host "│" -NoNewline -ForegroundColor Cyan
+    Write-Host (" Esta janela exibirá o progresso real e fechará automaticamente ao término.".PadRight(88)) -NoNewline -ForegroundColor Gray
+    Write-Host "│" -ForegroundColor Cyan
+    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
+    Write-Host ""
+    
+    Execute-BatchOptions $ExecutarLote
+    
+    Write-Host ""
+    Write-Host "╭────────────────────────────────────────────────────────────────────────────────────────╮" -ForegroundColor Green
+    Write-Host "│" -NoNewline -ForegroundColor Green
+    Write-Host (" [✓] Todas as tarefas solicitadas foram concluídas!".PadRight(88)) -NoNewline -ForegroundColor Green
+    Write-Host "│" -ForegroundColor Green
+    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Green
+    
+    if ($JanelaFilha) {
+        Write-Host "`n[+] Fechando esta janela em 2 segundos..." -ForegroundColor Gray
+        Start-Sleep -Seconds 2
+        exit 0
+    } else {
+        Wait-User
+        exit 0
+    }
+}
+
 $script:menuAtual = "MAIN"
 
 while ($script:menuAtual -ne "EXIT") {
