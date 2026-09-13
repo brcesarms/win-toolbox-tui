@@ -205,6 +205,59 @@ function Set-MachineName {
     }
 }
 
+function Enable-OpenSSHServer {
+    Write-Host "`n========================================================" -ForegroundColor Cyan
+    Write-Host "[*] HABILITANDO SERVIDOR OPENSSH NO WINDOWS 11" -ForegroundColor Cyan
+    Write-Host "========================================================" -ForegroundColor Cyan
+
+    # 1. Instalar recurso nativo OpenSSH Server se ausente
+    Write-Host "[1/3] Verificando capacidade nativa OpenSSH.Server..." -ForegroundColor Gray
+    $sshCap = Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH.Server*'
+    if ($sshCap.State -ne 'Installed') {
+        Write-Host "[+] Instalando OpenSSH.Server (aguarde alguns instantes)..." -ForegroundColor Yellow
+        Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0 | Out-Null
+        Write-Host "[✔] Recurso OpenSSH Server instalado!" -ForegroundColor Green
+    } else {
+        Write-Host "[✔] Recurso OpenSSH Server já está instalado." -ForegroundColor Green
+    }
+
+    # 2. Configurar e iniciar serviços sshd e ssh-agent
+    Write-Host "[2/3] Configurando serviço sshd para inicialização automática..." -ForegroundColor Gray
+    Start-Service sshd -ErrorAction SilentlyContinue
+    Set-Service -Name sshd -StartupType 'Automatic'
+    
+    Start-Service ssh-agent -ErrorAction SilentlyContinue
+    Set-Service -Name ssh-agent -StartupType 'Automatic'
+    Write-Host "[✔] Serviço sshd em execução e configurado como Automático!" -ForegroundColor Green
+
+    # 3. Regra de Firewall para porta 22 (TCP Inbound em todos os perfis)
+    Write-Host "[3/3] Configurando regra de Firewall (Porta 22 TCP)..." -ForegroundColor Gray
+    $regraExiste = Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -ErrorAction SilentlyContinue
+    if (-not $regraExiste) {
+        New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' `
+            -Enabled True -Direction Inbound -Protocol TCP -Action Allow -LocalPort 22 -Profile Any | Out-Null
+    }
+    # Fallback via netsh para garantir que o firewall libere mesmo com GPO restritiva
+    $validaRegra = netsh advfirewall firewall show rule name="OpenSSH-Server-In-TCP" 2>$null
+    if ($validaRegra -notmatch "OpenSSH-Server-In-TCP") {
+        netsh advfirewall firewall add rule name="OpenSSH-Server-In-TCP" dir=in action=allow protocol=TCP localport=22 | Out-Null
+    }
+    Write-Host "[✔] Porta 22 liberada no Firewall para todos os perfis de rede!" -ForegroundColor Green
+
+    # Instrução prática de conexão para o usuário
+    $ip = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { 
+        $_.IPAddress -ne "127.0.0.1" -and 
+        $_.IPAddress -notlike "169.254*" -and 
+        $_.InterfaceAlias -notlike "*Loopback*"
+    } | Select-Object -ExpandProperty IPAddress -First 1)
+
+    Write-Host "`n========================================================" -ForegroundColor Green
+    Write-Host " [✔] SERVIDOR SSH CONFIGURADO E PRONTO PARA CONEXÃO!" -ForegroundColor Green
+    Write-Host "     Comando para conectar do Linux/Mac/Terminal:" -ForegroundColor White
+    Write-Host "     ssh $env:username@$ip" -ForegroundColor Yellow
+    Write-Host "========================================================" -ForegroundColor Green
+}
+
 # ==============================================================================
 # 6. TWEAKS EXCLUSIVOS DO WINDOWS 11
 # ==============================================================================
@@ -450,10 +503,10 @@ function Invoke-MenuManutencao {
 |   M1. Reparo Completo (DISM + SFC Scannow)     |   M5. Habilitar Administrador Nativo (SID 500)            |
 |   M2. Diagnóstico Online Volume C: (Scan)      |   M6. Mapear Credencial de Rede (Windows Vault)           |
 |   M3. Reset Completo de Pilha de Rede (DHCP)   |   M7. Renomear Computador & Reiniciar                     |
-|   M4. Forçar Atualização GPO (gpupdate)        |                                                           |
+|   M4. Forçar Atualização GPO (gpupdate)        |   M8. Habilitar Servidor OpenSSH (Porta 22)               |
 +------------------------------------------------------------------------------------------------------------+
 |       T W E A K S   E S S E N C I A I S   W I N D O W S   1 1                                              |
-|   M8. Aplicar Tweaks Completos de Produtividade & Performance                                              |
+|   M9. Aplicar Tweaks Completos de Produtividade & Performance                                              |
 |       (Menu Clássico, Barra à Esquerda, Extensões Visíveis, Pastas Ocultas, Dark Mode, Hibernação OFF)    |
 +------------------------------------------------------------------------------------------------------------+
 |       P E R F I S   A U T O M A T I Z A D O S   ( I N S T A L A C A O   E M   L O T E )                    |
@@ -462,7 +515,7 @@ function Invoke-MenuManutencao {
 +------------------------------------------------------------------------------------------------------------+
 |   V.  ⬅️ Voltar ao Menu Principal     |   D.  💻 Ir para Menu Dev          |   Q.  🚪 Sair                  |
 +------------------------------------------------------------------------------------------------------------+
-  (Dica: você pode selecionar múltiplos itens separados por vírgula. Ex: M1, M8)
+  (Dica: você pode selecionar múltiplos itens separados por vírgula. Ex: M1, M8, M9)
 "@ -ForegroundColor Gray
 
     $escolha = Read-Host "MANUTENÇÃO SELEÇÃO [V para Principal, D para Dev, Q para Sair]"
@@ -484,7 +537,8 @@ function Invoke-MenuManutencao {
             "M5" { Enable-BuiltinAdmin }
             "M6" { Add-NetworkCredential }
             "M7" { Set-MachineName }
-            "M8" { Apply-Win11Tweaks }
+            "M8" { Enable-OpenSSHServer }
+            "M9" { Apply-Win11Tweaks }
             "P1" { Invoke-ModoPMA }
             "P2" { Invoke-ModoBRNCZZR }
             default {

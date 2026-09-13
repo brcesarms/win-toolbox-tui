@@ -56,11 +56,12 @@ Focado em reparo do Windows 11, configuração corporativa e automações em lot
   * `M2`: Diagnóstico Online do Volume C: (Repair-Volume sem reiniciar)
   * `M3`: Reset de Pilha de Rede (Flush DNS, DHCP Release/Renew, reinício dinâmico de adaptadores)
   * `M4`: Atualização de Diretivas (gpupdate /force)
-* **Configurações & Rede (`M5–M7`)**:
+* **Configurações & Rede (`M5–M8`)**:
   * `M5`: Ativação Universal de Administrador Local (Detecção por SID `*-500`)
   * `M6`: Mapeamento seguro de credenciais de rede no Windows Vault
   * `M7`: Renomear computador com opção de reboot imediato ou posterior
-* **Tweaks Essenciais Windows 11 (`M8`)**:
+  * `M8`: 🚀 **Habilitar Servidor OpenSSH** (Instala capacidade nativa, inicia serviço sshd/ssh-agent automático, libera porta 22 no Firewall em todos os perfis e exibe o comando de conexão)
+* **Tweaks Essenciais Windows 11 (`M9`)**:
   * Restauração do menu de contexto clássico (sem "Mostrar mais opções")
   * Alinhamento da barra de tarefas à esquerda
   * Exibição de extensões de arquivos e pastas ocultas
