@@ -47,7 +47,7 @@ Focado estritamente em ferramentas para programadores e técnicos avançados:
 * **IDEs & Editores (`D1–D4`)**: VS Code, Notepad++, Visual Studio 2022 Community, Android Studio
 * **Versionamento & Servidor (`D5–D6`)**: Git SCM, XAMPP (PHP 8.2 & MySQL)
 * **Java Development Kits (`D7–D10`)**: Eclipse Temurin JDK 8, 11, 17 (LTS), 21 (LTS)
-* **Navegação**: Digite **`V`** para voltar ao Menu Principal ou **`Q`** para sair.
+* **Navegação**: Digite **`V`** para voltar ao Principal, **`M`** para ir à Manutenção, ou **`Q`** para sair.
 
 ### 3️⃣ Menu Manutenção, Tweaks & Perfis Auto (`M`)
 Focado em reparo do Windows 11, configuração corporativa e automações em lote:
@@ -70,7 +70,7 @@ Focado em reparo do Windows 11, configuração corporativa e automações em lot
 * **Perfis Automatizados (`P1–P2`)**:
   * `P1`: 🏛️ **MODO PMA** (Padrão corporativo da Prefeitura: Apps essenciais + Runtimes + Admin + Tweaks Win 11)
   * `P2`: 🚀 **MODO BRNCZZR** (Padrão Dev Workstation completa)
-* **Navegação**: Digite **`V`** para voltar ao Menu Principal ou **`Q`** para sair.
+* **Navegação**: Digite **`V`** para voltar ao Principal, **`D`** para ir ao Dev, ou **`Q`** para sair.
 
 ---
 

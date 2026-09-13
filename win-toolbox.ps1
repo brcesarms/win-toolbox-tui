@@ -2,13 +2,13 @@
 .SYNOPSIS
     win-toolbox-tui — Caixa de Ferramentas e Pós-Instalação para Windows 11
 .DESCRIPTION
-    Script interativo modular (TUI) com múltiplos menus para manutenção, diagnóstico,
-    instalação de softwares via winget, tweaks de sistema e perfis automatizados (PMA / Dev).
+    Script interativo modular (TUI) com múltiplos menus e navegação direta entre
+    telas (Principal, Dev e Manutenção). Suporte a execução em lote e winget silencioso.
     Exclusivo para Windows 11 (Build 22000+).
 .AUTHOR
     Bruno César Medeiros Siqueira <bruno.cesar@outlook.it>
 .VERSION
-    6.1.0 — Multi-Menu Edition (Windows 11)
+    6.2.0 — Cross-Menu Navigation Edition (Windows 11)
 #>
 
 [CmdletBinding()]
@@ -45,7 +45,7 @@ function Show-Header {
     Clear-Host
     $dataHora = (Get-Date).ToString("dd/MM/yyyy HH:mm")
     Write-Host "============================================================================================================" -ForegroundColor Cyan
-    Write-Host "   WIN-TOOLBOX-TUI v6.1  |  WINDOWS 11  |  $subtitulo  |  $dataHora  |  Host: $env:computername" -ForegroundColor White
+    Write-Host "   WIN-TOOLBOX-TUI v6.2  |  WINDOWS 11  |  $subtitulo  |  $dataHora  |  Host: $env:computername" -ForegroundColor White
     Write-Host "============================================================================================================" -ForegroundColor Cyan
 }
 
@@ -250,7 +250,6 @@ function Invoke-ModoPMA {
     Write-Host "   EXECUTANDO PERFIL: MODO PMA (PADRÃO PREFEITURA WIN 11)" -ForegroundColor Cyan
     Write-Host "========================================================" -ForegroundColor Cyan
 
-    # Aplicativos corporativos essenciais
     Install-WingetApp "7zip.7zip" "7-Zip"
     Install-WingetApp "Mozilla.Firefox" "Mozilla Firefox"
     Install-WingetApp "Google.Chrome" "Google Chrome"
@@ -260,13 +259,11 @@ function Invoke-ModoPMA {
     Install-WingetApp "RustDesk.RustDesk" "RustDesk (Acesso Remoto)"
     Install-WingetApp "VideoLAN.VLC" "VLC Media Player"
 
-    # Runtimes essenciais para Windows 11
     Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)"
     Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 (x64)"
     Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 (x86)"
     Install-WingetApp "EclipseAdoptium.Temurin.17.JRE" "Java Temurin 17 JRE (LTS)"
 
-    # Ajustes de sistema da prefeitura
     Enable-BuiltinAdmin
     Apply-Win11Tweaks
 
@@ -278,14 +275,12 @@ function Invoke-ModoBRNCZZR {
     Write-Host "   EXECUTANDO PERFIL: MODO BRNCZZR (DEV & WORKSTATION)" -ForegroundColor Cyan
     Write-Host "========================================================" -ForegroundColor Cyan
 
-    # Ferramentas de Desenvolvimento
     Install-WingetApp "Git.Git" "Git SCM"
     Install-WingetApp "Microsoft.VisualStudioCode" "Visual Studio Code"
     Install-WingetApp "Notepad++.Notepad++" "Notepad++"
     Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK (LTS)"
     Install-WingetApp "ApacheFriends.Xampp.8.2" "XAMPP (PHP & MySQL)"
 
-    # Produtividade e Utilidades
     Install-WingetApp "7zip.7zip" "7-Zip"
     Install-WingetApp "Google.Chrome" "Google Chrome"
     Install-WingetApp "Mozilla.Firefox" "Mozilla Firefox"
@@ -293,12 +288,10 @@ function Invoke-ModoBRNCZZR {
     Install-WingetApp "RustDesk.RustDesk" "RustDesk"
     Install-WingetApp "VideoLAN.VLC" "VLC Media Player"
 
-    # Runtimes .NET 8 e VC++
     Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)"
     Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 (x64)"
     Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 (x86)"
 
-    # Ajustes finos do Windows 11
     Enable-BuiltinAdmin
     Apply-Win11Tweaks
 
@@ -306,121 +299,9 @@ function Invoke-ModoBRNCZZR {
 }
 
 # ==============================================================================
-# 7. SUBMENU: DESENVOLVIMENTO (DEV)
+# 7. TELAS DE MENU (ESTRUTURA FSM - FINITE STATE MACHINE)
 # ==============================================================================
-function Show-MenuDev {
-    while ($true) {
-        Show-Header "MENU DESENVOLVIMENTO (DEV)"
-        Write-Host @"
-+------------------------------------------------------------------------------------------------------------+
-|       I D E s   &   E D I T O R E S    |       V E R S I O N A M E N T O  &  S E R V I D O R               |
-|   D1. Visual Studio Code               |   D5. Git SCM                                                     |
-|   D2. Notepad++                        |   D6. XAMPP (PHP 8.2 & MySQL / Apache)                            |
-|   D3. Visual Studio 2022 Community     |                                                                   |
-|   D4. Android Studio                   |       J A V A   J D K   ( E C L I P S E   T E M U R I N )         |
-|                                        |   D7. Java Temurin 8 JDK          D9.  Java Temurin 17 JDK (LTS)  |
-|                                        |   D8. Java Temurin 11 JDK         D10. Java Temurin 21 JDK (LTS)  |
-+------------------------------------------------------------------------------------------------------------+
-|   D0. PACOTE DEV COMPLETO (VS Code + Git + Notepad++ + JDK 17)                                             |
-+------------------------------------------------------------------------------------------------------------+
-|   V.  Voltar ao Menu Principal         |   Q.  Sair                                                        |
-+------------------------------------------------------------------------------------------------------------+
-  (Dica: você pode selecionar múltiplos itens separados por vírgula. Ex: D1, D5, D9)
-"@ -ForegroundColor Gray
-
-        $escolha = Read-Host "DEV SELEÇÃO [V para Voltar, Q para Sair]"
-        if ([string]::IsNullOrWhiteSpace($escolha)) { continue }
-        if ($escolha.Trim().ToUpper() -eq "V") { break }
-        if ($escolha.Trim().ToUpper() -eq "Q") { exit }
-
-        $itens = $escolha -split ","
-        foreach ($item in $itens) {
-            $opcao = $item.Trim().ToUpper()
-            switch ($opcao) {
-                "D0" {
-                    Install-WingetApp "Microsoft.VisualStudioCode" "VS Code"
-                    Install-WingetApp "Git.Git" "Git SCM"
-                    Install-WingetApp "Notepad++.Notepad++" "Notepad++"
-                    Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK"
-                }
-                "D1"  { Install-WingetApp "Microsoft.VisualStudioCode" "VS Code" }
-                "D2"  { Install-WingetApp "Notepad++.Notepad++" "Notepad++" }
-                "D3"  { Install-WingetApp "Microsoft.VisualStudio.2022.Community" "Visual Studio 2022 Community" }
-                "D4"  { Install-WingetApp "Google.AndroidStudio" "Android Studio" }
-                "D5"  { Install-WingetApp "Git.Git" "Git SCM" }
-                "D6"  { Install-WingetApp "ApacheFriends.Xampp.8.2" "XAMPP (PHP 8.2 & MySQL)" }
-                "D7"  { Install-WingetApp "EclipseAdoptium.Temurin.8.JDK" "Java Temurin 8 JDK" }
-                "D8"  { Install-WingetApp "EclipseAdoptium.Temurin.11.JDK" "Java Temurin 11 JDK" }
-                "D9"  { Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK" }
-                "D10" { Install-WingetApp "EclipseAdoptium.Temurin.21.JDK" "Java Temurin 21 JDK" }
-                default {
-                    Write-Host "[!] Opção '$opcao' inválida no menu Dev." -ForegroundColor Red
-                }
-            }
-        }
-        Wait-User
-    }
-}
-
-# ==============================================================================
-# 8. SUBMENU: MANUTENÇÃO & PERFIS AUTOMATIZADOS
-# ==============================================================================
-function Show-MenuManutencao {
-    while ($true) {
-        Show-Header "MENU MANUTENÇÃO, TWEAKS & PERFIS AUTO"
-        Write-Host @"
-+------------------------------------------------------------------------------------------------------------+
-|       D I A G N O S T I C O   &   R E P A R O  |       C O N F I G U R A C O E S   &   R E D E             |
-|   M1. Reparo Completo (DISM + SFC Scannow)     |   M5. Habilitar Administrador Nativo (SID 500)            |
-|   M2. Diagnóstico Online Volume C: (Scan)      |   M6. Mapear Credencial de Rede (Windows Vault)           |
-|   M3. Reset Completo de Pilha de Rede (DHCP)   |   M7. Renomear Computador & Reiniciar                     |
-|   M4. Forçar Atualização GPO (gpupdate)        |                                                           |
-+------------------------------------------------------------------------------------------------------------+
-|       T W E A K S   E S S E N C I A I S   W I N D O W S   1 1                                              |
-|   M8. Aplicar Tweaks Completos de Produtividade & Performance                                              |
-|       (Menu Clássico, Barra à Esquerda, Extensões Visíveis, Pastas Ocultas, Dark Mode, Hibernação OFF)    |
-+------------------------------------------------------------------------------------------------------------+
-|       P E R F I S   A U T O M A T I Z A D O S   ( I N S T A L A C A O   E M   L O T E )                    |
-|   P1. 🏛️ MODO PMA (Prefeitura Win 11: Apps Corp + Runtimes + Admin + Tweaks Win 11)                        |
-|   P2. 🚀 MODO BRNCZZR (Dev Workstation: Apps Dev + Produtividade + Runtimes + Tweaks)                      |
-+------------------------------------------------------------------------------------------------------------+
-|   V.  Voltar ao Menu Principal                 |   Q.  Sair                                                |
-+------------------------------------------------------------------------------------------------------------+
-  (Dica: você pode selecionar múltiplos itens separados por vírgula. Ex: M1, M8)
-"@ -ForegroundColor Gray
-
-        $escolha = Read-Host "MANUTENÇÃO SELEÇÃO [V para Voltar, Q para Sair]"
-        if ([string]::IsNullOrWhiteSpace($escolha)) { continue }
-        if ($escolha.Trim().ToUpper() -eq "V") { break }
-        if ($escolha.Trim().ToUpper() -eq "Q") { exit }
-
-        $itens = $escolha -split ","
-        foreach ($item in $itens) {
-            $opcao = $item.Trim().ToUpper()
-            switch ($opcao) {
-                "M1" { Invoke-SystemRepair }
-                "M2" { Invoke-DiskCheck }
-                "M3" { Invoke-NetworkReset }
-                "M4" { Invoke-UpdateGPO }
-                "M5" { Enable-BuiltinAdmin }
-                "M6" { Add-NetworkCredential }
-                "M7" { Set-MachineName }
-                "M8" { Apply-Win11Tweaks }
-                "P1" { Invoke-ModoPMA }
-                "P2" { Invoke-ModoBRNCZZR }
-                default {
-                    Write-Host "[!] Opção '$opcao' inválida no menu de Manutenção." -ForegroundColor Red
-                }
-            }
-        }
-        Wait-User
-    }
-}
-
-# ==============================================================================
-# 9. MENU PRINCIPAL (SOFTWARES ESSENCIAIS & NAVEGAÇÃO)
-# ==============================================================================
-while ($true) {
+function Invoke-MenuPrincipal {
     Show-Header "MENU PRINCIPAL — SOFTWARES ESSENCIAIS"
     Write-Host @"
 +------------------------------------------------------------------------------------------------------------+
@@ -447,70 +328,168 @@ while ($true) {
 "@ -ForegroundColor Gray
 
     $escolha = Read-Host "OPÇÃO [D para Dev, M para Manutenção, Q para Sair]"
-    if ([string]::IsNullOrWhiteSpace($escolha)) { continue }
-
+    if ([string]::IsNullOrWhiteSpace($escolha)) { return }
     $escolhaUpper = $escolha.Trim().ToUpper()
 
-    if ($escolhaUpper -eq "Q") {
-        Write-Host "`n[+] Encerrando win-toolbox-tui. Até logo!`n" -ForegroundColor Green
-        break
-    }
-    if ($escolhaUpper -eq "D") {
-        Show-MenuDev
-        continue
-    }
-    if ($escolhaUpper -eq "M") {
-        Show-MenuManutencao
-        continue
-    }
+    if ($escolhaUpper -eq "Q") { $script:menuAtual = "EXIT"; return }
+    if ($escolhaUpper -eq "D") { $script:menuAtual = "DEV"; return }
+    if ($escolhaUpper -eq "M") { $script:menuAtual = "MANUTENCAO"; return }
 
-    # Se forem opções de instalação do menu principal (suporte a vírgula)
     $itens = $escolha -split ","
     foreach ($item in $itens) {
         $opcao = $item.Trim().ToUpper()
         switch ($opcao) {
             "0"  { Update-AllWinget }
-            
-            # Compactação
             "1A" { Install-WingetApp "7zip.7zip" "7-Zip" }
             "1B" { Install-WingetApp "RARLab.WinRAR" "WinRAR" }
-            
-            # Documentos
             "2A" { Install-WingetApp "Adobe.Acrobat.Reader.64-bit" "Adobe Acrobat Reader" }
             "2B" { Install-WingetApp "Foxit.FoxitReader" "Foxit PDF Reader" }
             "2C" { Install-WingetApp "TheDocumentFoundation.LibreOffice.LTS" "LibreOffice LTS" }
-            
-            # Imagem
             "3A" { Install-WingetApp "GIMP.GIMP" "GIMP" }
             "3B" { Install-WingetApp "Skillbrains.Lightshot" "Lightshot" }
             "3C" { Install-WingetApp "ShareX.ShareX" "ShareX" }
-            
-            # Mídia
             "4A" { Install-WingetApp "HandBrake.HandBrake" "HandBrake" }
             "4B" { Install-WingetApp "CodecGuide.K-LiteCodecPack.Full" "K-Lite Codec Pack Full" }
             "4C" { Install-WingetApp "VideoLAN.VLC" "VLC Media Player" }
-            
-            # Runtimes Win 11
             "5A" { Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)" }
             "5B" { Install-WingetApp "Microsoft.DotNet.DesktopRuntime.9" ".NET 9 Desktop Runtime" }
             "5C" { Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 x64" }
             "5D" { Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 x86" }
             "5E" { Install-WingetApp "abbodi1406.vcredist" "Visual C++ All-in-One Runtime" }
             "5F" { Install-WingetApp "EclipseAdoptium.Temurin.17.JRE" "Java Temurin 17 JRE" }
-            
-            # Utilitários
             "6A" { Install-WingetApp "AnyDeskSoftwareGmbH.AnyDesk" "AnyDesk" }
             "6B" { Install-WingetApp "qBittorrent.qBittorrent" "qBittorrent" }
             "6C" { Install-WingetApp "Rufus.Rufus" "Rufus" }
             "6D" { Install-WingetApp "RustDesk.RustDesk" "RustDesk" }
             "6E" { Install-WingetApp "Transmission.Transmission" "Transmission" }
             "6F" { Install-WingetApp "RealVNC.VNCViewer" "RealVNC Viewer" }
-            
             default {
-                Write-Host "[!] Opção '$opcao' inválida ou não reconhecida no menu principal." -ForegroundColor Red
+                Write-Host "[!] Opção '$opcao' não reconhecida no Menu Principal." -ForegroundColor Red
             }
         }
     }
-
     Wait-User
 }
+
+function Invoke-MenuDev {
+    Show-Header "MENU DESENVOLVIMENTO (DEV)"
+    Write-Host @"
++------------------------------------------------------------------------------------------------------------+
+|       I D E s   &   E D I T O R E S    |       V E R S I O N A M E N T O  &  S E R V I D O R               |
+|   D1. Visual Studio Code               |   D5. Git SCM                                                     |
+|   D2. Notepad++                        |   D6. XAMPP (PHP 8.2 & MySQL / Apache)                            |
+|   D3. Visual Studio 2022 Community     |                                                                   |
+|   D4. Android Studio                   |       J A V A   J D K   ( E C L I P S E   T E M U R I N )         |
+|                                        |   D7. Java Temurin 8 JDK          D9.  Java Temurin 17 JDK (LTS)  |
+|                                        |   D8. Java Temurin 11 JDK         D10. Java Temurin 21 JDK (LTS)  |
++------------------------------------------------------------------------------------------------------------+
+|   D0. PACOTE DEV COMPLETO (VS Code + Git + Notepad++ + JDK 17)                                             |
++------------------------------------------------------------------------------------------------------------+
+|   V.  ⬅️ Voltar ao Menu Principal     |   M.  🛠️ Ir para Menu Manutenção   |   Q.  🚪 Sair                  |
++------------------------------------------------------------------------------------------------------------+
+  (Dica: você pode selecionar múltiplos itens separados por vírgula. Ex: D1, D5, D9)
+"@ -ForegroundColor Gray
+
+    $escolha = Read-Host "DEV SELEÇÃO [V para Principal, M para Manutenção, Q para Sair]"
+    if ([string]::IsNullOrWhiteSpace($escolha)) { return }
+    $escolhaUpper = $escolha.Trim().ToUpper()
+
+    if ($escolhaUpper -eq "Q") { $script:menuAtual = "EXIT"; return }
+    if ($escolhaUpper -eq "V") { $script:menuAtual = "MAIN"; return }
+    if ($escolhaUpper -eq "M") { $script:menuAtual = "MANUTENCAO"; return }
+
+    $itens = $escolha -split ","
+    foreach ($item in $itens) {
+        $opcao = $item.Trim().ToUpper()
+        switch ($opcao) {
+            "D0" {
+                Install-WingetApp "Microsoft.VisualStudioCode" "VS Code"
+                Install-WingetApp "Git.Git" "Git SCM"
+                Install-WingetApp "Notepad++.Notepad++" "Notepad++"
+                Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK"
+            }
+            "D1"  { Install-WingetApp "Microsoft.VisualStudioCode" "VS Code" }
+            "D2"  { Install-WingetApp "Notepad++.Notepad++" "Notepad++" }
+            "D3"  { Install-WingetApp "Microsoft.VisualStudio.2022.Community" "Visual Studio 2022 Community" }
+            "D4"  { Install-WingetApp "Google.AndroidStudio" "Android Studio" }
+            "D5"  { Install-WingetApp "Git.Git" "Git SCM" }
+            "D6"  { Install-WingetApp "ApacheFriends.Xampp.8.2" "XAMPP (PHP 8.2 & MySQL)" }
+            "D7"  { Install-WingetApp "EclipseAdoptium.Temurin.8.JDK" "Java Temurin 8 JDK" }
+            "D8"  { Install-WingetApp "EclipseAdoptium.Temurin.11.JDK" "Java Temurin 11 JDK" }
+            "D9"  { Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK" }
+            "D10" { Install-WingetApp "EclipseAdoptium.Temurin.21.JDK" "Java Temurin 21 JDK" }
+            default {
+                Write-Host "[!] Opção '$opcao' inválida no menu Dev." -ForegroundColor Red
+            }
+        }
+    }
+    Wait-User
+}
+
+function Invoke-MenuManutencao {
+    Show-Header "MENU MANUTENÇÃO, TWEAKS & PERFIS AUTO"
+    Write-Host @"
++------------------------------------------------------------------------------------------------------------+
+|       D I A G N O S T I C O   &   R E P A R O  |       C O N F I G U R A C O E S   &   R E D E             |
+|   M1. Reparo Completo (DISM + SFC Scannow)     |   M5. Habilitar Administrador Nativo (SID 500)            |
+|   M2. Diagnóstico Online Volume C: (Scan)      |   M6. Mapear Credencial de Rede (Windows Vault)           |
+|   M3. Reset Completo de Pilha de Rede (DHCP)   |   M7. Renomear Computador & Reiniciar                     |
+|   M4. Forçar Atualização GPO (gpupdate)        |                                                           |
++------------------------------------------------------------------------------------------------------------+
+|       T W E A K S   E S S E N C I A I S   W I N D O W S   1 1                                              |
+|   M8. Aplicar Tweaks Completos de Produtividade & Performance                                              |
+|       (Menu Clássico, Barra à Esquerda, Extensões Visíveis, Pastas Ocultas, Dark Mode, Hibernação OFF)    |
++------------------------------------------------------------------------------------------------------------+
+|       P E R F I S   A U T O M A T I Z A D O S   ( I N S T A L A C A O   E M   L O T E )                    |
+|   P1. 🏛️ MODO PMA (Prefeitura Win 11: Apps Corp + Runtimes + Admin + Tweaks Win 11)                        |
+|   P2. 🚀 MODO BRNCZZR (Dev Workstation: Apps Dev + Produtividade + Runtimes + Tweaks)                      |
++------------------------------------------------------------------------------------------------------------+
+|   V.  ⬅️ Voltar ao Menu Principal     |   D.  💻 Ir para Menu Dev          |   Q.  🚪 Sair                  |
++------------------------------------------------------------------------------------------------------------+
+  (Dica: você pode selecionar múltiplos itens separados por vírgula. Ex: M1, M8)
+"@ -ForegroundColor Gray
+
+    $escolha = Read-Host "MANUTENÇÃO SELEÇÃO [V para Principal, D para Dev, Q para Sair]"
+    if ([string]::IsNullOrWhiteSpace($escolha)) { return }
+    $escolhaUpper = $escolha.Trim().ToUpper()
+
+    if ($escolhaUpper -eq "Q") { $script:menuAtual = "EXIT"; return }
+    if ($escolhaUpper -eq "V") { $script:menuAtual = "MAIN"; return }
+    if ($escolhaUpper -eq "D") { $script:menuAtual = "DEV"; return }
+
+    $itens = $escolha -split ","
+    foreach ($item in $itens) {
+        $opcao = $item.Trim().ToUpper()
+        switch ($opcao) {
+            "M1" { Invoke-SystemRepair }
+            "M2" { Invoke-DiskCheck }
+            "M3" { Invoke-NetworkReset }
+            "M4" { Invoke-UpdateGPO }
+            "M5" { Enable-BuiltinAdmin }
+            "M6" { Add-NetworkCredential }
+            "M7" { Set-MachineName }
+            "M8" { Apply-Win11Tweaks }
+            "P1" { Invoke-ModoPMA }
+            "P2" { Invoke-ModoBRNCZZR }
+            default {
+                Write-Host "[!] Opção '$opcao' inválida no menu de Manutenção." -ForegroundColor Red
+            }
+        }
+    }
+    Wait-User
+}
+
+# ==============================================================================
+# 8. LOOP PRINCIPAL DE CONTROLE (MÁQUINA DE ESTADOS)
+# ==============================================================================
+$script:menuAtual = "MAIN"
+
+while ($script:menuAtual -ne "EXIT") {
+    switch ($script:menuAtual) {
+        "MAIN"        { Invoke-MenuPrincipal }
+        "DEV"         { Invoke-MenuDev }
+        "MANUTENCAO"  { Invoke-MenuManutencao }
+    }
+}
+
+Write-Host "`n[+] Encerrando win-toolbox-tui. Até logo!`n" -ForegroundColor Green
