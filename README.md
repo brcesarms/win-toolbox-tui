@@ -1,7 +1,7 @@
 # 🪟 win-toolbox-tui — Caixa de Ferramentas & Pós-Instalação para Windows 11
 
 > **Exclusivo para Windows 11 (Build 22000+)**  
-> Interface interativa de terminal (TUI) com **múltiplos menus organizados** em PowerShell para diagnóstico, manutenção, instalação em lote via Winget, tweaks essenciais de sistema e perfis automatizados de estações de trabalho.
+> Interface interativa de terminal (TUI) com **múltiplos menus organizados**, **indicadores dinâmicos de status em tempo real (`[✔]` Verde / `[ ]` Branco)**, categorias em alto contraste, suporte à **fonte Nerd do Omarchy Linux**, barra de progresso gráfica em lote e telemetria de rede para estações de trabalho.
 
 ---
 
@@ -23,80 +23,85 @@ powershell -ExecutionPolicy Bypass -File .\win-toolbox.ps1
 
 ---
 
-## 🎯 Estrutura Modular dos Menus
+## 💎 Destaques Visuais & Experiência TUI
 
-A interface foi redesenhada em **3 telas dedicadas e limpas**, evitando poluição visual:
-
-### 1️⃣ Menu Principal — Softwares Essenciais & Runtimes
-Contém as ferramentas do dia a dia e instaladores base:
-* **`0`**: Atualizar todos os pacotes via Winget
-* **Compactação (`1A–1B`)**: 7-Zip, WinRAR
-* **Documentos (`2A–2C`)**: Adobe Acrobat Reader, Foxit Reader, LibreOffice LTS
-* **Imagem (`3A–3C`)**: GIMP, Lightshot, ShareX
-* **Mídia (`4A–4C`)**: HandBrake, K-Lite Codec Pack Full, VLC Media Player
-* **Runtimes Win 11 (`5A–5F`)**: .NET 8 Desktop (LTS), .NET 9 Desktop, VC++ 2015-2022 (x64/x86), VC++ All-in-One, Java Temurin 17 JRE
-* **Utilitários (`6A–6F`)**: AnyDesk, qBittorrent, Rufus, RustDesk, Transmission, RealVNC Viewer
-* **Atalhos de Navegação**:
-  * Digite **`D`** ➔ Abre o Menu Desenvolvimento
-  * Digite **`M`** ➔ Abre o Menu Manutenção & Perfis
-  * Digite **`Q`** ➔ Encerra a ferramenta
-
-### 2️⃣ Menu Desenvolvimento (`D`)
-Focado estritamente em ferramentas para programadores e técnicos avançados:
-* **`D0`**: Instalar Pacote Dev Completo (VS Code + Git + Notepad++ + JDK 17)
-* **IDEs & Editores (`D1–D4`)**: VS Code, Notepad++, Visual Studio 2022 Community, Android Studio
-* **Versionamento & Servidor (`D5–D6`)**: Git SCM, XAMPP (PHP 8.2 & MySQL)
-* **Java Development Kits (`D7–D10`)**: Eclipse Temurin JDK 8, 11, 17 (LTS), 21 (LTS)
-* **Navegação**: Digite **`V`** para voltar ao Principal, **`M`** para ir à Manutenção, ou **`Q`** para sair.
-
-### 3️⃣ Menu Manutenção, Tweaks & Perfis Auto (`M`)
-Focado em reparo do Windows 11, configuração corporativa e automações em lote:
-* **Diagnóstico & Reparo (`M1–M4`)**:
-  * `M1`: Reparo Completo (DISM RestoreHealth primeiro + SFC Scannow)
-  * `M2`: Diagnóstico Online do Volume C: (Repair-Volume sem reiniciar)
-  * `M3`: Reset de Pilha de Rede (Flush DNS, DHCP Release/Renew, reinício dinâmico de adaptadores)
-  * `M4`: Atualização de Diretivas (gpupdate /force)
-* **Configurações & Rede (`M5–M8`)**:
-  * `M5`: Ativação Universal de Administrador Local (Detecção por SID `*-500`)
-  * `M6`: Mapeamento seguro de credenciais de rede no Windows Vault
-  * `M7`: Renomear computador com opção de reboot imediato ou posterior
-  * `M8`: 🚀 **Habilitar Servidor OpenSSH** (Instala capacidade nativa, inicia serviço sshd/ssh-agent automático, libera porta 22 no Firewall em todos os perfis e exibe o comando de conexão)
-* **Tweaks Essenciais Windows 11 (`M9`)**:
-  * Restauração do menu de contexto clássico (sem "Mostrar mais opções")
-  * Alinhamento da barra de tarefas à esquerda
-  * Exibição de extensões de arquivos e pastas ocultas
-  * Desativação de hibernação (`powercfg -h off` liberando 8GB–32GB no SSD/NVMe)
-  * Ativação nativa do Tema Escuro
-  * Ocultação de Widgets e botão Copilot
-* **Perfis Automatizados (`P1–P2`)**:
-  * `P1`: 🏛️ **MODO PMA** (Padrão corporativo da Prefeitura: Apps essenciais + Runtimes + Admin + Tweaks Win 11)
-  * `P2`: 🚀 **MODO BRNCZZR** (Padrão Dev Workstation completa)
-* **Navegação**: Digite **`V`** para voltar ao Principal, **`D`** para ir ao Dev, ou **`Q`** para sair.
+* 🟢 **Status Dinâmico em Tempo Real:** Cada aplicativo e tarefa exibe `[✔]` em Verde se já estiver instalado/concluído no Windows 11, ou `[ ]` em Branco se pendente.
+* 🟡 **Categorias em Alto Contraste:** Títulos de seções destacados com blocos `■ CATEGORIA` em Amarelo brilhante, facilitando leitura imediata.
+* 📐 **Alinhamento Perfeito de 90 Colunas:** Grid milimetricamente calibrado com bordas Unicode arredondadas (`╭─`, `│`, `╰─`).
+* 🔡 **Fonte Omarchy Linux (`D11`):** Instalação direta da *JetBrains Mono Nerd Font* (`DEVCOM.JetBrainsMonoNerdFont`) para estética terminal de alto nível.
+* 📊 **Barra de Progresso Dinâmica:** Feedback visual em tempo real para instalações em lote (`0, 1A, 2C...`) e perfis automatizados.
 
 ---
 
-## 🧩 Seleção Múltipla Inteligente & Barra de Progresso
+## 🎯 Estrutura Modular dos Menus
 
-Em qualquer um dos menus, você pode digitar vários comandos separados por vírgula para execução sequencial silenciosa:
-- No Menu Principal: `0, 1A, 2C, 5E, 6D`
-- No Menu Dev: `D1, D5, D9`
-- No Menu Manutenção: `M1, M8`
+A interface é dividida em **3 telas dedicadas e organizadas**:
 
-### 📊 Barra de Progresso Dinâmica (Unicode)
-Durante a execução de tarefas em lote ou perfis automatizados (`P1` e `P2`), o script desenha uma barra de progresso gráfica com preenchimento em tempo real e cálculo percentual:
+### 1️⃣ Menu Principal — Softwares Essenciais & Runtimes
+* **`0`**: Atualizar todos os pacotes instalados via Winget
+* **■ COMPACTAÇÃO (`1A–1B`)**: `1A` 7-Zip · `1B` WinRAR
+* **■ DOCUMENTOS (`2A–2C`)**: `2A` Adobe Acrobat Reader · `2B` Foxit PDF Reader · `2C` LibreOffice LTS
+* **■ IMAGEM & VÍDEO (`3A–4C`)**: `3A` GIMP · `3B` Lightshot · `3C` ShareX · `4A` HandBrake · `4B` K-Lite Codec Full · `4C` VLC Media Player
+* **■ RUNTIMES WIN 11 (`5A–5F`)**: `5A` .NET 8 Desktop LTS · `5B` .NET 9 Desktop · `5C` VC++ 2015-2022 x64 · `5D` VC++ 2015-2022 x86 · `5E` VC++ All-in-One · `5F` Java Temurin 17 JRE
+* **■ ACESSO REMOTO & UTILITÁRIOS (`6A–6F`)**: `6A` AnyDesk · `6B` qBittorrent · `6C` Rufus (Boot) · `6D` RustDesk · `6E` Transmission · `6F` RealVNC Viewer
+* **Navegação**: `D` Menu Dev · `M` Menu Manutenção & Perfis · `Q` Sair
 
+### 2️⃣ Menu Desenvolvimento (`D`)
+* **`D0`**: 🚀 **Pacote Dev Completo** (VS Code + Git + Notepad++ + JDK 17 + Fonte Omarchy)
+* **■ IDEs & EDITORES (`D1–D4`)**: `D1` VS Code · `D2` Notepad++ · `D3` VS 2022 Community · `D4` Android Studio
+* **■ FONTE OMARCHY LINUX (`D11`)**: `D11` JetBrains Mono Nerd Font
+* **■ VERSIONAMENTO & SERVIDORES (`D5–D6`)**: `D5` Git SCM · `D6` XAMPP (PHP 8.2 & MySQL)
+* **■ JAVA DEVELOPMENT KIT (`D7–D10`)**: `D7` JDK 8 · `D8` JDK 11 · `D9` JDK 17 (LTS) · `D10` JDK 21 (LTS)
+* **Navegação**: `V` Menu Principal · `M` Menu Manutenção & Perfis · `Q` Sair
+
+### 3️⃣ Menu Manutenção, Tweaks & Perfis Auto (`M`)
+* **■ DIAGNÓSTICO & REPARO (`M1–M4`)**:
+  * `M1`: Reparo Completo (DISM RestoreHealth primeiro + SFC Scannow)
+  * `M2`: Diagnóstico Online Volume C: (Repair-Volume sem reiniciar)
+  * `M3`: Reset Pilha de Rede (Flush DNS, DHCP Release/Renew, reinício dinâmico de adaptadores)
+  * `M4`: Atualização de Diretivas GPO (`gpupdate /force`)
+* **■ CONFIGURAÇÕES, REDE & ACESSO (`M5–M8`)**:
+  * `M5`: Ativação de Administrador Local nativo (Detecção por SID `*-500`)
+  * `M6`: Mapeamento seguro de credenciais de rede no Windows Credential Manager
+  * `M7`: Renomear computador com opção de reiniciar
+  * `M8`: 🚀 **Habilitar Servidor OpenSSH** (Porta 22 TCP, serviço sshd/ssh-agent automático, regra de firewall em todos os perfis e exibição de comando de conexão)
+* **■ TWEAKS DE SISTEMA E PERFORMANCE DO WINDOWS 11 (`M9`)**:
+  * Restauração do Menu de Contexto Clássico completo
+  * Barra de tarefas alinhada à esquerda
+  * Exibição de extensões de arquivos e itens ocultos
+  * Desativação de hibernação (`powercfg -h off` liberando espaço no SSD)
+  * Tema Escuro do sistema e aplicativos
+  * Ocultação de Widgets e botão Copilot
+* **■ PERFIS AUTOMATIZADOS (`P1–P2`)**:
+  * `P1`: 🏛️ **MODO PMA** (Padrão corporativo Prefeitura: Apps + Runtimes + Admin + Tweaks Win 11)
+  * `P2`: 🚀 **MODO BRNCZZR** (Padrão Dev Workstation + Produtividade + Runtimes + Fonte Omarchy + Tweaks)
+* **Navegação**: `V` Menu Principal · `D` Menu Dev · `Q` Sair
+
+---
+
+## 🧩 Execuções em Lote & Barra de Progresso
+
+Selecione várias opções separadas por vírgula em qualquer menu:
 ```text
-╭─ PROGRESSO [ 3 / 8 ] ──────────────────────────────────────────────────────── [ 38% ] ─╮
-│ [███████████░░░░░░░░░░░░░░░░░░░] Processando opção: [2C]                              │
+╭─ Digite as opções desejadas separadas por vírgula (ex: 0, 1A, 2C, 5E, 6D)
+╰─❯ 1A, 2C, 5C, 6D, D11
+```
+
+Durante o processamento, a TUI renderiza a barra de progresso:
+```text
+╭─ PROGRESSO [ 3 / 5 ] ──────────────────────────────────────────────────────── [ 60% ] ─╮
+│ [██████████████████░░░░░░░░░░░░] Processando opção: [5C]                              │
 ╰────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
 ---
 
-## 🔒 Segurança
+## 🔒 Boas Práticas & Segurança
 
-- Nenhuma credencial ou senha corporativa é gravada em texto puro.
-- Todos os pacotes são validados pela infraestrutura oficial do Microsoft Winget.
+- Validação estrita de arquitetura e compatibilidade exclusiva com Windows 11.
+- Nenhuma credencial trafega ou é registrada em log em texto plano.
+- Ordem canônica Microsoft de diagnóstico (`DISM` antes de `SFC`).
+- Cache de verificação de arquivos e serviços para renderização instantânea do menu sem congelamentos.
 
 ---
 
@@ -108,4 +113,4 @@ GitHub: [@brcesarms](https://github.com/brcesarms)
 
 ## 📄 Licença
 
-Este projeto é distribuído sob a licença [MIT](LICENSE).
+Distribuído sob licença [MIT](LICENSE).
