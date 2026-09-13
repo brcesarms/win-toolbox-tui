@@ -45,7 +45,6 @@ function Show-Header {
     Clear-Host
 
     $data = (Get-Date).ToString("dd/MM/yyyy")
-    $hora = (Get-Date).ToString("HH:mm:ss")
 
     # Obter o IPv4 principal ativo da máquina
     $ip = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { 
@@ -59,7 +58,7 @@ function Show-Header {
 
     Write-Host "============================================================================================================" -ForegroundColor Cyan
     Write-Host "   WIN-TOOLBOX-TUI V1.0  |  WINDOWS 11  |  $subtitulo" -ForegroundColor Cyan
-    Write-Host "   Data: $data  |  Hora: $hora  |  Computador: $env:computername  |  Usuario: $env:username  |  IP: $ip" -ForegroundColor White
+    Write-Host "   Data: $data  |  Computador: $env:computername  |  Usuario: $env:username  |  IP: $ip" -ForegroundColor White
     Write-Host "============================================================================================================" -ForegroundColor Cyan
 }
 
