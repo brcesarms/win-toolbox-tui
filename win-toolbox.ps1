@@ -165,6 +165,9 @@ function Show-BiosScreen {
     Write-Host ("╔" + ("═" * ($totalWidth - 2)) + "╗") -ForegroundColor Cyan
     $topo = (" WIN-TOOLBOX TUI · Setup Utility" + (" " * ($inner - 38 - 15)) + " [ WINDOWS 11 ]")
     Write-Host "║ $($topo.PadRight($inner)) ║" -ForegroundColor Cyan
+    $data = (Get-Date).ToString("dd/MM/yyyy")
+    $info = " Data: $data | Computador: $env:computername | Usuário: $env:username"
+    Write-Host "║ $($info.PadRight($inner)) ║" -ForegroundColor DarkGray
     Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
 
     # ---- título da tela (amarelo centralizado) ----
@@ -174,10 +177,7 @@ function Show-BiosScreen {
     Write-Host "║ " -NoNewline -ForegroundColor Cyan
     Write-Host ("$bold$hl$reset") -NoNewline -ForegroundColor Yellow
     Write-Host " ║" -ForegroundColor Cyan
-
-    # ---- legenda (verde = instalado · cinza = pendente · marcados) ----
-    $legend = " [✓] Verde = INSTALADO   ·   [ ] cinza = pendente   ·   marcados p/ instalar: $($Marks.Count)"
-    Write-Host "║ $($legend.PadRight($inner)) ║" -ForegroundColor DarkGray
+    Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
 
     # ---- itens da página atual ----
     $start = $Page * $PageSize
@@ -212,8 +212,15 @@ function Show-BiosScreen {
         Write-Host " ║" -ForegroundColor Cyan
     }
 
-    # ---- rodapé: dicas + paginação + telemetria ----
+    # ---- rodapé: legenda + dicas + paginação ----
     Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
+    if ($Multi) {
+        $legend = " [✓] Verde = INSTALADO   ·   [ ] cinza = pendente   ·   marcados p/ instalar: $($Marks.Count)"
+    } else {
+        $legend = " [✓] Verde = INSTALADO   ·   [ ] cinza = pendente"
+    }
+    Write-Host "║ $($legend.PadRight($inner)) ║" -ForegroundColor DarkGray
+
     if ($Multi) {
         $dica = " ↑↓ mover · Espaço marcar [✓] · Enter executar · Esc voltar · Q sair"
     } else {
@@ -221,10 +228,7 @@ function Show-BiosScreen {
     }
     if ($PageCount -gt 1) { $dica += "  ·  Página $($Page + 1)/$PageCount" }
     if ($Shortcuts.Count -gt 0) { $dica += "  ·  atalhos: $($Shortcuts -join '/')" }
-    $data = (Get-Date).ToString("dd/MM/yyyy")
-    $info = " Data: $data | Computador: $env:computername | Usuário: $env:username"
     Write-Host "║ $($dica.PadRight($inner)) ║" -ForegroundColor Cyan
-    Write-Host "║ $($info.PadRight($inner)) ║" -ForegroundColor DarkGray
     Write-Host ("╚" + ("═" * ($totalWidth - 2)) + "╝") -ForegroundColor Cyan
 }
 
