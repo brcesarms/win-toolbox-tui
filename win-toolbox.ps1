@@ -96,38 +96,46 @@ function Test-IsInstalled {
     try {
         switch ($key) {
             "7zip"            { $result = (Test-Path "$env:ProgramFiles\7-Zip\7z.exe") -or (Test-Path "${env:ProgramFiles(x86)}\7-Zip\7z.exe") }
-            "winrar"          { $result = (Test-Path "$env:ProgramFiles\WinRAR\WinRAR.exe") }
             "adobe"           { $result = (Test-Path "$env:ProgramFiles\Adobe\Acrobat DC\Acrobat\Acrobat.exe") -or (Test-Path "${env:ProgramFiles(x86)}\Adobe\Acrobat Reader DC\Reader\AcroRd32.exe") }
+            "anydesk"         { $result = (Test-Path "${env:ProgramFiles(x86)}\AnyDesk\AnyDesk.exe") }
+            "brave"           { $result = (Test-Path "$env:ProgramFiles\BraveSoftware\Brave-Browser\Application\brave.exe") -or (Test-Path "${env:ProgramFiles(x86)}\BraveSoftware\Brave-Browser\Application\brave.exe") -or (Test-Path "$env:LOCALAPPDATA\BraveSoftware\Brave-Browser\Application\brave.exe") }
+            "chrome"          { $result = (Test-Path "$env:ProgramFiles\Google\Chrome\Application\chrome.exe") -or (Test-Path "${env:ProgramFiles(x86)}\Google\Chrome\Application\chrome.exe") -or (Test-Path "$env:LOCALAPPDATA\Google\Chrome\Application\chrome.exe") }
             "foxit"           { $result = (Test-Path "${env:ProgramFiles(x86)}\Foxit Software\Foxit PDF Reader\FoxitPDFReader.exe") -or (Test-Path "$env:ProgramFiles\Foxit Software\Foxit PDF Reader\FoxitPDFReader.exe") }
-            "libreoffice"     { $result = (Test-Path "$env:ProgramFiles\LibreOffice\program\soffice.exe") }
             "gimp"            { $result = (Test-Path "$env:ProgramFiles\GIMP 2\bin\gimp-2.10.exe") -or (Test-Path "$env:ProgramFiles\GIMP 3\bin\gimp.exe") }
-            "lightshot"       { $result = (Test-Path "${env:ProgramFiles(x86)}\Skillbrains\Lightshot\Lightshot.exe") }
-            "sharex"          { $result = (Test-Path "$env:ProgramFiles\ShareX\ShareX.exe") }
             "handbrake"       { $result = (Test-Path "$env:ProgramFiles\HandBrake\HandBrake.exe") }
             "klite"           { $result = (Test-Path "HKLM:\SOFTWARE\KLiteCodecPack") -or (Test-Path "HKLM:\SOFTWARE\WOW6432Node\KLiteCodecPack") -or (Test-Path "${env:ProgramFiles(x86)}\K-Lite Codec Pack") }
+            "libreoffice"     { $result = (Test-Path "$env:ProgramFiles\LibreOffice\program\soffice.exe") }
+            "lightshot"       { $result = (Test-Path "${env:ProgramFiles(x86)}\Skillbrains\Lightshot\Lightshot.exe") }
+            "qbittorrent"     { $result = (Test-Path "$env:ProgramFiles\qBittorrent\qbittorrent.exe") }
+            "realvnc"         { $result = (Test-Path "$env:ProgramFiles\RealVNC\VNC Viewer\vncviewer.exe") }
+            "rufus"           { $result = (Test-Path "$env:LOCALAPPDATA\Programs\Rufus\rufus.exe") -or (Test-Path "$env:ProgramFiles\Rufus\rufus.exe") }
+            "rustdesk"        { $result = (Test-Path "$env:ProgramFiles\RustDesk\rustdesk.exe") }
+            "sharex"          { $result = (Test-Path "$env:ProgramFiles\ShareX\ShareX.exe") }
+            "transmission"    { $result = (Test-Path "$env:ProgramFiles\Transmission\transmission-qt.exe") }
             "vlc"             { $result = (Test-Path "$env:ProgramFiles\VideoLAN\VLC\vlc.exe") }
+            "winrar"          { $result = (Test-Path "$env:ProgramFiles\WinRAR\WinRAR.exe") }
+            
+            # Runtimes
             "dotnet8"         { $result = (Test-Path "$env:ProgramFiles\dotnet\shared\Microsoft.WindowsDesktop.App\8.*") }
             "dotnet9"         { $result = (Test-Path "$env:ProgramFiles\dotnet\shared\Microsoft.WindowsDesktop.App\9.*") }
+            "temurin17jre"    { $result = (Test-Path "$env:ProgramFiles\Eclipse Adoptium\jre-17*") }
             "vcredist_x64"    { $result = (Test-Path "HKLM:\SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64") }
             "vcredist_x86"    { $result = (Test-Path "HKLM:\SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x86") }
             "vcredist_all"    { $result = (Test-Path "HKLM:\SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x64") -and (Test-Path "HKLM:\SOFTWARE\Microsoft\VisualStudio\14.0\VC\Runtimes\x86") }
-            "temurin17jre"    { $result = (Test-Path "$env:ProgramFiles\Eclipse Adoptium\jre-17*") }
-            "anydesk"         { $result = (Test-Path "${env:ProgramFiles(x86)}\AnyDesk\AnyDesk.exe") }
-            "qbittorrent"     { $result = (Test-Path "$env:ProgramFiles\qBittorrent\qbittorrent.exe") }
-            "rufus"           { $result = (Test-Path "$env:LOCALAPPDATA\Programs\Rufus\rufus.exe") -or (Test-Path "$env:ProgramFiles\Rufus\rufus.exe") }
-            "rustdesk"        { $result = (Test-Path "$env:ProgramFiles\RustDesk\rustdesk.exe") }
-            "transmission"    { $result = (Test-Path "$env:ProgramFiles\Transmission\transmission-qt.exe") }
-            "realvnc"         { $result = (Test-Path "$env:ProgramFiles\RealVNC\VNC Viewer\vncviewer.exe") }
-            "vscode"          { $result = (Test-Path "$env:LOCALAPPDATA\Programs\Microsoft VS Code\Code.exe") -or (Test-Path "$env:ProgramFiles\Microsoft VS Code\Code.exe") }
-            "notepadplusplus" { $result = (Test-Path "$env:ProgramFiles\Notepad++\notepad++.exe") }
-            "vs2022"          { $result = (Test-Path "$env:ProgramFiles\Microsoft Visual Studio\2022") }
+            
+            # Dev
             "androidstudio"   { $result = (Test-Path "$env:ProgramFiles\Android\Android Studio\bin\studio64.exe") }
             "git"             { $result = (Test-Path "$env:ProgramFiles\Git\bin\git.exe") -or ((Get-Command git -ErrorAction SilentlyContinue) -ne $null) }
-            "xampp"           { $result = (Test-Path "C:\xampp\xampp-control.exe") }
+            "notepadplusplus" { $result = (Test-Path "$env:ProgramFiles\Notepad++\notepad++.exe") }
             "temurin8jdk"     { $result = (Test-Path "$env:ProgramFiles\Eclipse Adoptium\jdk-8*") }
             "temurin11jdk"    { $result = (Test-Path "$env:ProgramFiles\Eclipse Adoptium\jdk-11*") }
             "temurin17jdk"    { $result = (Test-Path "$env:ProgramFiles\Eclipse Adoptium\jdk-17*") }
             "temurin21jdk"    { $result = (Test-Path "$env:ProgramFiles\Eclipse Adoptium\jdk-21*") }
+            "vscode"          { $result = (Test-Path "$env:LOCALAPPDATA\Programs\Microsoft VS Code\Code.exe") -or (Test-Path "$env:ProgramFiles\Microsoft VS Code\Code.exe") }
+            "vs2022"          { $result = (Test-Path "$env:ProgramFiles\Microsoft Visual Studio\2022") }
+            "xampp"           { $result = (Test-Path "C:\xampp\xampp-control.exe") }
+            
+            # Manutenção & Configurações
             "admin500"        { $result = ((Get-LocalUser -ErrorAction SilentlyContinue | Where-Object { $_.SID -like "*-500" -and $_.Enabled -eq $true }) -ne $null) }
             "sshd"            { $result = ((Get-Service sshd -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'Running' }) -ne $null) }
             "win11_tweaks"    { $result = (Test-Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32") }
@@ -782,72 +790,114 @@ function Execute-SingleOption {
     $op = $opcao.Trim().ToUpper()
     switch ($op) {
         "0"   { Update-AllWinget }
+        
+        # ---- Apps em Ordem Alfabética (1..19 e legados) ----
+        "1"   { Install-WingetApp "7zip.7zip" "7-Zip" "7zip" }
         "1A"  { Install-WingetApp "7zip.7zip" "7-Zip" "7zip" }
-        "1B"  { Install-WingetApp "RARLab.WinRAR" "WinRAR" "winrar" }
+        
+        "2"   { Install-WingetApp "Adobe.Acrobat.Reader.64-bit" "Adobe Acrobat Reader" "adobe" }
         "2A"  { Install-WingetApp "Adobe.Acrobat.Reader.64-bit" "Adobe Acrobat Reader" "adobe" }
-        "2B"  { Install-WingetApp "Foxit.FoxitReader" "Foxit PDF Reader" "foxit" }
-        "2C"  { Install-WingetApp "TheDocumentFoundation.LibreOffice.LTS" "LibreOffice LTS" "libreoffice" }
-        "3A"  { Install-WingetApp "GIMP.GIMP" "GIMP" "gimp" }
-        "3B"  { Install-WingetApp "Skillbrains.Lightshot" "Lightshot" "lightshot" }
-        "3C"  { Install-WingetApp "ShareX.ShareX" "ShareX" "sharex" }
-        "4A"  { Install-WingetApp "HandBrake.HandBrake" "HandBrake" "handbrake" }
-        "4B"  { Install-WingetApp "CodecGuide.K-LiteCodecPack.Full" "K-Lite Codec Pack Full" "klite" }
-        "4C"  { Install-WingetApp "VideoLAN.VLC" "VLC Media Player" "vlc" }
-        "5A"  { Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)" "dotnet8" }
-        "5B"  { Install-WingetApp "Microsoft.DotNet.DesktopRuntime.9" ".NET 9 Desktop Runtime" "dotnet9" }
-        "5C"  { Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 x64" "vcredist_x64" }
-        "5D"  { Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 x86" "vcredist_x86" }
-        "5E"  { Install-WingetApp "abbodi1406.vcredist" "Visual C++ All-in-One Runtime" "vcredist_all" }
-        "5F"  { Install-WingetApp "EclipseAdoptium.Temurin.17.JRE" "Java Temurin 17 JRE" "temurin17jre" }
+        
+        "3"   { Install-WingetApp "AnyDeskSoftwareGmbH.AnyDesk" "AnyDesk" "anydesk" }
+        "5A"  { Install-WingetApp "AnyDeskSoftwareGmbH.AnyDesk" "AnyDesk" "anydesk" }
         "6A"  { Install-WingetApp "AnyDeskSoftwareGmbH.AnyDesk" "AnyDesk" "anydesk" }
+        
+        "4"   { Install-WingetApp "Brave.Brave" "Brave Browser" "brave" }
+        "BRAVE" { Install-WingetApp "Brave.Brave" "Brave Browser" "brave" }
+        
+        "5"   { Install-WingetApp "Foxit.FoxitReader" "Foxit PDF Reader" "foxit" }
+        "2B"  { Install-WingetApp "Foxit.FoxitReader" "Foxit PDF Reader" "foxit" }
+        
+        "6"   { Install-WingetApp "GIMP.GIMP" "GIMP" "gimp" }
+        "3A"  { Install-WingetApp "GIMP.GIMP" "GIMP" "gimp" }
+        
+        "7"   { Install-WingetApp "Google.Chrome" "Google Chrome" "chrome" }
+        "CHROME" { Install-WingetApp "Google.Chrome" "Google Chrome" "chrome" }
+        
+        "8"   { Install-WingetApp "HandBrake.HandBrake" "HandBrake" "handbrake" }
+        "4A"  { Install-WingetApp "HandBrake.HandBrake" "HandBrake" "handbrake" }
+        
+        "9"   { Install-WingetApp "CodecGuide.K-LiteCodecPack.Full" "K-Lite Codec Pack Full" "klite" }
+        "4B"  { Install-WingetApp "CodecGuide.K-LiteCodecPack.Full" "K-Lite Codec Pack Full" "klite" }
+        
+        "10"  { Install-WingetApp "TheDocumentFoundation.LibreOffice.LTS" "LibreOffice LTS" "libreoffice" }
+        "2C"  { Install-WingetApp "TheDocumentFoundation.LibreOffice.LTS" "LibreOffice LTS" "libreoffice" }
+        
+        "11"  { Install-WingetApp "Skillbrains.Lightshot" "Lightshot" "lightshot" }
+        "3B"  { Install-WingetApp "Skillbrains.Lightshot" "Lightshot" "lightshot" }
+        
+        "12"  { Install-WingetApp "qBittorrent.qBittorrent" "qBittorrent" "qbittorrent" }
         "6B"  { Install-WingetApp "qBittorrent.qBittorrent" "qBittorrent" "qbittorrent" }
-        "6C"  { Install-WingetApp "Rufus.Rufus" "Rufus" "rufus" }
-        "6D"  { Install-WingetApp "RustDesk.RustDesk" "RustDesk" "rustdesk" }
-        "6E"  { Install-WingetApp "Transmission.Transmission" "Transmission" "transmission" }
+        
+        "13"  { Install-WingetApp "RealVNC.VNCViewer" "RealVNC Viewer" "realvnc" }
+        "5C"  { Install-WingetApp "RealVNC.VNCViewer" "RealVNC Viewer" "realvnc" }
         "6F"  { Install-WingetApp "RealVNC.VNCViewer" "RealVNC Viewer" "realvnc" }
         
+        "14"  { Install-WingetApp "Rufus.Rufus" "Rufus" "rufus" }
+        "6C"  { Install-WingetApp "Rufus.Rufus" "Rufus" "rufus" }
+        
+        "15"  { Install-WingetApp "RustDesk.RustDesk" "RustDesk" "rustdesk" }
+        "5B"  { Install-WingetApp "RustDesk.RustDesk" "RustDesk" "rustdesk" }
+        "6D"  { Install-WingetApp "RustDesk.RustDesk" "RustDesk" "rustdesk" }
+        
+        "16"  { Install-WingetApp "ShareX.ShareX" "ShareX" "sharex" }
+        "3C"  { Install-WingetApp "ShareX.ShareX" "ShareX" "sharex" }
+        
+        "17"  { Install-WingetApp "Transmission.Transmission" "Transmission" "transmission" }
+        "6E"  { Install-WingetApp "Transmission.Transmission" "Transmission" "transmission" }
+        
+        "18"  { Install-WingetApp "VideoLAN.VLC" "VLC Media Player" "vlc" }
+        "4C"  { Install-WingetApp "VideoLAN.VLC" "VLC Media Player" "vlc" }
+        
+        "19"  { Install-WingetApp "RARLab.WinRAR" "WinRAR" "winrar" }
+        "1B"  { Install-WingetApp "RARLab.WinRAR" "WinRAR" "winrar" }
+        
+        # ---- Dev em Ordem Alfabética (D1..D10) ----
         "D0"  { 
             Install-WingetApp "Microsoft.VisualStudioCode" "VS Code" "vscode"
             Install-WingetApp "Git.Git" "Git SCM" "git"
             Install-WingetApp "Notepad++.Notepad++" "Notepad++" "notepadplusplus"
             Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK" "temurin17jdk"
         }
-        "D1"  { Install-WingetApp "Microsoft.VisualStudioCode" "VS Code" "vscode" }
-        "D2"  { Install-WingetApp "Notepad++.Notepad++" "Notepad++" "notepadplusplus" }
-        "D3"  { Install-WingetApp "Microsoft.VisualStudio.2022.Community" "Visual Studio 2022 Community" "vs2022" }
-        "D4"  { Install-WingetApp "Google.AndroidStudio" "Android Studio" "androidstudio" }
-        "D5"  { Install-WingetApp "Git.Git" "Git SCM" "git" }
-        "D6"  { Install-WingetApp "ApacheFriends.Xampp.8.2" "XAMPP (PHP 8.2 & MySQL)" "xampp" }
-        "D7"  { Install-WingetApp "EclipseAdoptium.Temurin.8.JDK" "Java Temurin 8 JDK" "temurin8jdk" }
-        "D8"  { Install-WingetApp "EclipseAdoptium.Temurin.11.JDK" "Java Temurin 11 JDK" "temurin11jdk" }
-        "D9"  { Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK" "temurin17jdk" }
-        "D10" { Install-WingetApp "EclipseAdoptium.Temurin.21.JDK" "Java Temurin 21 JDK" "temurin21jdk" }
+        "D1"  { Install-WingetApp "Google.AndroidStudio" "Android Studio" "androidstudio" }
+        "D2"  { Install-WingetApp "Git.Git" "Git SCM" "git" }
+        "D3"  { Install-WingetApp "EclipseAdoptium.Temurin.8.JDK" "Java Temurin 8 JDK" "temurin8jdk" }
+        "D4"  { Install-WingetApp "EclipseAdoptium.Temurin.11.JDK" "Java Temurin 11 JDK" "temurin11jdk" }
+        "D5"  { Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK" "temurin17jdk" }
+        "D6"  { Install-WingetApp "EclipseAdoptium.Temurin.21.JDK" "Java Temurin 21 JDK" "temurin21jdk" }
+        "D7"  { Install-WingetApp "Notepad++.Notepad++" "Notepad++" "notepadplusplus" }
+        "D8"  { Install-WingetApp "Microsoft.VisualStudio.2022.Community" "Visual Studio 2022 Community" "vs2022" }
+        "D9"  { Install-WingetApp "Microsoft.VisualStudioCode" "VS Code" "vscode" }
+        "D10" { Install-WingetApp "ApacheFriends.Xampp.8.2" "XAMPP (PHP 8.2 & MySQL)" "xampp" }
         
-        # ---- Runtimes ----
+        # ---- Runtimes em Ordem Alfabética (R1..R6) ----
         "R0"  { 
             Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)" "dotnet8"
             Install-WingetApp "Microsoft.DotNet.DesktopRuntime.9" ".NET 9 Desktop Runtime" "dotnet9"
-            Install-WingetApp "abbodi1406.vcredist" "Visual C++ All-in-One Runtime" "vcredist_all"
             Install-WingetApp "EclipseAdoptium.Temurin.17.JRE" "Java Temurin 17 JRE" "temurin17jre"
+            Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 x64" "vcredist_x64"
+            Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 x86" "vcredist_x86"
+            Install-WingetApp "abbodi1406.vcredist" "Visual C++ All-in-One Runtime" "vcredist_all"
         }
         "R1"  { Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)" "dotnet8" }
         "R2"  { Install-WingetApp "Microsoft.DotNet.DesktopRuntime.9" ".NET 9 Desktop Runtime" "dotnet9" }
-        "R3"  { Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 x64" "vcredist_x64" }
-        "R4"  { Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 x86" "vcredist_x86" }
-        "R5"  { Install-WingetApp "abbodi1406.vcredist" "Visual C++ All-in-One Runtime" "vcredist_all" }
-        "R6"  { Install-WingetApp "EclipseAdoptium.Temurin.17.JRE" "Java Temurin 17 JRE" "temurin17jre" }
+        "R3"  { Install-WingetApp "EclipseAdoptium.Temurin.17.JRE" "Java Temurin 17 JRE" "temurin17jre" }
+        "R4"  { Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 x64" "vcredist_x64" }
+        "R5"  { Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 x86" "vcredist_x86" }
+        "R6"  { Install-WingetApp "abbodi1406.vcredist" "Visual C++ All-in-One Runtime" "vcredist_all" }
         
-        # ---- Configurações & Manutenção ----
-        "C1"  { Apply-Win11Tweaks }
-        "C2"  { Enable-BuiltinAdmin }
-        "C3"  { Enable-OpenSSHServer }
-        "C4"  { Set-MachineName }
+        # ---- Configurações & Manutenção em Ordem Alfabética (C1..C9) ----
+        "C1"  { Invoke-DiskCheck }
+        "C2"  { Invoke-UpdateGPO }
+        "C3"  { Enable-BuiltinAdmin }
+        "C4"  { Enable-OpenSSHServer }
         "C5"  { Add-NetworkCredential }
-        "C6"  { Invoke-NetworkReset }
-        "C7"  { Invoke-UpdateGPO }
-        "C8"  { Invoke-DiskCheck }
-        "C9"  { Invoke-SystemRepair }
+        "C6"  { Set-MachineName }
+        "C7"  { Invoke-SystemRepair }
+        "C8"  { Invoke-NetworkReset }
+        "C9"  { Apply-Win11Tweaks }
 
+        # Mapeamentos legados e utilitários
         "M1"  { Invoke-SystemRepair }
         "M2"  { Invoke-DiskCheck }
         "M3"  { Invoke-NetworkReset }
@@ -913,23 +963,25 @@ function Dispatch-Execution {
 function Invoke-MenuApps {
     $items = @(
         (New-BiosItem "0"  "ATUALIZAÇÃO GERAL — atualizar todos os pacotes winget" -Special $true),
-        (New-BiosItem "1A" "7-Zip" -Instalado (Test-IsInstalled "7zip")),
-        (New-BiosItem "1B" "WinRAR" -Instalado (Test-IsInstalled "winrar")),
-        (New-BiosItem "2A" "Adobe Acrobat Reader" -Instalado (Test-IsInstalled "adobe")),
-        (New-BiosItem "2B" "Foxit PDF Reader" -Instalado (Test-IsInstalled "foxit")),
-        (New-BiosItem "2C" "LibreOffice LTS" -Instalado (Test-IsInstalled "libreoffice")),
-        (New-BiosItem "3A" "GIMP" -Instalado (Test-IsInstalled "gimp")),
-        (New-BiosItem "3B" "Lightshot" -Instalado (Test-IsInstalled "lightshot")),
-        (New-BiosItem "3C" "ShareX" -Instalado (Test-IsInstalled "sharex")),
-        (New-BiosItem "4A" "HandBrake" -Instalado (Test-IsInstalled "handbrake")),
-        (New-BiosItem "4B" "K-Lite Codec Pack Full" -Instalado (Test-IsInstalled "klite")),
-        (New-BiosItem "4C" "VLC Media Player" -Instalado (Test-IsInstalled "vlc")),
-        (New-BiosItem "5A" "AnyDesk" -Instalado (Test-IsInstalled "anydesk")),
-        (New-BiosItem "5B" "RustDesk" -Instalado (Test-IsInstalled "rustdesk")),
-        (New-BiosItem "5C" "RealVNC Viewer" -Instalado (Test-IsInstalled "realvnc")),
-        (New-BiosItem "6A" "qBittorrent" -Instalado (Test-IsInstalled "qbittorrent")),
-        (New-BiosItem "6B" "Transmission" -Instalado (Test-IsInstalled "transmission")),
-        (New-BiosItem "6C" "Rufus (Boot)" -Instalado (Test-IsInstalled "rufus"))
+        (New-BiosItem "1"  "7-Zip" -Instalado (Test-IsInstalled "7zip")),
+        (New-BiosItem "2"  "Adobe Acrobat Reader" -Instalado (Test-IsInstalled "adobe")),
+        (New-BiosItem "3"  "AnyDesk" -Instalado (Test-IsInstalled "anydesk")),
+        (New-BiosItem "4"  "Brave Browser" -Instalado (Test-IsInstalled "brave")),
+        (New-BiosItem "5"  "Foxit PDF Reader" -Instalado (Test-IsInstalled "foxit")),
+        (New-BiosItem "6"  "GIMP" -Instalado (Test-IsInstalled "gimp")),
+        (New-BiosItem "7"  "Google Chrome" -Instalado (Test-IsInstalled "chrome")),
+        (New-BiosItem "8"  "HandBrake" -Instalado (Test-IsInstalled "handbrake")),
+        (New-BiosItem "9"  "K-Lite Codec Pack Full" -Instalado (Test-IsInstalled "klite")),
+        (New-BiosItem "10" "LibreOffice LTS" -Instalado (Test-IsInstalled "libreoffice")),
+        (New-BiosItem "11" "Lightshot" -Instalado (Test-IsInstalled "lightshot")),
+        (New-BiosItem "12" "qBittorrent" -Instalado (Test-IsInstalled "qbittorrent")),
+        (New-BiosItem "13" "RealVNC Viewer" -Instalado (Test-IsInstalled "realvnc")),
+        (New-BiosItem "14" "Rufus (Boot)" -Instalado (Test-IsInstalled "rufus")),
+        (New-BiosItem "15" "RustDesk" -Instalado (Test-IsInstalled "rustdesk")),
+        (New-BiosItem "16" "ShareX" -Instalado (Test-IsInstalled "sharex")),
+        (New-BiosItem "17" "Transmission" -Instalado (Test-IsInstalled "transmission")),
+        (New-BiosItem "18" "VLC Media Player" -Instalado (Test-IsInstalled "vlc")),
+        (New-BiosItem "19" "WinRAR" -Instalado (Test-IsInstalled "winrar"))
     )
 
     $res = Read-BiosMenu -ActiveTab "APPS" -Items $items -Multi $true
@@ -950,10 +1002,10 @@ function Invoke-MenuRuntimes {
         (New-BiosItem "R0" "PACOTE RUNTIMES — .NET 8/9 + VC++ All-in-One + Java 17" -Special $true),
         (New-BiosItem "R1" ".NET 8 Desktop Runtime (LTS)" -Instalado (Test-IsInstalled "dotnet8")),
         (New-BiosItem "R2" ".NET 9 Desktop Runtime" -Instalado (Test-IsInstalled "dotnet9")),
-        (New-BiosItem "R3" "Visual C++ 2015-2022 (x64)" -Instalado (Test-IsInstalled "vcredist_x64")),
-        (New-BiosItem "R4" "Visual C++ 2015-2022 (x86)" -Instalado (Test-IsInstalled "vcredist_x86")),
-        (New-BiosItem "R5" "Visual C++ All-in-One (abbodi1406)" -Instalado (Test-IsInstalled "vcredist_all")),
-        (New-BiosItem "R6" "Java Temurin 17 JRE" -Instalado (Test-IsInstalled "temurin17jre"))
+        (New-BiosItem "R3" "Java Temurin 17 JRE" -Instalado (Test-IsInstalled "temurin17jre")),
+        (New-BiosItem "R4" "Visual C++ 2015-2022 (x64)" -Instalado (Test-IsInstalled "vcredist_x64")),
+        (New-BiosItem "R5" "Visual C++ 2015-2022 (x86)" -Instalado (Test-IsInstalled "vcredist_x86")),
+        (New-BiosItem "R6" "Visual C++ All-in-One (abbodi1406)" -Instalado (Test-IsInstalled "vcredist_all"))
     )
 
     $res = Read-BiosMenu -ActiveTab "RUNTIMES" -Items $items -Multi $true
@@ -971,17 +1023,17 @@ function Invoke-MenuRuntimes {
 
 function Invoke-MenuDev {
     $items = @(
-        (New-BiosItem "D0" "PACOTE DEV COMPLETO — VS Code + Git + Notepad++ + JDK 17" -Special $true),
-        (New-BiosItem "D1" "Visual Studio Code" -Instalado (Test-IsInstalled "vscode")),
-        (New-BiosItem "D2" "Notepad++" -Instalado (Test-IsInstalled "notepadplusplus")),
-        (New-BiosItem "D3" "Visual Studio 2022 Community" -Instalado (Test-IsInstalled "vs2022")),
-        (New-BiosItem "D4" "Android Studio" -Instalado (Test-IsInstalled "androidstudio")),
-        (New-BiosItem "D5" "Git SCM" -Instalado (Test-IsInstalled "git")),
-        (New-BiosItem "D6" "XAMPP (PHP 8.2 & MySQL)" -Instalado (Test-IsInstalled "xampp")),
-        (New-BiosItem "D7" "Java Temurin 8 JDK" -Instalado (Test-IsInstalled "temurin8jdk")),
-        (New-BiosItem "D8" "Java Temurin 11 JDK" -Instalado (Test-IsInstalled "temurin11jdk")),
-        (New-BiosItem "D9" "Java Temurin 17 JDK (LTS)" -Instalado (Test-IsInstalled "temurin17jdk")),
-        (New-BiosItem "D10" "Java Temurin 21 JDK (LTS)" -Instalado (Test-IsInstalled "temurin21jdk"))
+        (New-BiosItem "D0"  "PACOTE DEV COMPLETO — VS Code + Git + Notepad++ + JDK 17" -Special $true),
+        (New-BiosItem "D1"  "Android Studio" -Instalado (Test-IsInstalled "androidstudio")),
+        (New-BiosItem "D2"  "Git SCM" -Instalado (Test-IsInstalled "git")),
+        (New-BiosItem "D3"  "Java Temurin 8 JDK" -Instalado (Test-IsInstalled "temurin8jdk")),
+        (New-BiosItem "D4"  "Java Temurin 11 JDK" -Instalado (Test-IsInstalled "temurin11jdk")),
+        (New-BiosItem "D5"  "Java Temurin 17 JDK (LTS)" -Instalado (Test-IsInstalled "temurin17jdk")),
+        (New-BiosItem "D6"  "Java Temurin 21 JDK (LTS)" -Instalado (Test-IsInstalled "temurin21jdk")),
+        (New-BiosItem "D7"  "Notepad++" -Instalado (Test-IsInstalled "notepadplusplus")),
+        (New-BiosItem "D8"  "Visual Studio 2022 Community" -Instalado (Test-IsInstalled "vs2022")),
+        (New-BiosItem "D9"  "Visual Studio Code" -Instalado (Test-IsInstalled "vscode")),
+        (New-BiosItem "D10" "XAMPP (PHP 8.2 & MySQL)" -Instalado (Test-IsInstalled "xampp"))
     )
 
     $res = Read-BiosMenu -ActiveTab "DEV" -Items $items -Multi $true
@@ -999,15 +1051,15 @@ function Invoke-MenuDev {
 
 function Invoke-MenuConfig {
     $items = @(
-        (New-BiosItem "C1" "Tweaks Win 11 (Menu Clássico, Dark, Barra Esquerda, Sem Widgets/Copilot)" -Instalado (Test-IsInstalled "win11_tweaks")),
-        (New-BiosItem "C2" "Habilitar Admin (SID 500)" -Instalado (Test-IsInstalled "admin500")),
-        (New-BiosItem "C3" "Habilitar Servidor OpenSSH (Porta 22)" -Instalado (Test-IsInstalled "sshd")),
-        (New-BiosItem "C4" "Renomear Computador" -Instalado (Test-IsInstalled "rename_pc")),
+        (New-BiosItem "C1" "Diagnóstico Volume C: (Scan)" -Instalado (Test-IsInstalled "disk_check")),
+        (New-BiosItem "C2" "Forçar Atualização GPO" -Instalado (Test-IsInstalled "gpo_update")),
+        (New-BiosItem "C3" "Habilitar Admin (SID 500)" -Instalado (Test-IsInstalled "admin500")),
+        (New-BiosItem "C4" "Habilitar Servidor OpenSSH (Porta 22)" -Instalado (Test-IsInstalled "sshd")),
         (New-BiosItem "C5" "Mapear Credencial de Rede" -Instalado (Test-IsInstalled "net_cred")),
-        (New-BiosItem "C6" "Reset Pilha de Rede (DHCP / DNS / TCP)" -Instalado (Test-IsInstalled "net_reset")),
-        (New-BiosItem "C7" "Forçar Atualização GPO" -Instalado (Test-IsInstalled "gpo_update")),
-        (New-BiosItem "C8" "Diagnóstico Volume C: (Scan)" -Instalado (Test-IsInstalled "disk_check")),
-        (New-BiosItem "C9" "Reparo Completo do Sistema (DISM + SFC)" -Instalado (Test-IsInstalled "system_repair")),
+        (New-BiosItem "C6" "Renomear Computador" -Instalado (Test-IsInstalled "rename_pc")),
+        (New-BiosItem "C7" "Reparo Completo do Sistema (DISM + SFC)" -Instalado (Test-IsInstalled "system_repair")),
+        (New-BiosItem "C8" "Reset Pilha de Rede (DHCP / DNS / TCP)" -Instalado (Test-IsInstalled "net_reset")),
+        (New-BiosItem "C9" "Tweaks Win 11 (Menu Clássico, Dark, Barra Esquerda, Sem Widgets/Copilot)" -Instalado (Test-IsInstalled "win11_tweaks")),
         (New-BiosItem "P1" "MODO PMA — Prefeitura Win 11 (Apps + Runtimes + Admin + Tweaks)" -Special $true),
         (New-BiosItem "P2" "MODO BRNCZZR — Dev Workstation (Apps Dev + Runtimes + Tweaks)" -Special $true)
     )

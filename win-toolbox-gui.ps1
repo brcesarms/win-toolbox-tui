@@ -377,10 +377,17 @@ $sectionsSoft = @(
         )
     },
     @{
+        Title = "Navegadores"
+        Apps  = @(
+            @{ Id = "Brave.Brave";                   Nome = "Brave Browser" },
+            @{ Id = "Google.Chrome";                 Nome = "Google Chrome" }
+        )
+    },
+    @{
         Title = "Documentos"
         Apps  = @(
-            @{ Id = "TheDocumentFoundation.LibreOffice.LTS"; Nome = "LibreOffice LTS" },
-            @{ Id = "Adobe.Acrobat.Reader.64-bit";    Nome = "Adobe Acrobat Reader" }
+            @{ Id = "Adobe.Acrobat.Reader.64-bit";    Nome = "Adobe Acrobat Reader" },
+            @{ Id = "TheDocumentFoundation.LibreOffice.LTS"; Nome = "LibreOffice LTS" }
         )
     },
     @{

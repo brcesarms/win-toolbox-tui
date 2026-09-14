@@ -47,47 +47,54 @@ powershell -ExecutionPolicy Bypass -File .\win-toolbox.ps1
 
 ## 🎯 Estrutura Modular dos Menus (Abas estilo BIOS)
 
-A interface apresenta uma barra de menus superior sempre visível com **4 abas dedicadas**:
+A interface apresenta uma barra de menus superior sempre visível com **4 abas dedicadas** organizadas em **ordem alfabética**:
 
 ### 1️⃣ [ Apps ]
 * **`0`**: 🚀 **Atualização Geral** — atualizar todos os pacotes instalados via Winget
-* **COMPACTAÇÃO (`1A–1B`)**: `1A` 7-Zip · `1B` WinRAR
-* **DOCUMENTOS (`2A–2C`)**: `2A` Adobe Acrobat Reader · `2B` Foxit PDF Reader · `2C` LibreOffice LTS
-* **IMAGEM & VÍDEO (`3A–4C`)**: `3A` GIMP · `3B` Lightshot · `3C` ShareX · `4A` HandBrake · `4B` K-Lite Codec Full · `4C` VLC Media Player
-* **ACESSO REMOTO & UTILITÁRIOS (`5A–6C`)**: `5A` AnyDesk · `5B` RustDesk · `5C` RealVNC Viewer · `6A` qBittorrent · `6B` Transmission · `6C` Rufus (Boot)
+* **SOFTWARES EM ORDEM ALFABÉTICA (`1–19`)**:
+  * `1` 7-Zip · `2` Adobe Acrobat Reader · `3` AnyDesk · `4` **Brave Browser** · `5` Foxit PDF Reader
+  * `6` GIMP · `7` **Google Chrome** · `8` HandBrake · `9` K-Lite Codec Pack Full · `10` LibreOffice LTS
+  * `11` Lightshot · `12` qBittorrent · `13` RealVNC Viewer · `14` Rufus (Boot) · `15` RustDesk
+  * `16` ShareX · `17` Transmission · `18` VLC Media Player · `19` WinRAR
 * **Navegação**: `← / →` ou `Tab` alternam abas · `1` ou `A` para esta aba · `Q` Sair
 
 ### 2️⃣ [ Runtimes ]
 * **`R0`**: ⚡ **Pacote Runtimes Completo** (.NET 8/9 + VC++ All-in-One + Java 17)
-* **RUNTIMES (`R1–R6`)**:
+* **RUNTIMES EM ORDEM ALFABÉTICA (`R1–R6`)**:
   * `R1`: .NET 8 Desktop Runtime (LTS)
   * `R2`: .NET 9 Desktop Runtime
-  * `R3`: Visual C++ 2015-2022 (x64)
-  * `R4`: Visual C++ 2015-2022 (x86)
-  * `R5`: Visual C++ All-in-One (abbodi1406)
-  * `R6`: Java Temurin 17 JRE
+  * `R3`: Java Temurin 17 JRE
+  * `R4`: Visual C++ 2015-2022 (x64)
+  * `R5`: Visual C++ 2015-2022 (x86)
+  * `R6`: Visual C++ All-in-One (abbodi1406)
 * **Navegação**: `← / →` ou `Tab` alternam abas · `2` ou `R` para esta aba · `Q` Sair
 
 ### 3️⃣ [ Dev ]
 * **`D0`**: 🚀 **Pacote Dev Completo** (VS Code + Git + Notepad++ + JDK 17)
-* **IDEs & EDITORES (`D1–D4`)**: `D1` VS Code · `D2` Notepad++ · `D3` VS 2022 Community · `D4` Android Studio
-* **VERSIONAMENTO & CONTROLE (`D5`)**: `D5` Git SCM
-* **SERVIDORES & AMBIENTES (`D6`)**: `D6` XAMPP (PHP 8.2 & MySQL)
-* **JAVA DEVELOPMENT KIT (`D7–D10`)**: `D7` JDK 8 · `D8` JDK 11 · `D9` JDK 17 (LTS) · `D10` JDK 21 (LTS)
+* **FERRAMENTAS DEV EM ORDEM ALFABÉTICA (`D1–D10`)**:
+  * `D1`: Android Studio
+  * `D2`: Git SCM
+  * `D3`: Java Temurin 8 JDK
+  * `D4`: Java Temurin 11 JDK
+  * `D5`: Java Temurin 17 JDK (LTS)
+  * `D6`: Java Temurin 21 JDK (LTS)
+  * `D7`: Notepad++
+  * `D8`: Visual Studio 2022 Community
+  * `D9`: Visual Studio Code
+  * `D10`: XAMPP (PHP 8.2 & MySQL)
 * **Navegação**: `← / →` ou `Tab` alternam abas · `3` ou `D` para esta aba · `Q` Sair
 
 ### 4️⃣ [ Configurações ]
-* **SISTEMA, ACESSO & REDE (`C1–C7`)**:
-  * `C1`: Tweaks Win 11 (Menu Clássico, Dark, Barra Esquerda, Sem Widgets/Copilot)
-  * `C2`: Habilitar Admin Local nativo (Detecção por SID `*-500`)
-  * `C3`: 🚀 **Habilitar Servidor OpenSSH** (Porta 22 TCP, serviço sshd/ssh-agent automático e firewall)
-  * `C4`: Renomear Computador
+* **FERRAMENTAS EM ORDEM ALFABÉTICA (`C1–C9`)**:
+  * `C1`: Diagnóstico Volume C: (Repair-Volume sem reiniciar)
+  * `C2`: Forçar Atualização de Diretivas GPO (`gpupdate /force`)
+  * `C3`: Habilitar Admin Local nativo (Detecção por SID `*-500`)
+  * `C4`: 🚀 **Habilitar Servidor OpenSSH** (Porta 22 TCP, serviço sshd/ssh-agent e firewall)
   * `C5`: Mapear Credencial de Rede no Windows Credential Manager
-  * `C6`: Reset Pilha de Rede (Flush DNS, DHCP Release/Renew, reinício dinâmico de adaptadores)
-  * `C7`: Forçar Atualização de Diretivas GPO (`gpupdate /force`)
-* **DIAGNÓSTICO & REPARO (`C8–C9`)**:
-  * `C8`: Diagnóstico Online Volume C: (Repair-Volume sem reiniciar)
-  * `C9`: Reparo Completo do Sistema (DISM RestoreHealth primeiro + SFC Scannow)
+  * `C6`: Renomear Computador
+  * `C7`: Reparo Completo do Sistema (DISM RestoreHealth primeiro + SFC Scannow)
+  * `C8`: Reset Pilha de Rede (Flush DNS, DHCP Release/Renew, reinício dinâmico de adaptadores)
+  * `C9`: Tweaks Win 11 (Menu Clássico, Dark, Barra Esquerda, Sem Widgets/Copilot)
 * **PERFIS AUTOMATIZADOS (`P1–P2`)**:
   * `P1`: 🏛️ **MODO PMA** (Padrão corporativo Prefeitura: Apps + Runtimes + Admin + Tweaks Win 11)
   * `P2`: 🚀 **MODO BRNCZZR** (Padrão Dev Workstation + Produtividade + Runtimes + Tweaks)
