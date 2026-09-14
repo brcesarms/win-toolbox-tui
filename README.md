@@ -30,18 +30,17 @@ powershell -ExecutionPolicy Bypass -File .\win-toolbox.ps1
 
 ## 💎 Destaques do TUI estilo BIOS (padrão)
 
-* 🖥️ **Interface estilo BIOS / Setup Utility:** bordas duplas `╔ ║ ╝`, título centralizado amarelo e cursor de seleção em bloco verde — fiel ao firmware.
-* ⌨️ **Navegação 100% nativa:** setas ↑↓ movem · Espaço marca `[✓]` · Enter executa · Esc volta · Q sai. Usa `[Console]::ReadKey` (zero dependências — nem gum, nem instalação).
-* 🟢 **Detecção de instalados:** cada item aparece `[INSTALADO]` em verde quando já presente na máquina; itens instalados não são remarcáveis.
-* 📑 **Atalhos entre telas:** `D` Dev · `M` Manutenção · `S` Softwares — sem voltar ao menu.
-* 📊 **Paginação automática:** telas longas viram páginas com `PgUp`/`PgDn`.
+* 🖥️ **Interface estilo BIOS / Setup Utility (120x30):** bordas duplas `╔ ║ ╝`, ocupando perfeitamente a resolução padrão da janela (120 colunas x 30 linhas), abas superiores sempre visíveis e cursor de seleção em bloco verde — fiel ao firmware.
+* ⌨️ **Navegação 100% nativa:** `← / →` ou `Tab` alternam entre as 4 abas · `↑ / ↓` movem · Espaço marca `[✓]` · Enter executa · Esc ou Q sai. Usa `[Console]::ReadKey` (zero dependências — nem gum, nem instalação).
+* 🟢 **Detecção de instalados:** cada item aparece marcado com `[✓]` e `[INSTALADO]` em verde quando já presente na máquina; itens instalados não são remarcáveis.
+* 📑 **Atalhos diretos entre abas:** `1` ou `A` (Apps) · `2` ou `R` (Runtimes) · `3` ou `D` (Dev) · `4` ou `C` (Configurações).
 * ⚡ **100% one-liner** — `irm ... | iex` sem instalar nada.
 
 ## 🖥️ Destaques da GUI (alternativa)
 
 * ☑️ **Checkboxes múltiplos:** marque os apps desejados (7-Zip, WinRAR, VLC...) e clique em **Instalar Selecionados**.
 * 🟢 **Detecção de apps instalados:** checkboxes de apps já presentes aparecem verdes/desabilitados com tooltip "Já instalado".
-* 📑 **Abas organizadas:** Softwares Essenciais · Desenvolvimento · Manutenção & Perfis.
+* 📑 **Abas organizadas:** Apps · Desenvolvimento · Manutenção & Perfis.
 * 🌙 **Tema dark:** cards, grid alinhado e checkboxes desenhados sob medida (OwnerDraw).
 
 ---
@@ -50,7 +49,7 @@ powershell -ExecutionPolicy Bypass -File .\win-toolbox.ps1
 
 A interface apresenta uma barra de menus superior sempre visível com **4 abas dedicadas**:
 
-### 1️⃣ [ Apps Essenciais ]
+### 1️⃣ [ Apps ]
 * **`0`**: 🚀 **Atualização Geral** — atualizar todos os pacotes instalados via Winget
 * **COMPACTAÇÃO (`1A–1B`)**: `1A` 7-Zip · `1B` WinRAR
 * **DOCUMENTOS (`2A–2C`)**: `2A` Adobe Acrobat Reader · `2B` Foxit PDF Reader · `2C` LibreOffice LTS
@@ -60,7 +59,7 @@ A interface apresenta uma barra de menus superior sempre visível com **4 abas d
 
 ### 2️⃣ [ Runtimes ]
 * **`R0`**: ⚡ **Pacote Runtimes Completo** (.NET 8/9 + VC++ All-in-One + Java 17)
-* **RUNTIMES ESSENCIAIS (`R1–R6`)**:
+* **RUNTIMES (`R1–R6`)**:
   * `R1`: .NET 8 Desktop Runtime (LTS)
   * `R2`: .NET 9 Desktop Runtime
   * `R3`: Visual C++ 2015-2022 (x64)

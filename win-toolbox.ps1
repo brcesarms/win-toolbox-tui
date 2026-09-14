@@ -56,7 +56,24 @@ if ($osBuild -lt 22000) {
 }
 
 # ==============================================================================
-# 3. UTILITÁRIO DE ESPERA (WAIT)
+# 3. CONFIGURAÇÃO DE DIMENSÕES DA JANELA (PADRÃO 120 COLUNAS X 30 LINHAS)
+# ==============================================================================
+try {
+    if ($Host.UI.RawUI) {
+        $curW = $Host.UI.RawUI.WindowSize.Width
+        $curH = $Host.UI.RawUI.WindowSize.Height
+        if ($curW -lt 120 -or $curH -lt 30) {
+            $buf = $Host.UI.RawUI.BufferSize
+            $newBufW = [Math]::Max($buf.Width, 120)
+            $newBufH = [Math]::Max($buf.Height, 30)
+            $Host.UI.RawUI.BufferSize = New-Object System.Management.Automation.Host.Size($newBufW, $newBufH)
+            $Host.UI.RawUI.WindowSize = New-Object System.Management.Automation.Host.Size(120, 30)
+        }
+    }
+} catch { }
+
+# ==============================================================================
+# 4. UTILITÁRIO DE ESPERA (WAIT)
 # ==============================================================================
 function Wait-User {
     Write-Host "`n[Pressione ENTER para continuar...]" -ForegroundColor DarkGray
@@ -142,6 +159,8 @@ function New-BiosItem {
     return @{ Code = $Code; Text = $Text; Instalado = $Instalado; Special = $Special }
 }
 
+$script:screenCleared = $false
+
 function Show-BiosScreen {
     param(
         [string]$ActiveTab = "APPS",
@@ -149,34 +168,47 @@ function Show-BiosScreen {
         [int]$Sel,
         [hashtable]$Marks,
         [int]$Page = 0,
-        [int]$PageSize = 17,
+        [int]$PageSize = 20,
         [int]$PageCount = 1,
         [bool]$Multi = $true
     )
-    Clear-Host
-    $totalWidth = 90        # largura total da caixa
-    $inner = $totalWidth - 4 # conteúdo interno (86) entre "║ " e " ║"
+    
+    try {
+        [Console]::CursorVisible = $false
+        if (-not $script:screenCleared) {
+            Clear-Host
+            $script:screenCleared = $true
+        } else {
+            [Console]::SetCursorPosition(0, 0)
+        }
+    } catch {
+        Clear-Host
+    }
+
+    $totalWidth = 120        # largura total da caixa padronizada 120x30
+    $inner = $totalWidth - 4 # conteúdo interno (116) entre "║ " e " ║"
 
     # ---- topo estilo BIOS ----
     Write-Host ("╔" + ("═" * ($totalWidth - 2)) + "╗") -ForegroundColor Cyan
-    $topo = (" WIN-TOOLBOX TUI · Setup Utility" + (" " * ($inner - 38 - 15)) + " [ WINDOWS 11 ]")
+    $topo = (" WIN-TOOLBOX TUI · Setup Utility" + (" " * 69) + "[ WINDOWS 11 ] ")
     Write-Host "║ $($topo.PadRight($inner)) ║" -ForegroundColor Cyan
     $data = (Get-Date).ToString("dd/MM/yyyy")
     $info = " Data: $data | Computador: $env:computername | Usuário: $env:username"
     Write-Host "║ $($info.PadRight($inner)) ║" -ForegroundColor DarkGray
     Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
 
-    # ---- barra de menus estilo BIOS (sempre visível no topo) ----
-    # Espaçamento exato: 4 + 19 + 7 + 12 + 7 + 7 + 7 + 17 + 6 = 86 colunas
-    Write-Host "║    " -NoNewline -ForegroundColor Cyan
+    # ---- barra de menus estilo BIOS (sempre visível no topo, 120 colunas) ----
+    # Espaçamento exato: 2 (borda "║ ") + 10 + 8 (Apps) + 16 + 12 (Runtimes) + 16 + 7 (Dev) + 16 + 17 (Configurações) + 14 + 2 (" ║") = 120
+    Write-Host "║ " -NoNewline -ForegroundColor Cyan
+    Write-Host (" " * 10) -NoNewline
     
     if ($ActiveTab -eq "APPS") {
-        Write-Host "[ APPS ESSENCIAIS ]" -NoNewline -BackgroundColor Yellow -ForegroundColor Black
+        Write-Host "[ APPS ]" -NoNewline -BackgroundColor Yellow -ForegroundColor Black
     } else {
-        Write-Host "  Apps Essenciais  " -NoNewline -ForegroundColor DarkGray
+        Write-Host "  Apps  " -NoNewline -ForegroundColor DarkGray
     }
     
-    Write-Host "       " -NoNewline
+    Write-Host (" " * 16) -NoNewline
     
     if ($ActiveTab -eq "RUNTIMES") {
         Write-Host "[ RUNTIMES ]" -NoNewline -BackgroundColor Yellow -ForegroundColor Black
@@ -184,7 +216,7 @@ function Show-BiosScreen {
         Write-Host "  Runtimes  " -NoNewline -ForegroundColor DarkGray
     }
     
-    Write-Host "       " -NoNewline
+    Write-Host (" " * 16) -NoNewline
     
     if ($ActiveTab -eq "DEV") {
         Write-Host "[ DEV ]" -NoNewline -BackgroundColor Yellow -ForegroundColor Black
@@ -192,7 +224,7 @@ function Show-BiosScreen {
         Write-Host "  Dev  " -NoNewline -ForegroundColor DarkGray
     }
     
-    Write-Host "       " -NoNewline
+    Write-Host (" " * 16) -NoNewline
     
     if ($ActiveTab -eq "CONFIG") {
         Write-Host "[ CONFIGURAÇÕES ]" -NoNewline -BackgroundColor Yellow -ForegroundColor Black
@@ -200,7 +232,8 @@ function Show-BiosScreen {
         Write-Host "  Configurações  " -NoNewline -ForegroundColor DarkGray
     }
     
-    Write-Host "      ║" -ForegroundColor Cyan
+    Write-Host (" " * 14) -NoNewline
+    Write-Host " ║" -ForegroundColor Cyan
     Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
 
     # ---- itens da página atual ----
@@ -239,6 +272,14 @@ function Show-BiosScreen {
         Write-Host " ║" -ForegroundColor Cyan
     }
 
+    # Preenchimento de linhas vazias até $PageSize para manter altura de 30 linhas fixa
+    for ($i = $end; $i -lt ($start + $PageSize); $i++) {
+        $vazio = ""
+        Write-Host "║ " -NoNewline -ForegroundColor Cyan
+        Write-Host ($vazio.PadRight($inner)) -NoNewline
+        Write-Host " ║" -ForegroundColor Cyan
+    }
+
     # ---- rodapé: dicas de navegação + legenda de cores ----
     Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
 
@@ -253,7 +294,8 @@ function Show-BiosScreen {
     if ($legend.Length -gt $inner) { $legend = $legend.Substring(0, $inner) }
     Write-Host "║ $($legend.PadRight($inner)) ║" -ForegroundColor DarkGray
 
-    Write-Host ("╚" + ("═" * ($totalWidth - 2)) + "╝") -ForegroundColor Cyan
+    # Borda inferior com -NoNewline para evitar scroll na linha 30
+    Write-Host ("╚" + ("═" * ($totalWidth - 2)) + "╝") -NoNewline -ForegroundColor Cyan
 }
 
 function Read-BiosMenu {
@@ -265,7 +307,7 @@ function Read-BiosMenu {
 
     $sel = 0
     $marks = @{}
-    $pageSize = 17
+    $pageSize = 20
     $pageCount = [Math]::Max(1, [Math]::Ceiling($Items.Count / $pageSize))
     $page = 0
 
@@ -279,7 +321,10 @@ function Read-BiosMenu {
         } catch {
             $resp = Read-Host "Digite codigos (ex: 1A,2C) ou Q para sair"
             $respU = $resp.Trim().ToUpper()
-            if ($respU -eq "Q") { return "Q" }
+            if ($respU -eq "Q") { 
+                try { [Console]::CursorVisible = $true } catch { }
+                return "Q" 
+            }
             return $respU
         }
 
@@ -314,7 +359,7 @@ function Read-BiosMenu {
                     if ($page -gt 0) {
                         $page--
                         $sel = ($page * $pageSize) + $pageSize - 1
-                        if ($sel -ge $Items.Count) { $sel = $Items.Count - 1 }
+                        if ($sel -ge $Items.Count) { $sel = [Math]::Max(0, $Items.Count - 1) }
                     } else {
                         $sel = 0
                     }
@@ -322,7 +367,7 @@ function Read-BiosMenu {
             }
             "DownArrow" {
                 $sel++
-                $fimPagina = [Math]::Min($Items.Count, (($page + 1) * $pageSize) - 1)
+                $fimPagina = [Math]::Max(0, [Math]::Min($Items.Count - 1, (($page + 1) * $pageSize) - 1))
                 if ($sel -gt $fimPagina) {
                     if ($page -lt $pageCount - 1) {
                         $page++
@@ -333,7 +378,7 @@ function Read-BiosMenu {
                 }
             }
             "Home"     { $page = 0; $sel = 0 }
-            "End"      { $page = $pageCount - 1; $sel = $Items.Count - 1 }
+            "End"      { $page = $pageCount - 1; $sel = [Math]::Max(0, $Items.Count - 1) }
             "PageUp"   { if ($page -gt 0) { $page--; $sel = $page * $pageSize } }
             "PageDown" { if ($page -lt $pageCount - 1) { $page++; $sel = $page * $pageSize } }
             "Spacebar" {
@@ -354,8 +399,14 @@ function Read-BiosMenu {
                     return $Items[$sel].Code
                 }
             }
-            "Escape" { return "Q" }
-            "Q"      { return "Q" }
+            "Escape" { 
+                try { [Console]::CursorVisible = $true } catch { }
+                return "Q" 
+            }
+            "Q" { 
+                try { [Console]::CursorVisible = $true } catch { }
+                return "Q" 
+            }
             default {
                 $ch = "$($key.KeyChar)".ToUpper()
                 if ($ch -eq "1" -or $ch -eq "A") { return "TAB_APPS" }
@@ -779,26 +830,28 @@ function Dispatch-Execution {
     if ([string]::IsNullOrWhiteSpace($escolha)) { return }
     
     Clear-Host
-    Write-Host ("╭─ EXECUTANDO TAREFAS SELECIONADAS " + ("─" * 32) + " [ PROCESSO ATIVO ] ─╮") -ForegroundColor Cyan
+    try { [Console]::CursorVisible = $true } catch { }
+    Write-Host ("╭─ EXECUTANDO TAREFAS SELECIONADAS " + ("─" * 63) + " [ PROCESSO ATIVO ] ─╮") -ForegroundColor Cyan
     $msgLote = " Lote em andamento: $escolha"
-    if ($msgLote.Length -gt 88) { $msgLote = $msgLote.Substring(0, 85) + "..." }
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ($msgLote.PadRight(88)) -NoNewline -ForegroundColor Yellow
-    Write-Host "│" -ForegroundColor Cyan
-    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
+    if ($msgLote.Length -gt 116) { $msgLote = $msgLote.Substring(0, 113) + "..." }
+    Write-Host "│ " -NoNewline -ForegroundColor Cyan
+    Write-Host ($msgLote.PadRight(116)) -NoNewline -ForegroundColor Yellow
+    Write-Host " │" -ForegroundColor Cyan
+    Write-Host ("╰" + ("─" * 118) + "╯") -ForegroundColor Cyan
     Write-Host ""
     
     Execute-BatchOptions $escolha
     
     Write-Host ""
-    Write-Host "╭────────────────────────────────────────────────────────────────────────────────────────╮" -ForegroundColor Green
-    Write-Host "│" -NoNewline -ForegroundColor Green
-    Write-Host (" [✓] Todas as tarefas solicitadas foram concluídas!".PadRight(88)) -NoNewline -ForegroundColor Green
-    Write-Host "│" -ForegroundColor Green
-    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Green
+    Write-Host ("╭" + ("─" * 118) + "╮") -ForegroundColor Green
+    Write-Host "│ " -NoNewline -ForegroundColor Green
+    Write-Host (" [✓] Todas as tarefas solicitadas foram concluídas!".PadRight(116)) -NoNewline -ForegroundColor Green
+    Write-Host " │" -ForegroundColor Green
+    Write-Host ("╰" + ("─" * 118) + "╯") -ForegroundColor Green
     
     Wait-User
     $script:InstalledCache.Clear()
+    $script:screenCleared = $false
 }
 
 # ==============================================================================
@@ -925,21 +978,24 @@ function Invoke-MenuConfig {
 if (-not [string]::IsNullOrWhiteSpace($ExecutarLote)) {
     $host.UI.RawUI.WindowTitle = "WIN-TOOLBOX-TUI — [Executando: $ExecutarLote]"
     Clear-Host
-    Write-Host ("╭─ EXECUTANDO TAREFAS SELECIONADAS " + ("─" * 33) + " [ PROCESSO ATIVO ] ─╮") -ForegroundColor Cyan
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host (" Lote em andamento: $ExecutarLote".PadRight(88)) -NoNewline -ForegroundColor Yellow
-    Write-Host "│" -ForegroundColor Cyan
-    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
+    try { [Console]::CursorVisible = $true } catch { }
+    Write-Host ("╭─ EXECUTANDO TAREFAS SELECIONADAS " + ("─" * 63) + " [ PROCESSO ATIVO ] ─╮") -ForegroundColor Cyan
+    $msgLote = " Lote em andamento: $ExecutarLote"
+    if ($msgLote.Length -gt 116) { $msgLote = $msgLote.Substring(0, 113) + "..." }
+    Write-Host "│ " -NoNewline -ForegroundColor Cyan
+    Write-Host ($msgLote.PadRight(116)) -NoNewline -ForegroundColor Yellow
+    Write-Host " │" -ForegroundColor Cyan
+    Write-Host ("╰" + ("─" * 118) + "╯") -ForegroundColor Cyan
     Write-Host ""
     
     Execute-BatchOptions $ExecutarLote
     
     Write-Host ""
-    Write-Host "╭────────────────────────────────────────────────────────────────────────────────────────╮" -ForegroundColor Green
-    Write-Host "│" -NoNewline -ForegroundColor Green
-    Write-Host (" [✓] Todas as tarefas solicitadas foram concluídas!".PadRight(88)) -NoNewline -ForegroundColor Green
-    Write-Host "│" -ForegroundColor Green
-    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Green
+    Write-Host ("╭" + ("─" * 118) + "╮") -ForegroundColor Green
+    Write-Host "│ " -NoNewline -ForegroundColor Green
+    Write-Host (" [✓] Todas as tarefas solicitadas foram concluídas!".PadRight(116)) -NoNewline -ForegroundColor Green
+    Write-Host " │" -ForegroundColor Green
+    Write-Host ("╰" + ("─" * 118) + "╯") -ForegroundColor Green
     
     # Modo automático (-ExecutarLote): interativo aguarda ENTER; headless (Task Scheduler/RMM) sai direto.
     if ([Environment]::UserInteractive) {
@@ -962,4 +1018,5 @@ while ($script:menuAtual -ne "EXIT") {
     }
 }
 
+try { [Console]::CursorVisible = $true } catch { }
 Write-Host "`n[+] Encerrando win-toolbox-tui. Até logo!`n" -ForegroundColor Green

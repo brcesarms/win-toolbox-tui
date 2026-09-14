@@ -349,7 +349,7 @@ foreach ($b in @($btnTabSoft, $btnTabDev, $btnTabMant)) {
     $b.Cursor    = [System.Windows.Forms.Cursors]::Hand
     $i++
 }
-$btnTabSoft.Text = "Softwares Essenciais"
+$btnTabSoft.Text = "Apps"
 $btnTabDev.Text  = "Desenvolvimento"
 $btnTabMant.Text = "Manutenção & Perfis"
 
