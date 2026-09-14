@@ -155,22 +155,22 @@ function Show-BiosScreen {
         [string[]]$Shortcuts = @()
     )
     Clear-Host
-    $T = 90                 # largura total da caixa
-    $inner = $T - 4         # conteúdo interno (86) entre "║ " e " ║"
+    $totalWidth = 90        # largura total da caixa
+    $inner = $totalWidth - 4 # conteúdo interno (86) entre "║ " e " ║"
     $esc = [char]27
     $bold = "$esc[1m"
     $reset = "$esc[0m"
 
     # ---- topo estilo BIOS ----
-    Write-Host ("╔" + ("═" * ($T - 2)) + "╗") -ForegroundColor Cyan
+    Write-Host ("╔" + ("═" * ($totalWidth - 2)) + "╗") -ForegroundColor Cyan
     $topo = (" WIN-TOOLBOX TUI · Setup Utility" + (" " * ($inner - 38 - 15)) + " [ WINDOWS 11 ]")
     Write-Host "║ $($topo.PadRight($inner)) ║" -ForegroundColor Cyan
-    Write-Host ("╠" + ("═" * ($T - 2)) + "╣") -ForegroundColor Cyan
+    Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
 
     # ---- título da tela (amarelo centralizado) ----
-    $t = " $($ScreenTitle.ToUpper()) "
-    $pad = [Math]::Max(0, [int](($inner - $t.Length) / 2))
-    $hl = ((" " * $pad) + $t).PadRight($inner)
+    $titleText = " $($ScreenTitle.ToUpper()) "
+    $pad = [Math]::Max(0, [int](($inner - $titleText.Length) / 2))
+    $hl = ((" " * $pad) + $titleText).PadRight($inner)
     Write-Host "║ " -NoNewline -ForegroundColor Cyan
     Write-Host ("$bold$hl$reset") -NoNewline -ForegroundColor Yellow
     Write-Host " ║" -ForegroundColor Cyan
@@ -197,6 +197,10 @@ function Show-BiosScreen {
             $cor = "Green"
             $sufixo = "[INSTALADO]"
         }
+        $maxTexto = $inner - $sufixo.Length
+        if ($texto.Length -gt $maxTexto) {
+            $texto = $texto.Substring(0, [Math]::Max(0, $maxTexto - 1)) + "…"
+        }
         $linha = $texto.PadRight($inner - $sufixo.Length) + $sufixo
 
         Write-Host "║ " -NoNewline -ForegroundColor Cyan
@@ -209,7 +213,7 @@ function Show-BiosScreen {
     }
 
     # ---- rodapé: dicas + paginação + telemetria ----
-    Write-Host ("╠" + ("═" * ($T - 2)) + "╣") -ForegroundColor Cyan
+    Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
     if ($Multi) {
         $dica = " ↑↓ mover · Espaço marcar [✓] · Enter executar · Esc voltar · Q sair"
     } else {
@@ -221,7 +225,7 @@ function Show-BiosScreen {
     $info = " Data: $data | Computador: $env:computername | Usuário: $env:username"
     Write-Host "║ $($dica.PadRight($inner)) ║" -ForegroundColor Cyan
     Write-Host "║ $($info.PadRight($inner)) ║" -ForegroundColor DarkGray
-    Write-Host ("╚" + ("═" * ($T - 2)) + "╝") -ForegroundColor Cyan
+    Write-Host ("╚" + ("═" * ($totalWidth - 2)) + "╝") -ForegroundColor Cyan
 }
 
 function Read-BiosMenu {
@@ -255,12 +259,11 @@ function Read-BiosMenu {
         switch ($key.Key) {
             "UpArrow" {
                 $sel--
-                if ($sel -lt $Page * $pageSize) {
+                if ($sel -lt $page * $pageSize) {
                     if ($page -gt 0) {
                         $page--
-                        $sel = $pageSize - 1
-                        $visiveis = [Math]::Min($pageSize, $Items.Count - ($page * $pageSize))
-                        if ($sel -ge $visiveis) { $sel = $visiveis - 1 }
+                        $sel = ($page * $pageSize) + $pageSize - 1
+                        if ($sel -ge $Items.Count) { $sel = $Items.Count - 1 }
                     } else {
                         $sel = 0
                     }
