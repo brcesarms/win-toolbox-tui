@@ -168,7 +168,7 @@ function Show-BiosScreen {
         [int]$Sel,
         [hashtable]$Marks,
         [int]$Page = 0,
-        [int]$PageSize = 20,
+        [int]$PageSize = 21,
         [int]$PageCount = 1,
         [bool]$Multi = $true
     )
@@ -280,19 +280,15 @@ function Show-BiosScreen {
         Write-Host " ║" -ForegroundColor Cyan
     }
 
-    # ---- rodapé: dicas de navegação + legenda de cores ----
+    # ---- rodapé: dicas de navegação ----
     Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
 
-    # 1. Barra onde explica a navegação
+    # Barra de instruções de navegação
     $dica = " ←→ trocar menu · ↑↓ mover · Espaço [✓] · Enter executar · Q sair"
+    if ($Marks.Count -gt 0) { $dica += " · Marcados: $($Marks.Count)" }
     if ($PageCount -gt 1) { $dica += " · Pg $($Page + 1)/$PageCount" }
     if ($dica.Length -gt $inner) { $dica = $dica.Substring(0, $inner) }
     Write-Host "║ $($dica.PadRight($inner)) ║" -ForegroundColor Cyan
-
-    # 2. Legenda informando os significados das cores (embaixo da barra de navegação)
-    $legend = " [✓] Verde = INSTALADO   ·   [ ] cinza = pendente   ·   marcados: $($Marks.Count)"
-    if ($legend.Length -gt $inner) { $legend = $legend.Substring(0, $inner) }
-    Write-Host "║ $($legend.PadRight($inner)) ║" -ForegroundColor DarkGray
 
     # Borda inferior com -NoNewline para evitar scroll na linha 30
     Write-Host ("╚" + ("═" * ($totalWidth - 2)) + "╝") -NoNewline -ForegroundColor Cyan
@@ -307,7 +303,7 @@ function Read-BiosMenu {
 
     $sel = 0
     $marks = @{}
-    $pageSize = 20
+    $pageSize = 21
     $pageCount = [Math]::Max(1, [Math]::Ceiling($Items.Count / $pageSize))
     $page = 0
 
