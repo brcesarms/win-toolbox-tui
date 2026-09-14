@@ -1,7 +1,7 @@
 # 🪟 win-toolbox-tui — Caixa de Ferramentas & Pós-Instalação para Windows 11
 
 > **Exclusivo para Windows 11 (Build 22000+)**  
-> Interface interativa de terminal (TUI) com **múltiplos menus organizados**, **indicadores dinâmicos de status em tempo real (`[✔]` Verde / `[ ]` Branco)**, categorias em alto contraste (negrito ANSI), barra de progresso gráfica em lote e telemetria de rede para estações de trabalho.
+> Interface gráfica desktop (GUI/WPF) estilo **Chris Titus WinUtil** com checkboxes, abas e barra de progresso, instalando softwares e aplicando manutenção sem digitar comandos. Inclui ainda a **interface legada de terminal (TUI)** com indicadores de status em tempo real (`[✔]` Verde / `[ ]` Branco) e perfis automatizados (`P1`/`P2`).
 
 ---
 
@@ -10,7 +10,7 @@
 Abra o **PowerShell como Administrador** no Windows 11 e execute:
 
 ```powershell
-irm https://raw.githubusercontent.com/brcesarms/win-toolbox-tui/main/win-toolbox.ps1 | iex
+irm https://raw.githubusercontent.com/brcesarms/win-toolbox-tui/main/win-toolbox-gui.ps1 | iex
 ```
 
 Ou execute localmente clonando o repositório:
@@ -18,12 +18,27 @@ Ou execute localmente clonando o repositório:
 ```powershell
 git clone https://github.com/brcesarms/win-toolbox-tui.git
 cd win-toolbox-tui
-powershell -ExecutionPolicy Bypass -File .\win-toolbox.ps1
+powershell -ExecutionPolicy Bypass -File .\win-toolbox-gui.ps1
 ```
+
+> 🖥️ **Para a interface legada de terminal (TUI):** `win-toolbox.ps1`
+> ```powershell
+> irm https://raw.githubusercontent.com/brcesarms/win-toolbox-tui/main/win-toolbox.ps1 | iex
+> ```
 
 ---
 
-## 💎 Destaques Visuais & Experiência TUI
+## 💎 Destaques da GUI (padrão)
+
+* ☑️ **Checkboxes múltiplos:** marque os apps desejados (7-Zip, WinRAR, VLC...) e clique em **Instalar Selecionados**.
+* 📑 **Abas organizadas:** Softwares Essenciais · Desenvolvimento · Manutenção & Perfis.
+* 📊 **Barra de progresso + log em tempo real:** instalação via winget em background sem congelar a janela.
+* 🌙 **Tema dark estilo WinUtil:** interface moderna e de alto contraste.
+* ⚡ **100% one-liner** — sem instalar nada, só PowerShell.
+
+---
+
+## 🖥️ Destaques Visuais & Experiência TUI (legado)
 
 * 🟢 **Status Dinâmico em Tempo Real:** Cada aplicativo e tarefa exibe `[✔]` em Verde se já estiver instalado/concluído no Windows 11, ou `[ ]` em Branco se pendente.
 * 🟡 **Títulos em Negrito e Alto Contraste:** Seções e categorias formatadas em negrito ANSI de alto contraste, facilitando a leitura imediata sem poluição visual.
@@ -76,23 +91,6 @@ A interface é dividida em **3 telas dedicadas e organizadas**:
   * `P1`: 🏛️ **MODO PMA** (Padrão corporativo Prefeitura: Apps + Runtimes + Admin + Tweaks Win 11)
   * `P2`: 🚀 **MODO BRNCZZR** (Padrão Dev Workstation + Produtividade + Runtimes + Tweaks)
 * **Navegação**: `V` Menu Principal · `D` Menu Dev · `Q` Sair
-
----
-
-## 🧩 Execuções em Lote & Barra de Progresso
-
-Selecione várias opções separadas por vírgula em qualquer menu:
-```text
-╭─ Digite as opções desejadas separadas por vírgula (ex: 0, 1A, 2C, 5E, 6D)
-╰─❯ 1A, 2C, 5C, 6D, D11
-```
-
-Durante o processamento, a TUI renderiza a barra de progresso:
-```text
-╭─ PROGRESSO [ 3 / 5 ] ──────────────────────────────────────────────────────── [ 60% ] ─╮
-│ [██████████████████░░░░░░░░░░░░] Processando opção: [5C]                              │
-╰────────────────────────────────────────────────────────────────────────────────────────╯
-```
 
 ---
 
