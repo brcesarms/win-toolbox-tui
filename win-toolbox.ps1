@@ -212,15 +212,10 @@ function Show-BiosScreen {
         Write-Host " ║" -ForegroundColor Cyan
     }
 
-    # ---- rodapé: legenda + dicas + paginação ----
+    # ---- rodapé: dicas de navegação + legenda de cores ----
     Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
-    if ($Multi) {
-        $legend = " [✓] Verde = INSTALADO   ·   [ ] cinza = pendente   ·   marcados p/ instalar: $($Marks.Count)"
-    } else {
-        $legend = " [✓] Verde = INSTALADO   ·   [ ] cinza = pendente"
-    }
-    Write-Host "║ $($legend.PadRight($inner)) ║" -ForegroundColor DarkGray
 
+    # 1. Barra onde explica a navegação
     if ($Multi) {
         $dica = " ↑↓ mover · Espaço marcar [✓] · Enter executar · Esc voltar · Q sair"
     } else {
@@ -229,6 +224,15 @@ function Show-BiosScreen {
     if ($PageCount -gt 1) { $dica += "  ·  Página $($Page + 1)/$PageCount" }
     if ($Shortcuts.Count -gt 0) { $dica += "  ·  atalhos: $($Shortcuts -join '/')" }
     Write-Host "║ $($dica.PadRight($inner)) ║" -ForegroundColor Cyan
+
+    # 2. Legenda informando os significados das cores (embaixo da barra de navegação)
+    if ($Multi) {
+        $legend = " [✓] Verde = INSTALADO   ·   [ ] cinza = pendente   ·   marcados p/ instalar: $($Marks.Count)"
+    } else {
+        $legend = " [✓] Verde = INSTALADO   ·   [ ] cinza = pendente"
+    }
+    Write-Host "║ $($legend.PadRight($inner)) ║" -ForegroundColor DarkGray
+
     Write-Host ("╚" + ("═" * ($totalWidth - 2)) + "╝") -ForegroundColor Cyan
 }
 
