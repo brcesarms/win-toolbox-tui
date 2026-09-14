@@ -712,65 +712,26 @@ function Dispatch-Execution {
     param([Parameter(Mandatory=$true)] [string]$escolha)
     if ([string]::IsNullOrWhiteSpace($escolha)) { return }
     
-    $totalWidth = 90
-    $inner = $totalWidth - 4
+    Clear-Host
+    Write-Host ("╭─ EXECUTANDO TAREFAS SELECIONADAS " + ("─" * 32) + " [ PROCESSO ATIVO ] ─╮") -ForegroundColor Cyan
+    $msgLote = " Lote em andamento: $escolha"
+    if ($msgLote.Length -gt 88) { $msgLote = $msgLote.Substring(0, 85) + "..." }
+    Write-Host "│" -NoNewline -ForegroundColor Cyan
+    Write-Host ($msgLote.PadRight(88)) -NoNewline -ForegroundColor Yellow
+    Write-Host "│" -ForegroundColor Cyan
+    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
+    Write-Host ""
     
-    # Identifica ou prepara o arquivo do script no disco para abrir a nova janela
-    $targetScript = $PSCommandPath
-    if ([string]::IsNullOrWhiteSpace($targetScript) -or -not (Test-Path $targetScript)) {
-        $targetScript = "$env:TEMP\win-toolbox.ps1"
-        try {
-            Invoke-RestMethod "https://raw.githubusercontent.com/brcesarms/win-toolbox-tui/main/win-toolbox.ps1" -OutFile $targetScript
-        } catch {
-            $targetScript = $null
-        }
-    }
-
-    if ($targetScript -and (Test-Path $targetScript)) {
-        Clear-Host
-        Write-Host ("╔" + ("═" * ($totalWidth - 2)) + "╗") -ForegroundColor Cyan
-        $topo = (" WIN-TOOLBOX TUI · Setup Utility" + (" " * ($inner - 38 - 15)) + " [ WINDOWS 11 ]")
-        Write-Host "║ $($topo.PadRight($inner)) ║" -ForegroundColor Cyan
-        Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
-        
-        $msgTitle = " EXECUTANDO EM NOVA JANELA DE TERMINAL "
-        $padTitle = [Math]::Max(0, [int](($inner - $msgTitle.Length) / 2))
-        $hlTitle = ((" " * $padTitle) + $msgTitle).PadRight($inner)
-        Write-Host "║ $hlTitle ║" -ForegroundColor Yellow
-        Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
-        
-        $vazio = " " * $inner
-        $l1 = ("  ► Tarefas selecionadas: $escolha").PadRight($inner)
-        $l2 = ("  ► Uma nova janela foi aberta para exibir o progresso dos comandos.").PadRight($inner)
-        $l3 = ("  ► Acompanhe o download e a instalacao na nova janela.").PadRight($inner)
-        $l4 = ("  ► Ao concluir na outra janela, este menu voltara automaticamente.").PadRight($inner)
-        $lWait = (" Aguardando finalizacao da janela externa...").PadRight($inner)
-
-        Write-Host "║ $vazio ║" -ForegroundColor Cyan
-        Write-Host "║ $l1 ║" -ForegroundColor Cyan
-        Write-Host "║ $l2 ║" -ForegroundColor Gray
-        Write-Host "║ $l3 ║" -ForegroundColor Gray
-        Write-Host "║ $l4 ║" -ForegroundColor Green
-        Write-Host "║ $vazio ║" -ForegroundColor Cyan
-        Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
-        Write-Host "║ $lWait ║" -ForegroundColor DarkGray
-        Write-Host ("╚" + ("═" * ($totalWidth - 2)) + "╝") -ForegroundColor Cyan
-
-        # Abre o processo em nova janela do PowerShell com privilégios de Admin e aguarda terminar (-Wait)
-        Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$targetScript`" -ExecutarLote `"$escolha`"" -Wait
-    } else {
-        # Fallback in-process caso não consiga abrir processo separado
-        Clear-Host
-        Write-Host ("╭─ EXECUTANDO TAREFAS SELECIONADAS " + ("─" * 33) + " [ PROCESSO ATIVO ] ─╮") -ForegroundColor Cyan
-        Write-Host "│" -NoNewline -ForegroundColor Cyan
-        Write-Host (" Lote em andamento: $escolha".PadRight(88)) -NoNewline -ForegroundColor Yellow
-        Write-Host "│" -ForegroundColor Cyan
-        Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
-        Write-Host ""
-        Execute-BatchOptions $escolha
-        Wait-User
-    }
+    Execute-BatchOptions $escolha
     
+    Write-Host ""
+    Write-Host "╭────────────────────────────────────────────────────────────────────────────────────────╮" -ForegroundColor Green
+    Write-Host "│" -NoNewline -ForegroundColor Green
+    Write-Host (" [✓] Todas as tarefas solicitadas foram concluídas!".PadRight(88)) -NoNewline -ForegroundColor Green
+    Write-Host "│" -ForegroundColor Green
+    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Green
+    
+    Wait-User
     $script:InstalledCache.Clear()
 }
 
