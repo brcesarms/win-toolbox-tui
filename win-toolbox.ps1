@@ -56,46 +56,15 @@ if ($osBuild -lt 22000) {
 }
 
 # ==============================================================================
-# 3. CABEÇALHO E BARRA DE PROGRESSO DINÂMICA
+# 3. UTILITÁRIO DE ESPERA (WAIT)
 # ==============================================================================
-function Show-Header {
-    param([string]$subtitulo = "MENU PRINCIPAL")
-    Clear-Host
-
-    $data = (Get-Date).ToString("dd/MM/yyyy")
-
-    # Obter o IPv4 principal ativo da máquina
-    $ip = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { 
-        $_.IPAddress -ne "127.0.0.1" -and 
-        $_.IPAddress -notlike "169.254*" -and 
-        $_.InterfaceAlias -notlike "*Loopback*" -and
-        $_.InterfaceAlias -notlike "*vEthernet*"
-    } | Select-Object -ExpandProperty IPAddress -First 1)
-
-    if ([string]::IsNullOrWhiteSpace($ip)) { $ip = "N/A" }
-
-    $esc = [char]27
-    $norm = "$esc[22m"
-    $reset = "$esc[0m"
-
-    Write-Host "╭─ WIN-TOOLBOX-TUI V1.0 ──────────────────────────────────────────────── [ WINDOWS 11 ] ─╮" -ForegroundColor Cyan
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ("$norm" + " TELA: $subtitulo".PadRight(88) + "$reset") -NoNewline -ForegroundColor Cyan
-    Write-Host "│" -ForegroundColor Cyan
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ("$norm" + " Data: $data  |  Computador: $env:computername  |  Usuario: $env:username  |  IP: $ip".PadRight(88) + "$reset") -NoNewline -ForegroundColor Gray
-    Write-Host "│" -ForegroundColor Cyan
-    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
-}
-
-
 function Wait-User {
     Write-Host "`n[Pressione ENTER para continuar...]" -ForegroundColor DarkGray
     $null = Read-Host
 }
 
 # ==============================================================================
-# 4. CACHE DE DETECÇÃO, RENDERIZADORES TUI & WINGET
+# 4. CACHE DE DETECÇÃO & WINGET
 # ==============================================================================
 $script:InstalledCache = @{}
 
@@ -153,26 +122,6 @@ function Test-IsInstalled {
     
     $script:InstalledCache[$key] = $result
     return $result
-}
-
-function Get-ItemDisplay {
-    param(
-        [Parameter(Mandatory=$true)] [string]$Key,
-        [Parameter(Mandatory=$true)] [string]$Code,
-        [Parameter(Mandatory=$true)] [string]$Title
-    )
-    $isInst = Test-IsInstalled $Key
-    if ($isInst) {
-        return @{
-            Text = " [✓] $Code. $Title"
-            Color = "Green"
-        }
-    } else {
-        return @{
-            Text = " [ ] $Code. $Title"
-            Color = "Gray"
-        }
-    }
 }
 
 # ==============================================================================
@@ -359,178 +308,6 @@ function Read-BiosMenu {
             }
         }
     }
-}
-
-function Write-TuiRow3Col {
-    param(
-        [hashtable]$it1,
-        [hashtable]$it2,
-        [hashtable]$it3
-    )
-    $esc = [char]27
-    $norm = "$esc[22m"
-    $reset = "$esc[0m"
-
-    $t1 = if ($it1 -and $it1.Text) { $it1.Text } else { "" }
-    $c1 = if ($it1 -and $it1.Color) { $it1.Color } else { "Gray" }
-    
-    $t2 = if ($it2 -and $it2.Text) { $it2.Text } else { "" }
-    $c2 = if ($it2 -and $it2.Color) { $it2.Color } else { "Gray" }
-    
-    $t3 = if ($it3 -and $it3.Text) { $it3.Text } else { "" }
-    $c3 = if ($it3 -and $it3.Color) { $it3.Color } else { "Gray" }
-    
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ("$norm" + $t1.PadRight(25) + "$reset") -NoNewline -ForegroundColor $c1
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ("$norm" + $t2.PadRight(29) + "$reset") -NoNewline -ForegroundColor $c2
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ("$norm" + $t3.PadRight(32) + "$reset") -NoNewline -ForegroundColor $c3
-    Write-Host "│" -ForegroundColor Cyan
-}
-
-function Write-TuiHeader3Col {
-    param([string]$h1, [string]$h2, [string]$h3)
-    $esc = [char]27
-    $bold = "$esc[1;93m"
-    $reset = "$esc[0m"
-    
-    $p1 = $h1.PadRight(25)
-    $p2 = $h2.PadRight(29)
-    $p3 = $h3.PadRight(32)
-    
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host "$bold$p1$reset" -NoNewline
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host "$bold$p2$reset" -NoNewline
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host "$bold$p3$reset" -NoNewline
-    Write-Host "│" -ForegroundColor Cyan
-}
-
-function Write-TuiRowSplit {
-    param(
-        [hashtable]$it1,
-        [hashtable]$it2a,
-        [hashtable]$it2b
-    )
-    $esc = [char]27
-    $norm = "$esc[22m"
-    $reset = "$esc[0m"
-
-    $t1 = if ($it1 -and $it1.Text) { $it1.Text } else { "" }
-    $c1 = if ($it1 -and $it1.Color) { $it1.Color } else { "Gray" }
-    
-    $t2a = if ($it2a -and $it2a.Text) { $it2a.Text } else { "" }
-    $c2a = if ($it2a -and $it2a.Color) { $it2a.Color } else { "Gray" }
-    
-    $t2b = if ($it2b -and $it2b.Text) { $it2b.Text } else { "" }
-    $c2b = if ($it2b -and $it2b.Color) { $it2b.Color } else { "Gray" }
-    
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ("$norm" + $t1.PadRight(25) + "$reset") -NoNewline -ForegroundColor $c1
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ("$norm" + $t2a.PadRight(30) + "$reset") -NoNewline -ForegroundColor $c2a
-    Write-Host ("$norm" + $t2b.PadRight(32) + "$reset") -NoNewline -ForegroundColor $c2b
-    Write-Host "│" -ForegroundColor Cyan
-}
-
-function Write-TuiHeaderSplit {
-    param([string]$h1, [string]$h2)
-    $esc = [char]27
-    $bold = "$esc[1;93m"
-    $reset = "$esc[0m"
-    
-    $p1 = $h1.PadRight(25)
-    $p2 = $h2.PadRight(62)
-    
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host "$bold$p1$reset" -NoNewline
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host "$bold$p2$reset" -NoNewline
-    Write-Host "│" -ForegroundColor Cyan
-}
-
-function Write-TuiRow2Col {
-    param(
-        [hashtable]$it1,
-        [hashtable]$it2,
-        [string]$title1 = "",
-        [string]$title2 = ""
-    )
-    $esc = [char]27
-    $bold = "$esc[1;93m"
-    $norm = "$esc[22m"
-    $reset = "$esc[0m"
-    
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    if (-not [string]::IsNullOrWhiteSpace($title1)) {
-        $p1 = $title1.PadRight(40)
-        Write-Host "$bold$p1$reset" -NoNewline
-    } elseif ($it1 -and $it1.Text) {
-        $c1 = if ($it1.Color) { $it1.Color } else { "Gray" }
-        Write-Host ("$norm" + $it1.Text.PadRight(40) + "$reset") -NoNewline -ForegroundColor $c1
-    } else {
-        Write-Host ("".PadRight(40)) -NoNewline -ForegroundColor Gray
-    }
-    
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    if (-not [string]::IsNullOrWhiteSpace($title2)) {
-        $p2 = $title2.PadRight(47)
-        Write-Host "$bold$p2$reset" -NoNewline
-    } elseif ($it2 -and $it2.Text) {
-        $c2 = if ($it2.Color) { $it2.Color } else { "Gray" }
-        Write-Host ("$norm" + $it2.Text.PadRight(47) + "$reset") -NoNewline -ForegroundColor $c2
-    } else {
-        Write-Host ("".PadRight(47)) -NoNewline -ForegroundColor Gray
-    }
-    Write-Host "│" -ForegroundColor Cyan
-}
-
-function Write-TuiHeader2Col {
-    param([string]$h1, [string]$h2)
-    $esc = [char]27
-    $bold = "$esc[1;93m"
-    $reset = "$esc[0m"
-    
-    $p1 = $h1.PadRight(40)
-    $p2 = $h2.PadRight(47)
-    
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host "$bold$p1$reset" -NoNewline
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host "$bold$p2$reset" -NoNewline
-    Write-Host "│" -ForegroundColor Cyan
-}
-
-function Write-TuiRowFull {
-    param(
-        [hashtable]$it,
-        [string]$text = "",
-        [string]$color = "Gray"
-    )
-    $esc = [char]27
-    $norm = "$esc[22m"
-    $reset = "$esc[0m"
-
-    $finalText = if ($it -and $it.Text) { $it.Text } else { $text }
-    $finalColor = if ($it -and $it.Color) { $it.Color } else { $color }
-    
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host ("$norm" + $finalText.PadRight(88) + "$reset") -NoNewline -ForegroundColor $finalColor
-    Write-Host "│" -ForegroundColor Cyan
-}
-
-function Write-TuiHeaderFull {
-    param([string]$h)
-    $esc = [char]27
-    $bold = "$esc[1;93m"
-    $reset = "$esc[0m"
-    
-    $p = $h.PadRight(88)
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host "$bold$p$reset" -NoNewline
-    Write-Host "│" -ForegroundColor Cyan
 }
 
 function Install-WingetApp {
