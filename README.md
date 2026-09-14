@@ -31,6 +31,7 @@ powershell -ExecutionPolicy Bypass -File .\win-toolbox.ps1
 ## 💎 Destaques do TUI estilo BIOS (padrão)
 
 * 🖥️ **Interface estilo BIOS / Setup Utility (120x30):** bordas duplas `╔ ║ ╝`, ocupando perfeitamente a resolução padrão da janela (120 colunas x 30 linhas), abas superiores sempre visíveis e cursor de seleção em bloco verde — fiel ao firmware.
+* 💡 **Painel Lateral "Item Help" Dinâmico:** ao navegar com `↑` e `↓` pela lista de itens à esquerda, o painel à direita é atualizado instantaneamente com o nome, categoria, descrição do que o software faz, ID do pacote Winget e status de instalação.
 * ⌨️ **Navegação 100% nativa:** `← / →` ou `Tab` alternam entre as 4 abas · `↑ / ↓` movem · Espaço marca `[✓]` · Enter executa · Esc ou Q sai. Usa `[Console]::ReadKey` (zero dependências — nem gum, nem instalação).
 * 🟢 **Detecção de instalados:** cada item aparece marcado com `[✓]` e `[INSTALADO]` em verde quando já presente na máquina; itens instalados não são remarcáveis.
 * 📑 **Atalhos diretos entre abas:** `1` ou `A` (Apps) · `2` ou `R` (Runtimes) · `3` ou `D` (Dev) · `4` ou `C` (Configurações).
