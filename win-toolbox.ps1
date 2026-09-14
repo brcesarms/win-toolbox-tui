@@ -363,16 +363,15 @@ function Install-WingetApp {
         return
     }
 
-    $check = winget list --id $idApp --exact 2>$null | Select-String $idApp
-    if ($check) {
-        Write-Host " [JA INSTALADO]" -ForegroundColor Yellow
-        if (-not [string]::IsNullOrWhiteSpace($cacheKey)) {
-            $script:InstalledCache[$cacheKey] = $true
-        }
+    # Pré-flight: garante que o winget existe (evita executar um comando inexistente em silêncio)
+    if (-not (Get-Command winget -ErrorAction SilentlyContinue)) {
+        Write-Host " [WINGET NAO ENCONTRADO]" -ForegroundColor Red
+        Write-Host "[!] O winget (App Installer) não está disponível. Instale o 'App Installer' pela Microsoft Store e tente novamente." -ForegroundColor Red
         return
     }
 
-    Write-Host " [INSTALANDO]" -ForegroundColor Green
+    Write-Host " [INSTALANDO — aguarde, a 1a execução do winget pode demorar baixando fontes]" -ForegroundColor Green
+    Write-Host ("    > winget install --id $idApp --exact --silent --accept-package-agreements --accept-source-agreements --disable-interactivity") -ForegroundColor DarkGray
     winget install --id $idApp --exact --silent --accept-package-agreements --accept-source-agreements --disable-interactivity
     if ($LASTEXITCODE -eq 0) {
         Write-Host "[✓] $nomeAmigavel instalado com sucesso!" -ForegroundColor Green
@@ -381,6 +380,8 @@ function Install-WingetApp {
         }
     } else {
         Write-Host "[!] Falha ou aviso ao instalar $nomeAmigavel (Exit Code: $LASTEXITCODE)." -ForegroundColor Yellow
+        Write-Host "[*] Dica: feche/abra o PowerShell e rode manualmente para ver o erro completo:" -ForegroundColor Gray
+        Write-Host "    winget install --id $idApp --exact" -ForegroundColor Yellow
     }
 }
 
