@@ -160,6 +160,30 @@ function New-BiosItem {
 }
 
 $script:screenCleared = $false
+$script:CachedIP = ""
+
+function Get-LocalIP {
+    if (-not [string]::IsNullOrWhiteSpace($script:CachedIP)) {
+        return $script:CachedIP
+    }
+    try {
+        $ip = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { 
+            $_.IPAddress -ne "127.0.0.1" -and 
+            $_.IPAddress -notlike "169.254*" -and 
+            $_.InterfaceAlias -notlike "*Loopback*"
+        } | Select-Object -ExpandProperty IPAddress -First 1)
+        if (-not $ip) {
+            $ip = [System.Net.Dns]::GetHostAddresses([System.Net.Dns]::GetHostName()) | 
+                Where-Object { $_.AddressFamily -eq [System.Net.Sockets.AddressFamily]::InterNetwork -and $_.IPAddressToString -notlike "127.*" -and $_.IPAddressToString -notlike "169.254*" } | 
+                Select-Object -ExpandProperty IPAddressToString -First 1
+        }
+        if (-not $ip) { $ip = "Sem Rede" }
+        $script:CachedIP = $ip
+        return $ip
+    } catch {
+        return "127.0.0.1"
+    }
+}
 
 function Show-BiosScreen {
     param(
@@ -193,7 +217,8 @@ function Show-BiosScreen {
     $topo = (" WIN-TOOLBOX TUI · Setup Utility" + (" " * 69) + "[ WINDOWS 11 ] ")
     Write-Host "║ $($topo.PadRight($inner)) ║" -ForegroundColor Cyan
     $data = (Get-Date).ToString("dd/MM/yyyy")
-    $info = " Data: $data | Computador: $env:computername | Usuário: $env:username"
+    $ip = Get-LocalIP
+    $info = " Data: $data | Computador: $env:computername | Usuário: $env:username | IP: $ip"
     Write-Host "║ $($info.PadRight($inner)) ║" -ForegroundColor DarkGray
     Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
 
@@ -523,6 +548,7 @@ function Invoke-NetworkReset {
     }
     Write-Host "[✓] Rede atualizada com sucesso!" -ForegroundColor Green
     $script:InstalledCache["net_reset"] = $true
+    $script:CachedIP = ""
 }
 
 function Invoke-UpdateGPO {
