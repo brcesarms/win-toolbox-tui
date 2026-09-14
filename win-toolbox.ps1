@@ -27,6 +27,14 @@ param(
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]"Administrator")
 if (-not $isAdmin) {
     Write-Host "`n[!] Privilégios de Administrador são necessários." -ForegroundColor Yellow
+    if ([string]::IsNullOrWhiteSpace($PSCommandPath)) {
+        # Modo one-liner (irm | iex): o script não existe como arquivo local e não pode se auto-elevar.
+        Write-Host "[!] Modo one-liner detectado: o script não pode se auto-elevar por não existir como arquivo." -ForegroundColor Red
+        Write-Host "[*] Feche este PowerShell, abra o PowerShell COMO ADMINISTRADOR e execute novamente:" -ForegroundColor Cyan
+        Write-Host "    irm https://raw.githubusercontent.com/brcesarms/win-toolbox-tui/main/win-toolbox.ps1 | iex" -ForegroundColor Yellow
+        Pause
+        Exit 1
+    }
     Write-Host "[*] Reiniciando com elevação de privilégios...`n" -ForegroundColor Cyan
     $argList = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
     if (-not [string]::IsNullOrEmpty($ExecutarLote)) { $argList += " -ExecutarLote `"$ExecutarLote`"" }
@@ -726,9 +734,24 @@ function Dispatch-Execution {
     
     $isSSH = (-not [string]::IsNullOrEmpty($env:SSH_CONNECTION)) -or (-not [string]::IsNullOrEmpty($env:SSH_CLIENT))
     
-    if ($isSSH) {
+    # Resolve o caminho do script (vazio no modo one-liner "irm | iex" — sem arquivo local)
+    $scriptPath = $PSCommandPath
+    if ([string]::IsNullOrWhiteSpace($scriptPath)) {
+        $scriptPath = $MyInvocation.PSCommandPath
+    }
+    if ([string]::IsNullOrWhiteSpace($scriptPath) -and $PSScriptRoot) {
+        $scriptPath = Join-Path $PSScriptRoot "win-toolbox.ps1"
+    }
+    if ([string]::IsNullOrWhiteSpace($scriptPath)) {
+        $scriptPath = (Get-Item "win-toolbox.ps1" -ErrorAction SilentlyContinue).FullName
+    }
+    $temArquivoLocal = (-not [string]::IsNullOrWhiteSpace($scriptPath)) -and (Test-Path $scriptPath -PathType Leaf)
+    
+    if ($isSSH -or (-not $temArquivoLocal)) {
+        # Execução no processo atual: modo SSH ou one-liner (irm | iex) sem arquivo para re-executar.
+        # Sem isso, o Start-Process tentaria abrir "-File """ e a seleção pareceria "não fazer nada".
         Clear-Host
-        Write-Host ("╭─ EXECUTANDO TAREFAS SELECIONADAS " + ("─" * 39) + " [ SSH MODO ] ─╮") -ForegroundColor Cyan
+        Write-Host ("╭─ EXECUTANDO TAREFAS SELECIONADAS " + ("─" * 39) + " [ PROCESSO ATUAL ] ─╮") -ForegroundColor Cyan
         Write-Host "│" -NoNewline -ForegroundColor Cyan
         Write-Host (" Lote em andamento: $escolha".PadRight(88)) -NoNewline -ForegroundColor Yellow
         Write-Host "│" -ForegroundColor Cyan
@@ -737,19 +760,16 @@ function Dispatch-Execution {
         Execute-BatchOptions $escolha
         Wait-User
     } else {
-        $scriptPath = $PSCommandPath
-        if ([string]::IsNullOrWhiteSpace($scriptPath)) {
-            $scriptPath = $MyInvocation.PSCommandPath
+        # Janela filha desacoplada (modo arquivo local): executa sem poluir o menu
+        try {
+            $procArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -ExecutarLote `"$escolha`" -JanelaFilha"
+            Start-Process powershell.exe -ArgumentList $procArgs -Wait
+        } catch {
+            Write-Host "[!] Não foi possível abrir a janela de execução desacoplada ($_)" -ForegroundColor Yellow
+            Write-Host "[*] Executando as tarefas no processo atual..." -ForegroundColor Cyan
+            Execute-BatchOptions $escolha
+            Wait-User
         }
-        if ([string]::IsNullOrWhiteSpace($scriptPath) -and $PSScriptRoot) {
-            $scriptPath = Join-Path $PSScriptRoot "win-toolbox.ps1"
-        }
-        if ([string]::IsNullOrWhiteSpace($scriptPath)) {
-            $scriptPath = (Get-Item "win-toolbox.ps1" -ErrorAction SilentlyContinue).FullName
-        }
-        
-        $procArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -ExecutarLote `"$escolha`" -JanelaFilha"
-        Start-Process powershell.exe -ArgumentList $procArgs -Wait
     }
     
     $script:InstalledCache.Clear()
