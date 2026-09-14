@@ -305,15 +305,40 @@ function Show-BiosScreen {
         Write-Host " ║" -ForegroundColor Cyan
     }
 
-    # ---- rodapé: dicas de navegação ----
+    # ---- rodapé: dicas de navegação espaçadas estilo BIOS ----
     Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
 
-    # Barra de instruções de navegação
-    $dica = " ←→ trocar menu · ↑↓ mover · Espaço [✓] · Enter executar · Q sair"
-    if ($Marks.Count -gt 0) { $dica += " · Marcados: $($Marks.Count)" }
-    if ($PageCount -gt 1) { $dica += " · Pg $($Page + 1)/$PageCount" }
-    if ($dica.Length -gt $inner) { $dica = $dica.Substring(0, $inner) }
-    Write-Host "║ $($dica.PadRight($inner)) ║" -ForegroundColor Cyan
+    $navItems = @("←→ Trocar Menu", "↑↓ Mover", "Espaço [✓] Marcar", "Enter Executar")
+    if ($Marks.Count -gt 0) {
+        $navItems += "Marcados: $($Marks.Count)"
+    }
+    if ($PageCount -gt 1) {
+        $navItems += "Pg $($Page + 1)/$PageCount"
+    }
+    $navItems += "Q Sair"
+
+    $totalTextLen = 0
+    foreach ($item in $navItems) { $totalTextLen += $item.Length }
+    
+    $totalSpaces = [Math]::Max(0, $inner - $totalTextLen)
+    $numGaps = $navItems.Count + 1
+    $baseGap = [Math]::Floor($totalSpaces / $numGaps)
+    $extra = $totalSpaces % $numGaps
+
+    $linhaDica = ""
+    for ($g = 0; $g -lt $numGaps; $g++) {
+        $gapSize = $baseGap
+        if ($g -lt $extra) { $gapSize++ }
+        $linhaDica += (" " * $gapSize)
+        if ($g -lt $navItems.Count) {
+            $linhaDica += $navItems[$g]
+        }
+    }
+    if ($linhaDica.Length -gt $inner) { $linhaDica = $linhaDica.Substring(0, $inner) }
+
+    Write-Host "║ " -NoNewline -ForegroundColor Cyan
+    Write-Host ($linhaDica.PadRight($inner)) -NoNewline -ForegroundColor Cyan
+    Write-Host " ║" -ForegroundColor Cyan
 
     # Borda inferior com -NoNewline para evitar scroll na linha 30
     Write-Host ("╚" + ("═" * ($totalWidth - 2)) + "╝") -NoNewline -ForegroundColor Cyan
