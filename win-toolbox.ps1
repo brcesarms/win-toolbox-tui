@@ -735,17 +735,25 @@ function Dispatch-Execution {
         
         $msgTitle = " EXECUTANDO EM NOVA JANELA DE TERMINAL "
         $padTitle = [Math]::Max(0, [int](($inner - $msgTitle.Length) / 2))
-        Write-Host "║ $(((' ' * $padTitle) + $msgTitle).PadRight($inner)) ║" -ForegroundColor Yellow
+        $hlTitle = ((" " * $padTitle) + $msgTitle).PadRight($inner)
+        Write-Host "║ $hlTitle ║" -ForegroundColor Yellow
         Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
         
-        Write-Host "║ $("".PadRight($inner)) ║" -ForegroundColor Cyan
-        Write-Host "║ $("  ► Tarefas selecionadas: $escolha".PadRight($inner)) ║" -ForegroundColor Cyan
-        Write-Host "║ $("  ► Uma nova janela foi aberta para exibir o progresso dos comandos.".PadRight($inner)) ║" -ForegroundColor Gray
-        Write-Host "║ $("  ► Acompanhe o download e a instalação na nova janela.".PadRight($inner)) ║" -ForegroundColor Gray
-        Write-Host "║ $("  ► Ao concluir na outra janela, este menu voltará automaticamente.".PadRight($inner)) ║" -ForegroundColor Green
-        Write-Host "║ $("".PadRight($inner)) ║" -ForegroundColor Cyan
+        $vazio = " " * $inner
+        $l1 = ("  ► Tarefas selecionadas: $escolha").PadRight($inner)
+        $l2 = ("  ► Uma nova janela foi aberta para exibir o progresso dos comandos.").PadRight($inner)
+        $l3 = ("  ► Acompanhe o download e a instalacao na nova janela.").PadRight($inner)
+        $l4 = ("  ► Ao concluir na outra janela, este menu voltara automaticamente.").PadRight($inner)
+        $lWait = (" Aguardando finalizacao da janela externa...").PadRight($inner)
+
+        Write-Host "║ $vazio ║" -ForegroundColor Cyan
+        Write-Host "║ $l1 ║" -ForegroundColor Cyan
+        Write-Host "║ $l2 ║" -ForegroundColor Gray
+        Write-Host "║ $l3 ║" -ForegroundColor Gray
+        Write-Host "║ $l4 ║" -ForegroundColor Green
+        Write-Host "║ $vazio ║" -ForegroundColor Cyan
         Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
-        Write-Host "║ $(" Aguardando finalização da janela externa...".PadRight($inner)) ║" -ForegroundColor DarkGray
+        Write-Host "║ $lWait ║" -ForegroundColor DarkGray
         Write-Host ("╚" + ("═" * ($totalWidth - 2)) + "╝") -ForegroundColor Cyan
 
         # Abre o processo em nova janela do PowerShell com privilégios de Admin e aguarda terminar (-Wait)
