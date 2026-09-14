@@ -144,22 +144,18 @@ function New-BiosItem {
 
 function Show-BiosScreen {
     param(
-        [string]$ScreenTitle,
+        [string]$ActiveTab = "APPS",
         [object[]]$Items,
         [int]$Sel,
         [hashtable]$Marks,
         [int]$Page = 0,
         [int]$PageSize = 17,
         [int]$PageCount = 1,
-        [bool]$Multi = $true,
-        [string[]]$Shortcuts = @()
+        [bool]$Multi = $true
     )
     Clear-Host
     $totalWidth = 90        # largura total da caixa
     $inner = $totalWidth - 4 # conteúdo interno (86) entre "║ " e " ║"
-    $esc = [char]27
-    $bold = "$esc[1m"
-    $reset = "$esc[0m"
 
     # ---- topo estilo BIOS ----
     Write-Host ("╔" + ("═" * ($totalWidth - 2)) + "╗") -ForegroundColor Cyan
@@ -170,13 +166,41 @@ function Show-BiosScreen {
     Write-Host "║ $($info.PadRight($inner)) ║" -ForegroundColor DarkGray
     Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
 
-    # ---- título da tela (amarelo centralizado) ----
-    $titleText = " $($ScreenTitle.ToUpper()) "
-    $pad = [Math]::Max(0, [int](($inner - $titleText.Length) / 2))
-    $hl = ((" " * $pad) + $titleText).PadRight($inner)
-    Write-Host "║ " -NoNewline -ForegroundColor Cyan
-    Write-Host ("$bold$hl$reset") -NoNewline -ForegroundColor Yellow
-    Write-Host " ║" -ForegroundColor Cyan
+    # ---- barra de menus estilo BIOS (sempre visível no topo) ----
+    # Espaçamento exato: 4 + 19 + 7 + 12 + 7 + 7 + 7 + 17 + 6 = 86 colunas
+    Write-Host "║    " -NoNewline -ForegroundColor Cyan
+    
+    if ($ActiveTab -eq "APPS") {
+        Write-Host "[ APPS ESSENCIAIS ]" -NoNewline -BackgroundColor Yellow -ForegroundColor Black
+    } else {
+        Write-Host "  Apps Essenciais  " -NoNewline -ForegroundColor DarkGray
+    }
+    
+    Write-Host "       " -NoNewline
+    
+    if ($ActiveTab -eq "RUNTIMES") {
+        Write-Host "[ RUNTIMES ]" -NoNewline -BackgroundColor Yellow -ForegroundColor Black
+    } else {
+        Write-Host "  Runtimes  " -NoNewline -ForegroundColor DarkGray
+    }
+    
+    Write-Host "       " -NoNewline
+    
+    if ($ActiveTab -eq "DEV") {
+        Write-Host "[ DEV ]" -NoNewline -BackgroundColor Yellow -ForegroundColor Black
+    } else {
+        Write-Host "  Dev  " -NoNewline -ForegroundColor DarkGray
+    }
+    
+    Write-Host "       " -NoNewline
+    
+    if ($ActiveTab -eq "CONFIG") {
+        Write-Host "[ CONFIGURAÇÕES ]" -NoNewline -BackgroundColor Yellow -ForegroundColor Black
+    } else {
+        Write-Host "  Configurações  " -NoNewline -ForegroundColor DarkGray
+    }
+    
+    Write-Host "      ║" -ForegroundColor Cyan
     Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
 
     # ---- itens da página atual ----
@@ -218,23 +242,14 @@ function Show-BiosScreen {
     # ---- rodapé: dicas de navegação + legenda de cores ----
     Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
 
-    # 1. Barra onde explica a navegação (concisa para caber com segurança em 86 caracteres)
-    if ($Multi) {
-        $dica = " ↑↓ mover · Espaço [✓] · Enter executar · Esc voltar · Q sair"
-    } else {
-        $dica = " ↑↓ mover · Enter abrir · Esc voltar · Q sair"
-    }
+    # 1. Barra onde explica a navegação
+    $dica = " ←→ trocar menu · ↑↓ mover · Espaço [✓] · Enter executar · Q sair"
     if ($PageCount -gt 1) { $dica += " · Pg $($Page + 1)/$PageCount" }
-    if ($Shortcuts.Count -gt 0) { $dica += " · Atalhos: $($Shortcuts -join '/')" }
     if ($dica.Length -gt $inner) { $dica = $dica.Substring(0, $inner) }
     Write-Host "║ $($dica.PadRight($inner)) ║" -ForegroundColor Cyan
 
     # 2. Legenda informando os significados das cores (embaixo da barra de navegação)
-    if ($Multi) {
-        $legend = " [✓] Verde = INSTALADO   ·   [ ] cinza = pendente   ·   marcados: $($Marks.Count)"
-    } else {
-        $legend = " [✓] Verde = INSTALADO   ·   [ ] cinza = pendente"
-    }
+    $legend = " [✓] Verde = INSTALADO   ·   [ ] cinza = pendente   ·   marcados: $($Marks.Count)"
     if ($legend.Length -gt $inner) { $legend = $legend.Substring(0, $inner) }
     Write-Host "║ $($legend.PadRight($inner)) ║" -ForegroundColor DarkGray
 
@@ -243,10 +258,9 @@ function Show-BiosScreen {
 
 function Read-BiosMenu {
     param(
-        [Parameter(Mandatory=$true)] [string]$Title,
+        [Parameter(Mandatory=$true)] [string]$ActiveTab,
         [Parameter(Mandatory=$true)] [object[]]$Items,
-        [bool]$Multi = $true,
-        [string[]]$Shortcuts = @()
+        [bool]$Multi = $true
     )
 
     $sel = 0
@@ -256,8 +270,8 @@ function Read-BiosMenu {
     $page = 0
 
     while ($true) {
-        Show-BiosScreen -ScreenTitle $Title -Items $Items -Sel $sel -Marks $marks `
-            -Page $page -PageSize $pageSize -PageCount $pageCount -Multi $Multi -Shortcuts $Shortcuts
+        Show-BiosScreen -ActiveTab $ActiveTab -Items $Items -Sel $sel -Marks $marks `
+            -Page $page -PageSize $pageSize -PageCount $pageCount -Multi $Multi
 
         # Fallback para hosts sem ReadKey (pede códigos por texto)
         try {
@@ -270,6 +284,30 @@ function Read-BiosMenu {
         }
 
         switch ($key.Key) {
+            "LeftArrow" {
+                switch ($ActiveTab) {
+                    "APPS"     { return "TAB_CONFIG" }
+                    "RUNTIMES" { return "TAB_APPS" }
+                    "DEV"      { return "TAB_RUNTIMES" }
+                    "CONFIG"   { return "TAB_DEV" }
+                }
+            }
+            "RightArrow" {
+                switch ($ActiveTab) {
+                    "APPS"     { return "TAB_RUNTIMES" }
+                    "RUNTIMES" { return "TAB_DEV" }
+                    "DEV"      { return "TAB_CONFIG" }
+                    "CONFIG"   { return "TAB_APPS" }
+                }
+            }
+            "Tab" {
+                switch ($ActiveTab) {
+                    "APPS"     { return "TAB_RUNTIMES" }
+                    "RUNTIMES" { return "TAB_DEV" }
+                    "DEV"      { return "TAB_CONFIG" }
+                    "CONFIG"   { return "TAB_APPS" }
+                }
+            }
             "UpArrow" {
                 $sel--
                 if ($sel -lt $page * $pageSize) {
@@ -316,11 +354,14 @@ function Read-BiosMenu {
                     return $Items[$sel].Code
                 }
             }
-            "Escape" { return "ESC" }
+            "Escape" { return "Q" }
             "Q"      { return "Q" }
             default {
                 $ch = "$($key.KeyChar)".ToUpper()
-                if ($ch -and ($Shortcuts -contains $ch)) { return $ch }
+                if ($ch -eq "1" -or $ch -eq "A") { return "TAB_APPS" }
+                if ($ch -eq "2" -or $ch -eq "R") { return "TAB_RUNTIMES" }
+                if ($ch -eq "3" -or $ch -eq "D") { return "TAB_DEV" }
+                if ($ch -eq "4" -or $ch -eq "C") { return "TAB_CONFIG" }
             }
         }
     }
@@ -678,6 +719,31 @@ function Execute-SingleOption {
         "D9"  { Install-WingetApp "EclipseAdoptium.Temurin.17.JDK" "Java Temurin 17 JDK" "temurin17jdk" }
         "D10" { Install-WingetApp "EclipseAdoptium.Temurin.21.JDK" "Java Temurin 21 JDK" "temurin21jdk" }
         
+        # ---- Runtimes ----
+        "R0"  { 
+            Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)" "dotnet8"
+            Install-WingetApp "Microsoft.DotNet.DesktopRuntime.9" ".NET 9 Desktop Runtime" "dotnet9"
+            Install-WingetApp "abbodi1406.vcredist" "Visual C++ All-in-One Runtime" "vcredist_all"
+            Install-WingetApp "EclipseAdoptium.Temurin.17.JRE" "Java Temurin 17 JRE" "temurin17jre"
+        }
+        "R1"  { Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)" "dotnet8" }
+        "R2"  { Install-WingetApp "Microsoft.DotNet.DesktopRuntime.9" ".NET 9 Desktop Runtime" "dotnet9" }
+        "R3"  { Install-WingetApp "Microsoft.VCRedist.2015+.x64" "Visual C++ 2015-2022 x64" "vcredist_x64" }
+        "R4"  { Install-WingetApp "Microsoft.VCRedist.2015+.x86" "Visual C++ 2015-2022 x86" "vcredist_x86" }
+        "R5"  { Install-WingetApp "abbodi1406.vcredist" "Visual C++ All-in-One Runtime" "vcredist_all" }
+        "R6"  { Install-WingetApp "EclipseAdoptium.Temurin.17.JRE" "Java Temurin 17 JRE" "temurin17jre" }
+        
+        # ---- Configurações & Manutenção ----
+        "C1"  { Apply-Win11Tweaks }
+        "C2"  { Enable-BuiltinAdmin }
+        "C3"  { Enable-OpenSSHServer }
+        "C4"  { Set-MachineName }
+        "C5"  { Add-NetworkCredential }
+        "C6"  { Invoke-NetworkReset }
+        "C7"  { Invoke-UpdateGPO }
+        "C8"  { Invoke-DiskCheck }
+        "C9"  { Invoke-SystemRepair }
+
         "M1"  { Invoke-SystemRepair }
         "M2"  { Invoke-DiskCheck }
         "M3"  { Invoke-NetworkReset }
@@ -736,28 +802,9 @@ function Dispatch-Execution {
 }
 
 # ==============================================================================
-# 9. TELAS DE MENU ESTILO BIOS (SETUP UTILITY)
+# 9. TELAS DE MENU ESTILO BIOS (SETUP UTILITY COM ABAS)
 # ==============================================================================
-function Invoke-MenuPrincipal {
-    $items = @(
-        (New-BiosItem "SOFT" "Softwares Essenciais & Runtimes"),
-        (New-BiosItem "DEV"  "Desenvolvimento (IDEs, Git, JDKs)"),
-        (New-BiosItem "MANT" "Manutenção & Perfis Automatizados"),
-        (New-BiosItem "EXIT" "Sair")
-    )
-
-    $res = Read-BiosMenu -Title "SETUP UTILITY" -Items $items -Multi $false
-    switch ($res) {
-        "SOFT" { $script:menuAtual = "SOFT" }
-        "DEV"  { $script:menuAtual = "DEV" }
-        "MANT" { $script:menuAtual = "MANUTENCAO" }
-        "EXIT" { $script:menuAtual = "EXIT" }
-        "Q"    { $script:menuAtual = "EXIT" }
-        "ESC"  { $script:menuAtual = "MAIN" }
-    }
-}
-
-function Invoke-MenuSoftwares {
+function Invoke-MenuApps {
     $items = @(
         (New-BiosItem "0"  "ATUALIZAÇÃO GERAL — atualizar todos os pacotes winget" -Special $true),
         (New-BiosItem "1A" "7-Zip" -Instalado (Test-IsInstalled "7zip")),
@@ -771,28 +818,47 @@ function Invoke-MenuSoftwares {
         (New-BiosItem "4A" "HandBrake" -Instalado (Test-IsInstalled "handbrake")),
         (New-BiosItem "4B" "K-Lite Codec Pack Full" -Instalado (Test-IsInstalled "klite")),
         (New-BiosItem "4C" "VLC Media Player" -Instalado (Test-IsInstalled "vlc")),
-        (New-BiosItem "5A" ".NET 8 Desktop Runtime" -Instalado (Test-IsInstalled "dotnet8")),
-        (New-BiosItem "5B" ".NET 9 Desktop Runtime" -Instalado (Test-IsInstalled "dotnet9")),
-        (New-BiosItem "5C" "Visual C++ 15-22 x64" -Instalado (Test-IsInstalled "vcredist_x64")),
-        (New-BiosItem "5D" "Visual C++ 15-22 x86" -Instalado (Test-IsInstalled "vcredist_x86")),
-        (New-BiosItem "5E" "Visual C++ All-in-One (abbodi1406)" -Instalado (Test-IsInstalled "vcredist_all")),
-        (New-BiosItem "5F" "Java Temurin 17 JRE" -Instalado (Test-IsInstalled "temurin17jre")),
-        (New-BiosItem "6A" "AnyDesk" -Instalado (Test-IsInstalled "anydesk")),
-        (New-BiosItem "6B" "qBittorrent" -Instalado (Test-IsInstalled "qbittorrent")),
-        (New-BiosItem "6C" "Rufus (Boot)" -Instalado (Test-IsInstalled "rufus")),
-        (New-BiosItem "6D" "RustDesk" -Instalado (Test-IsInstalled "rustdesk")),
-        (New-BiosItem "6E" "Transmission" -Instalado (Test-IsInstalled "transmission")),
-        (New-BiosItem "6F" "RealVNC Viewer" -Instalado (Test-IsInstalled "realvnc"))
+        (New-BiosItem "5A" "AnyDesk" -Instalado (Test-IsInstalled "anydesk")),
+        (New-BiosItem "5B" "RustDesk" -Instalado (Test-IsInstalled "rustdesk")),
+        (New-BiosItem "5C" "RealVNC Viewer" -Instalado (Test-IsInstalled "realvnc")),
+        (New-BiosItem "6A" "qBittorrent" -Instalado (Test-IsInstalled "qbittorrent")),
+        (New-BiosItem "6B" "Transmission" -Instalado (Test-IsInstalled "transmission")),
+        (New-BiosItem "6C" "Rufus (Boot)" -Instalado (Test-IsInstalled "rufus"))
     )
 
-    $res = Read-BiosMenu -Title "SOFTWARES ESSENCIAIS & RUNTIMES" -Items $items -Multi $true -Shortcuts @("D", "M")
+    $res = Read-BiosMenu -ActiveTab "APPS" -Items $items -Multi $true
     switch ($res) {
-        "Q"   { $script:menuAtual = "EXIT" }
-        "ESC" { $script:menuAtual = "MAIN" }
-        "D"   { $script:menuAtual = "DEV" }
-        "M"   { $script:menuAtual = "MANUTENCAO" }
+        "Q"            { $script:menuAtual = "EXIT" }
+        "TAB_APPS"     { $script:menuAtual = "APPS" }
+        "TAB_RUNTIMES" { $script:menuAtual = "RUNTIMES" }
+        "TAB_DEV"      { $script:menuAtual = "DEV" }
+        "TAB_CONFIG"   { $script:menuAtual = "CONFIG" }
         default {
-            if (-not [string]::IsNullOrWhiteSpace($res)) { Dispatch-Execution $res } else { $script:menuAtual = "SOFT" }
+            if (-not [string]::IsNullOrWhiteSpace($res)) { Dispatch-Execution $res }
+        }
+    }
+}
+
+function Invoke-MenuRuntimes {
+    $items = @(
+        (New-BiosItem "R0" "PACOTE RUNTIMES — .NET 8/9 + VC++ All-in-One + Java 17" -Special $true),
+        (New-BiosItem "R1" ".NET 8 Desktop Runtime (LTS)" -Instalado (Test-IsInstalled "dotnet8")),
+        (New-BiosItem "R2" ".NET 9 Desktop Runtime" -Instalado (Test-IsInstalled "dotnet9")),
+        (New-BiosItem "R3" "Visual C++ 2015-2022 (x64)" -Instalado (Test-IsInstalled "vcredist_x64")),
+        (New-BiosItem "R4" "Visual C++ 2015-2022 (x86)" -Instalado (Test-IsInstalled "vcredist_x86")),
+        (New-BiosItem "R5" "Visual C++ All-in-One (abbodi1406)" -Instalado (Test-IsInstalled "vcredist_all")),
+        (New-BiosItem "R6" "Java Temurin 17 JRE" -Instalado (Test-IsInstalled "temurin17jre"))
+    )
+
+    $res = Read-BiosMenu -ActiveTab "RUNTIMES" -Items $items -Multi $true
+    switch ($res) {
+        "Q"            { $script:menuAtual = "EXIT" }
+        "TAB_APPS"     { $script:menuAtual = "APPS" }
+        "TAB_RUNTIMES" { $script:menuAtual = "RUNTIMES" }
+        "TAB_DEV"      { $script:menuAtual = "DEV" }
+        "TAB_CONFIG"   { $script:menuAtual = "CONFIG" }
+        default {
+            if (-not [string]::IsNullOrWhiteSpace($res)) { Dispatch-Execution $res }
         }
     }
 }
@@ -812,41 +878,43 @@ function Invoke-MenuDev {
         (New-BiosItem "D10" "Java Temurin 21 JDK (LTS)" -Instalado (Test-IsInstalled "temurin21jdk"))
     )
 
-    $res = Read-BiosMenu -Title "DESENVOLVIMENTO (DEV)" -Items $items -Multi $true -Shortcuts @("S", "M")
+    $res = Read-BiosMenu -ActiveTab "DEV" -Items $items -Multi $true
     switch ($res) {
-        "Q"   { $script:menuAtual = "EXIT" }
-        "ESC" { $script:menuAtual = "MAIN" }
-        "S"   { $script:menuAtual = "SOFT" }
-        "M"   { $script:menuAtual = "MANUTENCAO" }
+        "Q"            { $script:menuAtual = "EXIT" }
+        "TAB_APPS"     { $script:menuAtual = "APPS" }
+        "TAB_RUNTIMES" { $script:menuAtual = "RUNTIMES" }
+        "TAB_DEV"      { $script:menuAtual = "DEV" }
+        "TAB_CONFIG"   { $script:menuAtual = "CONFIG" }
         default {
-            if (-not [string]::IsNullOrWhiteSpace($res)) { Dispatch-Execution $res } else { $script:menuAtual = "DEV" }
+            if (-not [string]::IsNullOrWhiteSpace($res)) { Dispatch-Execution $res }
         }
     }
 }
 
-function Invoke-MenuManutencao {
+function Invoke-MenuConfig {
     $items = @(
-        (New-BiosItem "M1" "Reparo Completo (DISM + SFC)" -Instalado (Test-IsInstalled "system_repair")),
-        (New-BiosItem "M2" "Diagnóstico Volume C: (Scan)" -Instalado (Test-IsInstalled "disk_check")),
-        (New-BiosItem "M3" "Reset Pilha de Rede (DHCP)" -Instalado (Test-IsInstalled "net_reset")),
-        (New-BiosItem "M4" "Forçar Atualização GPO" -Instalado (Test-IsInstalled "gpo_update")),
-        (New-BiosItem "M5" "Habilitar Admin (SID 500)" -Instalado (Test-IsInstalled "admin500")),
-        (New-BiosItem "M6" "Mapear Credencial de Rede" -Instalado (Test-IsInstalled "net_cred")),
-        (New-BiosItem "M7" "Renomear Computador" -Instalado (Test-IsInstalled "rename_pc")),
-        (New-BiosItem "M8" "Habilitar Servidor OpenSSH (22)" -Instalado (Test-IsInstalled "sshd")),
-        (New-BiosItem "M9" "Tweaks Win 11 (Menu Clássico, Dark, Barra Esquerda, Sem Widgets/Copilot)" -Instalado (Test-IsInstalled "win11_tweaks")),
+        (New-BiosItem "C1" "Tweaks Win 11 (Menu Clássico, Dark, Barra Esquerda, Sem Widgets/Copilot)" -Instalado (Test-IsInstalled "win11_tweaks")),
+        (New-BiosItem "C2" "Habilitar Admin (SID 500)" -Instalado (Test-IsInstalled "admin500")),
+        (New-BiosItem "C3" "Habilitar Servidor OpenSSH (Porta 22)" -Instalado (Test-IsInstalled "sshd")),
+        (New-BiosItem "C4" "Renomear Computador" -Instalado (Test-IsInstalled "rename_pc")),
+        (New-BiosItem "C5" "Mapear Credencial de Rede" -Instalado (Test-IsInstalled "net_cred")),
+        (New-BiosItem "C6" "Reset Pilha de Rede (DHCP / DNS / TCP)" -Instalado (Test-IsInstalled "net_reset")),
+        (New-BiosItem "C7" "Forçar Atualização GPO" -Instalado (Test-IsInstalled "gpo_update")),
+        (New-BiosItem "C8" "Diagnóstico Volume C: (Scan)" -Instalado (Test-IsInstalled "disk_check")),
+        (New-BiosItem "C9" "Reparo Completo do Sistema (DISM + SFC)" -Instalado (Test-IsInstalled "system_repair")),
         (New-BiosItem "P1" "MODO PMA — Prefeitura Win 11 (Apps + Runtimes + Admin + Tweaks)" -Special $true),
         (New-BiosItem "P2" "MODO BRNCZZR — Dev Workstation (Apps Dev + Runtimes + Tweaks)" -Special $true)
     )
 
-    $res = Read-BiosMenu -Title "MANUTENÇÃO & PERFIS" -Items $items -Multi $true -Shortcuts @("S", "D")
+    $res = Read-BiosMenu -ActiveTab "CONFIG" -Items $items -Multi $true
     switch ($res) {
-        "Q"   { $script:menuAtual = "EXIT" }
-        "ESC" { $script:menuAtual = "MAIN" }
-        "S"   { $script:menuAtual = "SOFT" }
-        "D"   { $script:menuAtual = "DEV" }
+        "Q"            { $script:menuAtual = "EXIT" }
+        "TAB_APPS"     { $script:menuAtual = "APPS" }
+        "TAB_RUNTIMES" { $script:menuAtual = "RUNTIMES" }
+        "TAB_DEV"      { $script:menuAtual = "DEV" }
+        "TAB_CONFIG"   { $script:menuAtual = "CONFIG" }
         default {
-            if (-not [string]::IsNullOrWhiteSpace($res)) { Dispatch-Execution $res } else { $script:menuAtual = "MANUTENCAO" }
+            if (-not [string]::IsNullOrWhiteSpace($res)) { Dispatch-Execution $res }
         }
     }
 }
@@ -882,14 +950,15 @@ if (-not [string]::IsNullOrWhiteSpace($ExecutarLote)) {
     exit 0
 }
 
-$script:menuAtual = "MAIN"
+$script:menuAtual = "APPS"
 
 while ($script:menuAtual -ne "EXIT") {
     switch ($script:menuAtual) {
-        "MAIN"        { Invoke-MenuPrincipal }
-        "SOFT"        { Invoke-MenuSoftwares }
-        "DEV"         { Invoke-MenuDev }
-        "MANUTENCAO"  { Invoke-MenuManutencao }
+        "APPS"     { Invoke-MenuApps }
+        "RUNTIMES" { Invoke-MenuRuntimes }
+        "DEV"      { Invoke-MenuDev }
+        "CONFIG"   { Invoke-MenuConfig }
+        default    { $script:menuAtual = "APPS" }
     }
 }
 

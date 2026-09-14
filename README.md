@@ -46,49 +46,53 @@ powershell -ExecutionPolicy Bypass -File .\win-toolbox.ps1
 
 ---
 
-## 🎯 Estrutura Modular dos Menus
+## 🎯 Estrutura Modular dos Menus (Abas estilo BIOS)
 
-A interface é dividida em **3 telas dedicadas e organizadas**:
+A interface apresenta uma barra de menus superior sempre visível com **4 abas dedicadas**:
 
-### 1️⃣ Menu Principal — Softwares Essenciais & Runtimes
-* **`0`**: Atualizar todos os pacotes instalados via Winget
+### 1️⃣ [ Apps Essenciais ]
+* **`0`**: 🚀 **Atualização Geral** — atualizar todos os pacotes instalados via Winget
 * **COMPACTAÇÃO (`1A–1B`)**: `1A` 7-Zip · `1B` WinRAR
 * **DOCUMENTOS (`2A–2C`)**: `2A` Adobe Acrobat Reader · `2B` Foxit PDF Reader · `2C` LibreOffice LTS
 * **IMAGEM & VÍDEO (`3A–4C`)**: `3A` GIMP · `3B` Lightshot · `3C` ShareX · `4A` HandBrake · `4B` K-Lite Codec Full · `4C` VLC Media Player
-* **RUNTIMES WIN 11 (`5A–5F`)**: `5A` .NET 8 Desktop LTS · `5B` .NET 9 Desktop · `5C` VC++ 2015-2022 x64 · `5D` VC++ 2015-2022 x86 · `5E` VC++ All-in-One · `5F` Java Temurin 17 JRE
-* **ACESSO REMOTO & UTILITÁRIOS (`6A–6F`)**: `6A` AnyDesk · `6B` qBittorrent · `6C` Rufus (Boot) · `6D` RustDesk · `6E` Transmission · `6F` RealVNC Viewer
-* **Navegação**: `D` Menu Dev · `M` Menu Manutenção & Perfis · `Q` Sair
+* **ACESSO REMOTO & UTILITÁRIOS (`5A–6C`)**: `5A` AnyDesk · `5B` RustDesk · `5C` RealVNC Viewer · `6A` qBittorrent · `6B` Transmission · `6C` Rufus (Boot)
+* **Navegação**: `← / →` ou `Tab` alternam abas · `1` ou `A` para esta aba · `Q` Sair
 
-### 2️⃣ Menu Desenvolvimento (`D`)
+### 2️⃣ [ Runtimes ]
+* **`R0`**: ⚡ **Pacote Runtimes Completo** (.NET 8/9 + VC++ All-in-One + Java 17)
+* **RUNTIMES ESSENCIAIS (`R1–R6`)**:
+  * `R1`: .NET 8 Desktop Runtime (LTS)
+  * `R2`: .NET 9 Desktop Runtime
+  * `R3`: Visual C++ 2015-2022 (x64)
+  * `R4`: Visual C++ 2015-2022 (x86)
+  * `R5`: Visual C++ All-in-One (abbodi1406)
+  * `R6`: Java Temurin 17 JRE
+* **Navegação**: `← / →` ou `Tab` alternam abas · `2` ou `R` para esta aba · `Q` Sair
+
+### 3️⃣ [ Dev ]
 * **`D0`**: 🚀 **Pacote Dev Completo** (VS Code + Git + Notepad++ + JDK 17)
 * **IDEs & EDITORES (`D1–D4`)**: `D1` VS Code · `D2` Notepad++ · `D3` VS 2022 Community · `D4` Android Studio
 * **VERSIONAMENTO & CONTROLE (`D5`)**: `D5` Git SCM
 * **SERVIDORES & AMBIENTES (`D6`)**: `D6` XAMPP (PHP 8.2 & MySQL)
 * **JAVA DEVELOPMENT KIT (`D7–D10`)**: `D7` JDK 8 · `D8` JDK 11 · `D9` JDK 17 (LTS) · `D10` JDK 21 (LTS)
-* **Navegação**: `S` Menu Softwares · `M` Menu Manutenção & Perfis · `Q` Sair
+* **Navegação**: `← / →` ou `Tab` alternam abas · `3` ou `D` para esta aba · `Q` Sair
 
-### 3️⃣ Menu Manutenção, Tweaks & Perfis Auto (`M`)
-* **DIAGNÓSTICO & REPARO (`M1–M4`)**:
-  * `M1`: Reparo Completo (DISM RestoreHealth primeiro + SFC Scannow)
-  * `M2`: Diagnóstico Online Volume C: (Repair-Volume sem reiniciar)
-  * `M3`: Reset Pilha de Rede (Flush DNS, DHCP Release/Renew, reinício dinâmico de adaptadores)
-  * `M4`: Atualização de Diretivas GPO (`gpupdate /force`)
-* **CONFIGURAÇÕES, REDE & ACESSO (`M5–M8`)**:
-  * `M5`: Ativação de Administrador Local nativo (Detecção por SID `*-500`)
-  * `M6`: Mapeamento seguro de credenciais de rede no Windows Credential Manager
-  * `M7`: Renomear computador com opção de reiniciar
-  * `M8`: 🚀 **Habilitar Servidor OpenSSH** (Porta 22 TCP, serviço sshd/ssh-agent automático, regra de firewall em todos os perfis e exibição de comando de conexão)
-* **TWEAKS DE SISTEMA E PERFORMANCE DO WINDOWS 11 (`M9`)**:
-  * Restauração do Menu de Contexto Clássico completo
-  * Barra de tarefas alinhada à esquerda
-  * Exibição de extensões de arquivos e itens ocultos
-  * Desativação de hibernação (`powercfg -h off` liberando espaço no SSD)
-  * Tema Escuro do sistema e aplicativos
-  * Ocultação de Widgets e botão Copilot
+### 4️⃣ [ Configurações ]
+* **SISTEMA, ACESSO & REDE (`C1–C7`)**:
+  * `C1`: Tweaks Win 11 (Menu Clássico, Dark, Barra Esquerda, Sem Widgets/Copilot)
+  * `C2`: Habilitar Admin Local nativo (Detecção por SID `*-500`)
+  * `C3`: 🚀 **Habilitar Servidor OpenSSH** (Porta 22 TCP, serviço sshd/ssh-agent automático e firewall)
+  * `C4`: Renomear Computador
+  * `C5`: Mapear Credencial de Rede no Windows Credential Manager
+  * `C6`: Reset Pilha de Rede (Flush DNS, DHCP Release/Renew, reinício dinâmico de adaptadores)
+  * `C7`: Forçar Atualização de Diretivas GPO (`gpupdate /force`)
+* **DIAGNÓSTICO & REPARO (`C8–C9`)**:
+  * `C8`: Diagnóstico Online Volume C: (Repair-Volume sem reiniciar)
+  * `C9`: Reparo Completo do Sistema (DISM RestoreHealth primeiro + SFC Scannow)
 * **PERFIS AUTOMATIZADOS (`P1–P2`)**:
   * `P1`: 🏛️ **MODO PMA** (Padrão corporativo Prefeitura: Apps + Runtimes + Admin + Tweaks Win 11)
   * `P2`: 🚀 **MODO BRNCZZR** (Padrão Dev Workstation + Produtividade + Runtimes + Tweaks)
-* **Navegação**: `S` Menu Softwares · `D` Menu Dev · `Q` Sair
+* **Navegação**: `← / →` ou `Tab` alternam abas · `4` ou `C` para esta aba · `Q` Sair
 
 ---
 
