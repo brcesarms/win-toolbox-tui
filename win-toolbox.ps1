@@ -204,6 +204,7 @@ function Show-BiosScreen {
             $texto = $texto.Substring(0, [Math]::Max(0, $maxTexto - 1)) + "…"
         }
         $linha = $texto.PadRight($inner - $sufixo.Length) + $sufixo
+        if ($linha.Length -gt $inner) { $linha = $linha.Substring(0, $inner) }
 
         Write-Host "║ " -NoNewline -ForegroundColor Cyan
         if ($i -eq $Sel) {
@@ -217,22 +218,24 @@ function Show-BiosScreen {
     # ---- rodapé: dicas de navegação + legenda de cores ----
     Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
 
-    # 1. Barra onde explica a navegação
+    # 1. Barra onde explica a navegação (concisa para caber com segurança em 86 caracteres)
     if ($Multi) {
-        $dica = " ↑↓ mover · Espaço marcar [✓] · Enter executar · Esc voltar · Q sair"
+        $dica = " ↑↓ mover · Espaço [✓] · Enter executar · Esc voltar · Q sair"
     } else {
         $dica = " ↑↓ mover · Enter abrir · Esc voltar · Q sair"
     }
-    if ($PageCount -gt 1) { $dica += "  ·  Página $($Page + 1)/$PageCount" }
-    if ($Shortcuts.Count -gt 0) { $dica += "  ·  atalhos: $($Shortcuts -join '/')" }
+    if ($PageCount -gt 1) { $dica += " · Pg $($Page + 1)/$PageCount" }
+    if ($Shortcuts.Count -gt 0) { $dica += " · Atalhos: $($Shortcuts -join '/')" }
+    if ($dica.Length -gt $inner) { $dica = $dica.Substring(0, $inner) }
     Write-Host "║ $($dica.PadRight($inner)) ║" -ForegroundColor Cyan
 
     # 2. Legenda informando os significados das cores (embaixo da barra de navegação)
     if ($Multi) {
-        $legend = " [✓] Verde = INSTALADO   ·   [ ] cinza = pendente   ·   marcados p/ instalar: $($Marks.Count)"
+        $legend = " [✓] Verde = INSTALADO   ·   [ ] cinza = pendente   ·   marcados: $($Marks.Count)"
     } else {
         $legend = " [✓] Verde = INSTALADO   ·   [ ] cinza = pendente"
     }
+    if ($legend.Length -gt $inner) { $legend = $legend.Substring(0, $inner) }
     Write-Host "║ $($legend.PadRight($inner)) ║" -ForegroundColor DarkGray
 
     Write-Host ("╚" + ("═" * ($totalWidth - 2)) + "╝") -ForegroundColor Cyan
@@ -709,18 +712,56 @@ function Dispatch-Execution {
     param([Parameter(Mandatory=$true)] [string]$escolha)
     if ([string]::IsNullOrWhiteSpace($escolha)) { return }
     
-    # Execução sempre in-process (padrão da indústria: WinUtil, MAS, winget-install).
-    # Sem Start-Process/janela filha — um único caminho, robusto no one-liner irm | iex.
-    Clear-Host
-    Write-Host ("╭─ EXECUTANDO TAREFAS SELECIONADAS " + ("─" * 39) + " [ PROCESSO ATUAL ] ─╮") -ForegroundColor Cyan
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host (" Lote em andamento: $escolha".PadRight(88)) -NoNewline -ForegroundColor Yellow
-    Write-Host "│" -ForegroundColor Cyan
-    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
-    Write-Host ""
+    $totalWidth = 90
+    $inner = $totalWidth - 4
     
-    Execute-BatchOptions $escolha
-    Wait-User
+    # Identifica ou prepara o arquivo do script no disco para abrir a nova janela
+    $targetScript = $PSCommandPath
+    if ([string]::IsNullOrWhiteSpace($targetScript) -or -not (Test-Path $targetScript)) {
+        $targetScript = "$env:TEMP\win-toolbox.ps1"
+        try {
+            Invoke-RestMethod "https://raw.githubusercontent.com/brcesarms/win-toolbox-tui/main/win-toolbox.ps1" -OutFile $targetScript
+        } catch {
+            $targetScript = $null
+        }
+    }
+
+    if ($targetScript -and (Test-Path $targetScript)) {
+        Clear-Host
+        Write-Host ("╔" + ("═" * ($totalWidth - 2)) + "╗") -ForegroundColor Cyan
+        $topo = (" WIN-TOOLBOX TUI · Setup Utility" + (" " * ($inner - 38 - 15)) + " [ WINDOWS 11 ]")
+        Write-Host "║ $($topo.PadRight($inner)) ║" -ForegroundColor Cyan
+        Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
+        
+        $msgTitle = " EXECUTANDO EM NOVA JANELA DE TERMINAL "
+        $padTitle = [Math]::Max(0, [int](($inner - $msgTitle.Length) / 2))
+        Write-Host "║ $(((' ' * $padTitle) + $msgTitle).PadRight($inner)) ║" -ForegroundColor Yellow
+        Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
+        
+        Write-Host "║ $("".PadRight($inner)) ║" -ForegroundColor Cyan
+        Write-Host "║ $("  ► Tarefas selecionadas: $escolha".PadRight($inner)) ║" -ForegroundColor Cyan
+        Write-Host "║ $("  ► Uma nova janela foi aberta para exibir o progresso dos comandos.".PadRight($inner)) ║" -ForegroundColor Gray
+        Write-Host "║ $("  ► Acompanhe o download e a instalação na nova janela.".PadRight($inner)) ║" -ForegroundColor Gray
+        Write-Host "║ $("  ► Ao concluir na outra janela, este menu voltará automaticamente.".PadRight($inner)) ║" -ForegroundColor Green
+        Write-Host "║ $("".PadRight($inner)) ║" -ForegroundColor Cyan
+        Write-Host ("╠" + ("═" * ($totalWidth - 2)) + "╣") -ForegroundColor Cyan
+        Write-Host "║ $(" Aguardando finalização da janela externa...".PadRight($inner)) ║" -ForegroundColor DarkGray
+        Write-Host ("╚" + ("═" * ($totalWidth - 2)) + "╝") -ForegroundColor Cyan
+
+        # Abre o processo em nova janela do PowerShell com privilégios de Admin e aguarda terminar (-Wait)
+        Start-Process powershell.exe -ArgumentList "-NoProfile -ExecutionPolicy Bypass -File `"$targetScript`" -ExecutarLote `"$escolha`"" -Wait
+    } else {
+        # Fallback in-process caso não consiga abrir processo separado
+        Clear-Host
+        Write-Host ("╭─ EXECUTANDO TAREFAS SELECIONADAS " + ("─" * 33) + " [ PROCESSO ATIVO ] ─╮") -ForegroundColor Cyan
+        Write-Host "│" -NoNewline -ForegroundColor Cyan
+        Write-Host (" Lote em andamento: $escolha".PadRight(88)) -NoNewline -ForegroundColor Yellow
+        Write-Host "│" -ForegroundColor Cyan
+        Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
+        Write-Host ""
+        Execute-BatchOptions $escolha
+        Wait-User
+    }
     
     $script:InstalledCache.Clear()
 }
