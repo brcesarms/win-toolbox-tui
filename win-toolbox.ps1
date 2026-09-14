@@ -185,7 +185,7 @@ function Show-BiosScreen {
     for ($i = $start; $i -lt $end; $i++) {
         $it = $Items[$i]
         $mark = " "
-        if ($Marks.ContainsKey($it.Code)) { $mark = "✓" }
+        if ($it.Instalado -or $Marks.ContainsKey($it.Code)) { $mark = "✓" }
         $cursor = "  "
         if ($i -eq $Sel) { $cursor = "► " }
         $texto = "$cursor[$mark] $($it.Code.PadRight(4)) $($it.Text)"
@@ -196,6 +196,8 @@ function Show-BiosScreen {
         } elseif ($it.Instalado) {
             $cor = "Green"
             $sufixo = "[INSTALADO]"
+        } elseif ($Marks.ContainsKey($it.Code)) {
+            $cor = "Cyan"
         }
         $maxTexto = $inner - $sufixo.Length
         if ($texto.Length -gt $maxTexto) {
