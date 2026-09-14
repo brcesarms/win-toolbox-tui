@@ -1,7 +1,7 @@
 # 🪟 win-toolbox-tui — Caixa de Ferramentas & Pós-Instalação para Windows 11
 
 > **Exclusivo para Windows 11 (Build 22000+)**  
-> Interface gráfica desktop (GUI/WPF) estilo **Chris Titus WinUtil** com checkboxes, abas e barra de progresso, instalando softwares e aplicando manutenção sem digitar comandos. Inclui ainda a **interface legada de terminal (TUI)** com indicadores de status em tempo real (`[✔]` Verde / `[ ]` Branco) e perfis automatizados (`P1`/`P2`).
+> Interface de terminal estilo **BIOS / Setup Utility**: bordas duplas, navegação por setas (↑↓), Espaço marca `[✓]`, Enter executa, Esc volta e Q sai — com detecção de apps já instalados (`[INSTALADO]` verde). Instala softwares e aplica manutenção sem digitar comandos. Inclui também a **interface gráfica desktop (GUI)** com checkboxes e barra de progresso, e perfis automatizados (`P1`/`P2`).
 
 ---
 
@@ -10,7 +10,7 @@
 Abra o **PowerShell como Administrador** no Windows 11 e execute:
 
 ```powershell
-irm https://raw.githubusercontent.com/brcesarms/win-toolbox-tui/main/win-toolbox-gui.ps1 | iex
+irm https://raw.githubusercontent.com/brcesarms/win-toolbox-tui/main/win-toolbox.ps1 | iex
 ```
 
 Ou execute localmente clonando o repositório:
@@ -18,33 +18,31 @@ Ou execute localmente clonando o repositório:
 ```powershell
 git clone https://github.com/brcesarms/win-toolbox-tui.git
 cd win-toolbox-tui
-powershell -ExecutionPolicy Bypass -File .\win-toolbox-gui.ps1
+powershell -ExecutionPolicy Bypass -File .\win-toolbox.ps1
 ```
 
-> 🖥️ **Para a interface legada de terminal (TUI):** `win-toolbox.ps1`
+> 🖥️ **Para a interface gráfica desktop (GUI):** `win-toolbox-gui.ps1`
 > ```powershell
-> irm https://raw.githubusercontent.com/brcesarms/win-toolbox-tui/main/win-toolbox.ps1 | iex
+> irm https://raw.githubusercontent.com/brcesarms/win-toolbox-tui/main/win-toolbox-gui.ps1 | iex
 > ```
 
 ---
 
-## 💎 Destaques da GUI (padrão)
+## 💎 Destaques do TUI estilo BIOS (padrão)
+
+* 🖥️ **Interface estilo BIOS / Setup Utility:** bordas duplas `╔ ║ ╝`, título centralizado amarelo e cursor de seleção em bloco verde — fiel ao firmware.
+* ⌨️ **Navegação 100% nativa:** setas ↑↓ movem · Espaço marca `[✓]` · Enter executa · Esc volta · Q sai. Usa `[Console]::ReadKey` (zero dependências — nem gum, nem instalação).
+* 🟢 **Detecção de instalados:** cada item aparece `[INSTALADO]` em verde quando já presente na máquina; itens instalados não são remarcáveis.
+* 📑 **Atalhos entre telas:** `D` Dev · `M` Manutenção · `S` Softwares — sem voltar ao menu.
+* 📊 **Paginação automática:** telas longas viram páginas com `PgUp`/`PgDn`.
+* ⚡ **100% one-liner** — `irm ... | iex` sem instalar nada.
+
+## 🖥️ Destaques da GUI (alternativa)
 
 * ☑️ **Checkboxes múltiplos:** marque os apps desejados (7-Zip, WinRAR, VLC...) e clique em **Instalar Selecionados**.
+* 🟢 **Detecção de apps instalados:** checkboxes de apps já presentes aparecem verdes/desabilitados com tooltip "Já instalado".
 * 📑 **Abas organizadas:** Softwares Essenciais · Desenvolvimento · Manutenção & Perfis.
-* 📊 **Barra de progresso + log em tempo real:** instalação via winget em background sem congelar a janela.
-* 🌙 **Tema dark estilo WinUtil:** interface moderna e de alto contraste.
-* ⚡ **100% one-liner** — sem instalar nada, só PowerShell.
-
----
-
-## 🖥️ Destaques Visuais & Experiência TUI (legado)
-
-* 🟢 **Status Dinâmico em Tempo Real:** Cada aplicativo e tarefa exibe `[✔]` em Verde se já estiver instalado/concluído no Windows 11, ou `[ ]` em Branco se pendente.
-* 🟡 **Títulos em Negrito e Alto Contraste:** Seções e categorias formatadas em negrito ANSI de alto contraste, facilitando a leitura imediata sem poluição visual.
-* 📐 **Alinhamento Perfeito de 90 Colunas:** Grid milimetricamente calibrado com bordas Unicode arredondadas (`╭─`, `│`, `╰─`).
-* 🔡 **Tipografia Personalizável:** Compatível 100% com fontes modernas do Windows Terminal (como JetBrains Mono, Nerd Fonts e Cascadia Code).
-* 📊 **Barra de Progresso Dinâmica:** Feedback visual em tempo real para instalações em lote (`0, 1A, 2C...`) e perfis automatizados.
+* 🌙 **Tema dark:** cards, grid alinhado e checkboxes desenhados sob medida (OwnerDraw).
 
 ---
 
@@ -67,7 +65,7 @@ A interface é dividida em **3 telas dedicadas e organizadas**:
 * **VERSIONAMENTO & CONTROLE (`D5`)**: `D5` Git SCM
 * **SERVIDORES & AMBIENTES (`D6`)**: `D6` XAMPP (PHP 8.2 & MySQL)
 * **JAVA DEVELOPMENT KIT (`D7–D10`)**: `D7` JDK 8 · `D8` JDK 11 · `D9` JDK 17 (LTS) · `D10` JDK 21 (LTS)
-* **Navegação**: `V` Menu Principal · `M` Menu Manutenção & Perfis · `Q` Sair
+* **Navegação**: `S` Menu Softwares · `M` Menu Manutenção & Perfis · `Q` Sair
 
 ### 3️⃣ Menu Manutenção, Tweaks & Perfis Auto (`M`)
 * **DIAGNÓSTICO & REPARO (`M1–M4`)**:
@@ -90,7 +88,7 @@ A interface é dividida em **3 telas dedicadas e organizadas**:
 * **PERFIS AUTOMATIZADOS (`P1–P2`)**:
   * `P1`: 🏛️ **MODO PMA** (Padrão corporativo Prefeitura: Apps + Runtimes + Admin + Tweaks Win 11)
   * `P2`: 🚀 **MODO BRNCZZR** (Padrão Dev Workstation + Produtividade + Runtimes + Tweaks)
-* **Navegação**: `V` Menu Principal · `D` Menu Dev · `Q` Sair
+* **Navegação**: `S` Menu Softwares · `D` Menu Dev · `Q` Sair
 
 ---
 

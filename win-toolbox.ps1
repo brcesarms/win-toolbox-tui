@@ -1,16 +1,17 @@
 <#
 .SYNOPSIS
-    WIN-TOOLBOX-TUI V1.0 — Caixa de Ferramentas e Pós-Instalação para Windows 11
+    WIN-TOOLBOX-TUI V2.0 — Caixa de Ferramentas e Pós-Instalação para Windows 11
 .DESCRIPTION
-    Script interativo com interface TUI moderna (Unicode Box Drawing), múltiplos menus,
-    status dinâmico de instalação em tempo real ([✓] Verde / [ ] Branco), títulos em negrito ANSI,
-    execução 100% in-process (padrão da indústria, compatível com o one-liner irm | iex),
-    telemetria de rede e suporte nativo ao Windows Terminal.
+    Script interativo com interface estilo BIOS / Setup Utility: bordas duplas,
+    navegação por setas (↑↓), Espaço marca [✓], Enter executa, Esc volta e Q sai —
+    100% nativo PowerShell ([Console]::ReadKey, sem dependências externas).
+    Detecção de apps já instalados ([INSTALADO] em verde), execução 100% in-process
+    (compatível com o one-liner irm | iex), telemetria de rede e suporte ao Windows Terminal.
     Exclusivo para Windows 11 (Build 22000+).
 .AUTHOR
     Bruno César Medeiros Siqueira <bruno.cesar@outlook.it>
 .VERSION
-    1.5.0 — In-Process Execution Only (irm|iex friendly), Winget Sem Travamento, Menu TUI (Windows 11)
+    2.0.0 — Setup Utility estilo BIOS (setas ↑↓ + Espaço + Enter), Winget Sem Travamento, one-liner irm|iex
 #>
 
 [CmdletBinding()]
@@ -170,6 +171,192 @@ function Get-ItemDisplay {
         return @{
             Text = " [ ] $Code. $Title"
             Color = "Gray"
+        }
+    }
+}
+
+# ==============================================================================
+# 3.5 MOTOR DE INTERFACE ESTILO BIOS (SETUP UTILITY)
+# ==============================================================================
+# Experiência fiel ao firmware: bordas duplas, navegação por setas ↑↓, Espaço marca
+# [✓], Enter executa, Esc volta, Q sai. 100% nativo ([Console]::ReadKey), sem gum
+# nem instalação — roda direto no one-liner: irm ... | iex
+
+function New-BiosItem {
+    param(
+        [string]$Code,
+        [string]$Text,
+        [bool]$Instalado = $false,
+        [bool]$Special = $false
+    )
+    if ($Special) { $Instalado = $false }
+    return @{ Code = $Code; Text = $Text; Instalado = $Instalado; Special = $Special }
+}
+
+function Show-BiosScreen {
+    param(
+        [string]$ScreenTitle,
+        [object[]]$Items,
+        [int]$Sel,
+        [hashtable]$Marks,
+        [int]$Page = 0,
+        [int]$PageSize = 17,
+        [int]$PageCount = 1,
+        [bool]$Multi = $true,
+        [string[]]$Shortcuts = @()
+    )
+    Clear-Host
+    $T = 90                 # largura total da caixa
+    $inner = $T - 4         # conteúdo interno (86) entre "║ " e " ║"
+    $esc = [char]27
+    $bold = "$esc[1m"
+    $reset = "$esc[0m"
+
+    # ---- topo estilo BIOS ----
+    Write-Host ("╔" + ("═" * ($T - 2)) + "╗") -ForegroundColor Cyan
+    $topo = (" WIN-TOOLBOX TUI · Setup Utility" + (" " * ($inner - 38 - 15)) + " [ WINDOWS 11 ]")
+    Write-Host "║ $($topo.PadRight($inner)) ║" -ForegroundColor Cyan
+    Write-Host ("╠" + ("═" * ($T - 2)) + "╣") -ForegroundColor Cyan
+
+    # ---- título da tela (amarelo centralizado) ----
+    $t = " $($ScreenTitle.ToUpper()) "
+    $pad = [Math]::Max(0, [int](($inner - $t.Length) / 2))
+    $hl = ((" " * $pad) + $t).PadRight($inner)
+    Write-Host "║ " -NoNewline -ForegroundColor Cyan
+    Write-Host ("$bold$hl$reset") -NoNewline -ForegroundColor Yellow
+    Write-Host " ║" -ForegroundColor Cyan
+
+    # ---- legenda (verde = instalado · cinza = pendente · marcados) ----
+    $legend = " [✓] Verde = INSTALADO   ·   [ ] cinza = pendente   ·   marcados p/ instalar: $($Marks.Count)"
+    Write-Host "║ $($legend.PadRight($inner)) ║" -ForegroundColor DarkGray
+
+    # ---- itens da página atual ----
+    $start = $Page * $PageSize
+    $end = [Math]::Min($Items.Count, $start + $PageSize)
+    for ($i = $start; $i -lt $end; $i++) {
+        $it = $Items[$i]
+        $mark = " "
+        if ($Marks.ContainsKey($it.Code)) { $mark = "✓" }
+        $cursor = "  "
+        if ($i -eq $Sel) { $cursor = "► " }
+        $texto = "$cursor[$mark] $($it.Code.PadRight(4)) $($it.Text)"
+        $sufixo = ""
+        $cor = "Gray"
+        if ($it.Special) {
+            $cor = "Yellow"
+        } elseif ($it.Instalado) {
+            $cor = "Green"
+            $sufixo = "[INSTALADO]"
+        }
+        $linha = $texto.PadRight($inner - $sufixo.Length) + $sufixo
+
+        Write-Host "║ " -NoNewline -ForegroundColor Cyan
+        if ($i -eq $Sel) {
+            Write-Host ($linha.PadRight($inner)) -NoNewline -BackgroundColor Green -ForegroundColor Black
+        } else {
+            Write-Host ($linha.PadRight($inner)) -NoNewline -ForegroundColor $cor
+        }
+        Write-Host " ║" -ForegroundColor Cyan
+    }
+
+    # ---- rodapé: dicas + paginação + telemetria ----
+    Write-Host ("╠" + ("═" * ($T - 2)) + "╣") -ForegroundColor Cyan
+    if ($Multi) {
+        $dica = " ↑↓ mover · Espaço marcar [✓] · Enter executar · Esc voltar · Q sair"
+    } else {
+        $dica = " ↑↓ mover · Enter abrir · Esc voltar · Q sair"
+    }
+    if ($PageCount -gt 1) { $dica += "  ·  Página $($Page + 1)/$PageCount" }
+    if ($Shortcuts.Count -gt 0) { $dica += "  ·  atalhos: $($Shortcuts -join '/')" }
+    $data = (Get-Date).ToString("dd/MM/yyyy")
+    $info = " Data: $data | Computador: $env:computername | Usuário: $env:username"
+    Write-Host "║ $($dica.PadRight($inner)) ║" -ForegroundColor Cyan
+    Write-Host "║ $($info.PadRight($inner)) ║" -ForegroundColor DarkGray
+    Write-Host ("╚" + ("═" * ($T - 2)) + "╝") -ForegroundColor Cyan
+}
+
+function Read-BiosMenu {
+    param(
+        [Parameter(Mandatory=$true)] [string]$Title,
+        [Parameter(Mandatory=$true)] [object[]]$Items,
+        [bool]$Multi = $true,
+        [string[]]$Shortcuts = @()
+    )
+
+    $sel = 0
+    $marks = @{}
+    $pageSize = 17
+    $pageCount = [Math]::Max(1, [Math]::Ceiling($Items.Count / $pageSize))
+    $page = 0
+
+    while ($true) {
+        Show-BiosScreen -ScreenTitle $Title -Items $Items -Sel $sel -Marks $marks `
+            -Page $page -PageSize $pageSize -PageCount $pageCount -Multi $Multi -Shortcuts $Shortcuts
+
+        # Fallback para hosts sem ReadKey (pede códigos por texto)
+        try {
+            $key = [Console]::ReadKey($true)
+        } catch {
+            $resp = Read-Host "Digite codigos (ex: 1A,2C) ou Q para sair"
+            $respU = $resp.Trim().ToUpper()
+            if ($respU -eq "Q") { return "Q" }
+            return $respU
+        }
+
+        switch ($key.Key) {
+            "UpArrow" {
+                $sel--
+                if ($sel -lt $Page * $pageSize) {
+                    if ($page -gt 0) {
+                        $page--
+                        $sel = $pageSize - 1
+                        $visiveis = [Math]::Min($pageSize, $Items.Count - ($page * $pageSize))
+                        if ($sel -ge $visiveis) { $sel = $visiveis - 1 }
+                    } else {
+                        $sel = 0
+                    }
+                }
+            }
+            "DownArrow" {
+                $sel++
+                $fimPagina = [Math]::Min($Items.Count, (($page + 1) * $pageSize) - 1)
+                if ($sel -gt $fimPagina) {
+                    if ($page -lt $pageCount - 1) {
+                        $page++
+                        $sel = $page * $pageSize
+                    } else {
+                        $sel = $fimPagina
+                    }
+                }
+            }
+            "Home"     { $page = 0; $sel = 0 }
+            "End"      { $page = $pageCount - 1; $sel = $Items.Count - 1 }
+            "PageUp"   { if ($page -gt 0) { $page--; $sel = $page * $pageSize } }
+            "PageDown" { if ($page -lt $pageCount - 1) { $page++; $sel = $page * $pageSize } }
+            "Spacebar" {
+                if ($Multi) {
+                    $it = $Items[$sel]
+                    if ($it.Special -or -not $it.Instalado) {
+                        if ($marks.ContainsKey($it.Code)) { $marks.Remove($it.Code) } else { $marks[$it.Code] = $true }
+                    }
+                }
+            }
+            "Enter" {
+                if ($Multi) {
+                    $codes = @()
+                    foreach ($it in $Items) { if ($marks.ContainsKey($it.Code)) { $codes += $it.Code } }
+                    if ($codes.Count -eq 0) { $codes = @($Items[$sel].Code) }
+                    return ($codes -join ",")
+                } else {
+                    return $Items[$sel].Code
+                }
+            }
+            "Escape" { return "ESC" }
+            "Q"      { return "Q" }
+            default {
+                $ch = "$($key.KeyChar)".ToUpper()
+                if ($ch -and ($Shortcuts -contains $ch)) { return $ch }
+            }
         }
     }
 }
@@ -749,206 +936,119 @@ function Dispatch-Execution {
 }
 
 # ==============================================================================
-# 9. TELAS DE MENU COM POLIMENTO TUI MODERNO
+# 9. TELAS DE MENU ESTILO BIOS (SETUP UTILITY)
 # ==============================================================================
 function Invoke-MenuPrincipal {
-    Show-Header "MENU PRINCIPAL — SOFTWARES ESSENCIAIS & RUNTIMES"
+    $items = @(
+        (New-BiosItem "SOFT" "Softwares Essenciais & Runtimes"),
+        (New-BiosItem "DEV"  "Desenvolvimento (IDEs, Git, JDKs)"),
+        (New-BiosItem "MANT" "Manutenção & Perfis Automatizados"),
+        (New-BiosItem "EXIT" "Sair")
+    )
 
-    # Obter estados de cada aplicativo
-    $i1A = Get-ItemDisplay "7zip" "1A" "7-Zip"
-    $i1B = Get-ItemDisplay "winrar" "1B" "WinRAR"
-    
-    $i2A = Get-ItemDisplay "adobe" "2A" "Adobe Acrobat"
-    $i2B = Get-ItemDisplay "foxit" "2B" "Foxit PDF Reader"
-    $i2C = Get-ItemDisplay "libreoffice" "2C" "LibreOffice LTS"
-    
-    $i3A = Get-ItemDisplay "gimp" "3A" "GIMP"
-    $i3B = Get-ItemDisplay "lightshot" "3B" "Lightshot"
-    $i3C = Get-ItemDisplay "sharex" "3C" "ShareX"
-    
-    $i4A = Get-ItemDisplay "handbrake" "4A" "HandBrake"
-    $i4B = Get-ItemDisplay "klite" "4B" "K-Lite Codec Full"
-    $i4C = Get-ItemDisplay "vlc" "4C" "VLC Media Player"
-    
-    $i5A = Get-ItemDisplay "dotnet8" "5A" ".NET 8 Desktop"
-    $i5B = Get-ItemDisplay "dotnet9" "5B" ".NET 9 Desktop"
-    $i5C = Get-ItemDisplay "vcredist_x64" "5C" "VC++ 15-22 x64"
-    $i5D = Get-ItemDisplay "vcredist_x86" "5D" "VC++ 15-22 x86"
-    $i5E = Get-ItemDisplay "vcredist_all" "5E" "VC++ All-in-One"
-    $i5F = Get-ItemDisplay "temurin17jre" "5F" "Temurin 17 JRE"
-    
-    $i6A = Get-ItemDisplay "anydesk" "6A" "AnyDesk"
-    $i6B = Get-ItemDisplay "qbittorrent" "6B" "qBittorrent"
-    $i6C = Get-ItemDisplay "rufus" "6C" "Rufus (Boot)"
-    $i6D = Get-ItemDisplay "rustdesk" "6D" "RustDesk"
-    $i6E = Get-ItemDisplay "transmission" "6E" "Transmission"
-    $i6F = Get-ItemDisplay "realvnc" "6F" "RealVNC Viewer"
-
-    Write-Host "╭────────────────────────────────────────────────────────────────────────────────────────╮" -ForegroundColor Cyan
-    Write-TuiRowFull -text " [0] ATUALIZAÇÃO GERAL: Atualizar todos os pacotes instalados via Winget" -color "Yellow"
-    Write-Host "├─────────────────────────┬─────────────────────────────┬────────────────────────────────┤" -ForegroundColor Cyan
-    
-    Write-TuiHeader3Col " COMPACTAÇÃO" " DOCUMENTOS" " IMAGEM & VÍDEO"
-    Write-TuiRow3Col $i1A $i2A $i3A
-    Write-TuiRow3Col $i1B $i2B $i3B
-    Write-TuiRow3Col $null $i2C $i3C
-    Write-TuiRow3Col $null $null $i4A
-    Write-TuiRow3Col $null $null $i4B
-    Write-TuiRow3Col $null $null $i4C
-    
-    Write-Host "├─────────────────────────┼─────────────────────────────┴────────────────────────────────┤" -ForegroundColor Cyan
-    Write-TuiHeaderSplit " RUNTIMES WIN 11" " ACESSO REMOTO & UTILITÁRIOS"
-    Write-TuiRowSplit $i5A $i6A $i6D
-    Write-TuiRowSplit $i5B $i6B $i6E
-    Write-TuiRowSplit $i5C $i6C $i6F
-    Write-TuiRowSplit $i5D $null $null
-    Write-TuiRowSplit $i5E $null $null
-    Write-TuiRowSplit $i5F $null $null
-    
-    Write-Host "├─────────────────────────┴──────────────────────────────────────────────────────────────┤" -ForegroundColor Cyan
-    Write-TuiRowFull -text " NAVEGAÇÃO:   [D] Menu Dev    │    [M] Menu Manutenção & Perfis    │    [Q] Sair" -color "Yellow"
-    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
-    
-    $instCount = ($script:InstalledCache.Values | Where-Object { $_ -eq $true }).Count
-    $statusText = if ($instCount -gt 0) {
-        " [✓] Verde = Instalado/Concluído ($instCount detectados) | [ ] Branco = Pendente"
-    } else {
-        " [✓] Verde = Instalado/Concluído | [ ] Branco = Pendente. Suporta execução em lote."
+    $res = Read-BiosMenu -Title "SETUP UTILITY" -Items $items -Multi $false
+    switch ($res) {
+        "SOFT" { $script:menuAtual = "SOFT" }
+        "DEV"  { $script:menuAtual = "DEV" }
+        "MANT" { $script:menuAtual = "MANUTENCAO" }
+        "EXIT" { $script:menuAtual = "EXIT" }
+        "Q"    { $script:menuAtual = "EXIT" }
+        "ESC"  { $script:menuAtual = "MAIN" }
     }
-    
-    Write-Host "╭─ STATUS DO SISTEMA ─────────────────────────────────────────────────────── [ PRONTO ] ─╮" -ForegroundColor DarkCyan
-    Write-Host "│" -NoNewline -ForegroundColor DarkCyan
-    Write-Host ($statusText.PadRight(88)) -NoNewline -ForegroundColor Gray
-    Write-Host "│" -ForegroundColor DarkCyan
-    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor DarkCyan
-    
-    Write-Host "╭─ Digite as opções desejadas separadas por vírgula (ex: 0, 1A, 2C, 5E, 6D)" -ForegroundColor Cyan
-    $escolha = Read-Host "╰─❯ "
-    
-    if ([string]::IsNullOrWhiteSpace($escolha)) { return }
-    $escolhaUpper = $escolha.Trim().ToUpper()
+}
 
-    if ($escolhaUpper -eq "Q") { $script:menuAtual = "EXIT"; return }
-    if ($escolhaUpper -eq "D") { $script:menuAtual = "DEV"; return }
-    if ($escolhaUpper -eq "M") { $script:menuAtual = "MANUTENCAO"; return }
-    Dispatch-Execution $escolha
+function Invoke-MenuSoftwares {
+    $items = @(
+        (New-BiosItem "0"  "ATUALIZAÇÃO GERAL — atualizar todos os pacotes winget" -Special $true),
+        (New-BiosItem "1A" "7-Zip" -Instalado (Test-IsInstalled "7zip")),
+        (New-BiosItem "1B" "WinRAR" -Instalado (Test-IsInstalled "winrar")),
+        (New-BiosItem "2A" "Adobe Acrobat Reader" -Instalado (Test-IsInstalled "adobe")),
+        (New-BiosItem "2B" "Foxit PDF Reader" -Instalado (Test-IsInstalled "foxit")),
+        (New-BiosItem "2C" "LibreOffice LTS" -Instalado (Test-IsInstalled "libreoffice")),
+        (New-BiosItem "3A" "GIMP" -Instalado (Test-IsInstalled "gimp")),
+        (New-BiosItem "3B" "Lightshot" -Instalado (Test-IsInstalled "lightshot")),
+        (New-BiosItem "3C" "ShareX" -Instalado (Test-IsInstalled "sharex")),
+        (New-BiosItem "4A" "HandBrake" -Instalado (Test-IsInstalled "handbrake")),
+        (New-BiosItem "4B" "K-Lite Codec Pack Full" -Instalado (Test-IsInstalled "klite")),
+        (New-BiosItem "4C" "VLC Media Player" -Instalado (Test-IsInstalled "vlc")),
+        (New-BiosItem "5A" ".NET 8 Desktop Runtime" -Instalado (Test-IsInstalled "dotnet8")),
+        (New-BiosItem "5B" ".NET 9 Desktop Runtime" -Instalado (Test-IsInstalled "dotnet9")),
+        (New-BiosItem "5C" "Visual C++ 15-22 x64" -Instalado (Test-IsInstalled "vcredist_x64")),
+        (New-BiosItem "5D" "Visual C++ 15-22 x86" -Instalado (Test-IsInstalled "vcredist_x86")),
+        (New-BiosItem "5E" "Visual C++ All-in-One (abbodi1406)" -Instalado (Test-IsInstalled "vcredist_all")),
+        (New-BiosItem "5F" "Java Temurin 17 JRE" -Instalado (Test-IsInstalled "temurin17jre")),
+        (New-BiosItem "6A" "AnyDesk" -Instalado (Test-IsInstalled "anydesk")),
+        (New-BiosItem "6B" "qBittorrent" -Instalado (Test-IsInstalled "qbittorrent")),
+        (New-BiosItem "6C" "Rufus (Boot)" -Instalado (Test-IsInstalled "rufus")),
+        (New-BiosItem "6D" "RustDesk" -Instalado (Test-IsInstalled "rustdesk")),
+        (New-BiosItem "6E" "Transmission" -Instalado (Test-IsInstalled "transmission")),
+        (New-BiosItem "6F" "RealVNC Viewer" -Instalado (Test-IsInstalled "realvnc"))
+    )
+
+    $res = Read-BiosMenu -Title "SOFTWARES ESSENCIAIS & RUNTIMES" -Items $items -Multi $true -Shortcuts @("D", "M")
+    switch ($res) {
+        "Q"   { $script:menuAtual = "EXIT" }
+        "ESC" { $script:menuAtual = "MAIN" }
+        "D"   { $script:menuAtual = "DEV" }
+        "M"   { $script:menuAtual = "MANUTENCAO" }
+        default {
+            if (-not [string]::IsNullOrWhiteSpace($res)) { Dispatch-Execution $res } else { $script:menuAtual = "SOFT" }
+        }
+    }
 }
 
 function Invoke-MenuDev {
-    Show-Header "MENU DESENVOLVIMENTO (DEV)"
+    $items = @(
+        (New-BiosItem "D0" "PACOTE DEV COMPLETO — VS Code + Git + Notepad++ + JDK 17" -Special $true),
+        (New-BiosItem "D1" "Visual Studio Code" -Instalado (Test-IsInstalled "vscode")),
+        (New-BiosItem "D2" "Notepad++" -Instalado (Test-IsInstalled "notepadplusplus")),
+        (New-BiosItem "D3" "Visual Studio 2022 Community" -Instalado (Test-IsInstalled "vs2022")),
+        (New-BiosItem "D4" "Android Studio" -Instalado (Test-IsInstalled "androidstudio")),
+        (New-BiosItem "D5" "Git SCM" -Instalado (Test-IsInstalled "git")),
+        (New-BiosItem "D6" "XAMPP (PHP 8.2 & MySQL)" -Instalado (Test-IsInstalled "xampp")),
+        (New-BiosItem "D7" "Java Temurin 8 JDK" -Instalado (Test-IsInstalled "temurin8jdk")),
+        (New-BiosItem "D8" "Java Temurin 11 JDK" -Instalado (Test-IsInstalled "temurin11jdk")),
+        (New-BiosItem "D9" "Java Temurin 17 JDK (LTS)" -Instalado (Test-IsInstalled "temurin17jdk")),
+        (New-BiosItem "D10" "Java Temurin 21 JDK (LTS)" -Instalado (Test-IsInstalled "temurin21jdk"))
+    )
 
-    $iD1  = Get-ItemDisplay "vscode" "D1" "Visual Studio Code"
-    $iD2  = Get-ItemDisplay "notepadplusplus" "D2" "Notepad++"
-    $iD3  = Get-ItemDisplay "vs2022" "D3" "VS 2022 Community"
-    $iD4  = Get-ItemDisplay "androidstudio" "D4" "Android Studio"
-
-    $iD5  = Get-ItemDisplay "git" "D5" "Git SCM"
-    $iD6  = Get-ItemDisplay "xampp" "D6" "XAMPP (PHP 8.2 & MySQL)"
-    $iD7  = Get-ItemDisplay "temurin8jdk" "D7" "Java Temurin 8 JDK"
-    $iD8  = Get-ItemDisplay "temurin11jdk" "D8" "Java Temurin 11 JDK"
-    $iD9  = Get-ItemDisplay "temurin17jdk" "D9" "Java Temurin 17 JDK (LTS)"
-    $iD10 = Get-ItemDisplay "temurin21jdk" "D10" "Java Temurin 21 JDK (LTS)"
-
-    Write-Host "╭────────────────────────────────────────────────────────────────────────────────────────╮" -ForegroundColor Cyan
-    Write-TuiRowFull -text " [D0] PACOTE DEV COMPLETO: Instalar VS Code + Git + Notepad++ + JDK 17" -color "Yellow"
-    Write-Host "├────────────────────────────────────────┬───────────────────────────────────────────────┤" -ForegroundColor Cyan
-    
-    Write-TuiHeader2Col " IDEs & EDITORES" " VERSIONAMENTO & SERVIDORES"
-    Write-TuiRow2Col $iD1 $iD5
-    Write-TuiRow2Col $iD2 $iD6
-    Write-TuiRow2Col $iD3 $null "" " JAVA DEVELOPMENT KIT (JDK)"
-    Write-TuiRow2Col $iD4 $iD7
-    Write-TuiRow2Col $null $iD8
-    Write-TuiRow2Col $null $iD9
-    Write-TuiRow2Col $null $iD10
-    
-    Write-Host "├────────────────────────────────────────┴───────────────────────────────────────────────┤" -ForegroundColor Cyan
-    Write-TuiRowFull -text " NAVEGAÇÃO:   [V] Menu Principal    │    [M] Menu Manutenção & Perfis    │    [Q] Sair" -color "Yellow"
-    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
-    
-    $instCount = ($script:InstalledCache.Values | Where-Object { $_ -eq $true }).Count
-    $statusText = if ($instCount -gt 0) {
-        " [✓] Verde = Instalado/Concluído ($instCount detectados) | [ ] Branco = Pendente"
-    } else {
-        " [✓] Verde = Instalado/Concluído | [ ] Branco = Pendente. Suporta execução em lote."
+    $res = Read-BiosMenu -Title "DESENVOLVIMENTO (DEV)" -Items $items -Multi $true -Shortcuts @("S", "M")
+    switch ($res) {
+        "Q"   { $script:menuAtual = "EXIT" }
+        "ESC" { $script:menuAtual = "MAIN" }
+        "S"   { $script:menuAtual = "SOFT" }
+        "M"   { $script:menuAtual = "MANUTENCAO" }
+        default {
+            if (-not [string]::IsNullOrWhiteSpace($res)) { Dispatch-Execution $res } else { $script:menuAtual = "DEV" }
+        }
     }
-
-    Write-Host "╭─ STATUS DO SISTEMA ─────────────────────────────────────────────────────── [ PRONTO ] ─╮" -ForegroundColor DarkCyan
-    Write-Host "│" -NoNewline -ForegroundColor DarkCyan
-    Write-Host ($statusText.PadRight(88)) -NoNewline -ForegroundColor Gray
-    Write-Host "│" -ForegroundColor DarkCyan
-    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor DarkCyan
-
-    Write-Host "╭─ Selecione ferramentas de DEV (ex: D0 ou D1, D5, D9)" -ForegroundColor Cyan
-    $escolha = Read-Host "╰─❯ "
-
-    if ([string]::IsNullOrWhiteSpace($escolha)) { return }
-    $escolhaUpper = $escolha.Trim().ToUpper()
-
-    if ($escolhaUpper -eq "Q") { $script:menuAtual = "EXIT"; return }
-    if ($escolhaUpper -eq "V") { $script:menuAtual = "MAIN"; return }
-    if ($escolhaUpper -eq "M") { $script:menuAtual = "MANUTENCAO"; return }
-
-    Dispatch-Execution $escolha
 }
 
 function Invoke-MenuManutencao {
-    Show-Header "MENU MANUTENÇÃO, TWEAKS & PERFIS AUTO"
+    $items = @(
+        (New-BiosItem "M1" "Reparo Completo (DISM + SFC)" -Instalado (Test-IsInstalled "system_repair")),
+        (New-BiosItem "M2" "Diagnóstico Volume C: (Scan)" -Instalado (Test-IsInstalled "disk_check")),
+        (New-BiosItem "M3" "Reset Pilha de Rede (DHCP)" -Instalado (Test-IsInstalled "net_reset")),
+        (New-BiosItem "M4" "Forçar Atualização GPO" -Instalado (Test-IsInstalled "gpo_update")),
+        (New-BiosItem "M5" "Habilitar Admin (SID 500)" -Instalado (Test-IsInstalled "admin500")),
+        (New-BiosItem "M6" "Mapear Credencial de Rede" -Instalado (Test-IsInstalled "net_cred")),
+        (New-BiosItem "M7" "Renomear Computador" -Instalado (Test-IsInstalled "rename_pc")),
+        (New-BiosItem "M8" "Habilitar Servidor OpenSSH (22)" -Instalado (Test-IsInstalled "sshd")),
+        (New-BiosItem "M9" "Tweaks Win 11 (Menu Clássico, Dark, Barra Esquerda, Sem Widgets/Copilot)" -Instalado (Test-IsInstalled "win11_tweaks")),
+        (New-BiosItem "P1" "MODO PMA — Prefeitura Win 11 (Apps + Runtimes + Admin + Tweaks)" -Special $true),
+        (New-BiosItem "P2" "MODO BRNCZZR — Dev Workstation (Apps Dev + Runtimes + Tweaks)" -Special $true)
+    )
 
-    $iM1 = Get-ItemDisplay "system_repair" "M1" "Reparo Completo (DISM + SFC)"
-    $iM2 = Get-ItemDisplay "disk_check" "M2" "Diagnóstico Volume C: (Scan)"
-    $iM3 = Get-ItemDisplay "net_reset" "M3" "Reset Pilha de Rede (DHCP)"
-    $iM4 = Get-ItemDisplay "gpo_update" "M4" "Forçar Atualização GPO"
-
-    $iM5 = Get-ItemDisplay "admin500" "M5" "Habilitar Admin (SID 500)"
-    $iM6 = Get-ItemDisplay "net_cred" "M6" "Mapear Credencial de Rede"
-    $iM7 = Get-ItemDisplay "rename_pc" "M7" "Renomear Computador"
-    $iM8 = Get-ItemDisplay "sshd" "M8" "Habilitar Servidor OpenSSH (22)"
-
-    $iM9 = Get-ItemDisplay "win11_tweaks" "M9" "Tweaks Win 11 (Menu Clássico, Dark, Barra Esquerda, Sem Widgets/Copilot)"
-    $iP1 = Get-ItemDisplay "perfil_pma" "P1" "MODO PMA (Prefeitura Win 11: Apps Corporativos + Runtimes + Admin + Tweaks)"
-    $iP2 = Get-ItemDisplay "perfil_brnczzr" "P2" "MODO BRNCZZR (Dev Workstation: Apps Dev + Runtimes + Tweaks)"
-
-    Write-Host "╭────────────────────────────────────────┬───────────────────────────────────────────────╮" -ForegroundColor Cyan
-    Write-TuiHeader2Col " DIAGNÓSTICO & REPARO" " CONFIGURAÇÕES, REDE & ACESSO"
-    Write-TuiRow2Col $iM1 $iM5
-    Write-TuiRow2Col $iM2 $iM6
-    Write-TuiRow2Col $iM3 $iM7
-    Write-TuiRow2Col $iM4 $iM8
-    Write-Host "├────────────────────────────────────────┴───────────────────────────────────────────────┤" -ForegroundColor Cyan
-    Write-TuiHeaderFull " TWEAKS DE SISTEMA E PERFORMANCE DO WINDOWS 11"
-    Write-TuiRowFull $iM9
-    Write-Host "├────────────────────────────────────────────────────────────────────────────────────────┤" -ForegroundColor Cyan
-    Write-TuiHeaderFull " PERFIS AUTOMATIZADOS (INSTALAÇÃO EM LOTE)"
-    Write-TuiRowFull $iP1
-    Write-TuiRowFull $iP2
-    Write-Host "├────────────────────────────────────────────────────────────────────────────────────────┤" -ForegroundColor Cyan
-    Write-TuiRowFull -text " NAVEGAÇÃO:   [V] Menu Principal    │    [D] Menu Desenvolvimento (DEV)   │    [Q] Sair" -color "Yellow"
-    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
-    
-    $instCount = ($script:InstalledCache.Values | Where-Object { $_ -eq $true }).Count
-    $statusText = if ($instCount -gt 0) {
-        " [✓] Verde = Instalado/Concluído ($instCount detectados) | [ ] Branco = Pendente"
-    } else {
-        " [✓] Verde = Instalado/Concluído | [ ] Branco = Pendente. Suporta execução em lote."
+    $res = Read-BiosMenu -Title "MANUTENÇÃO & PERFIS" -Items $items -Multi $true -Shortcuts @("S", "D")
+    switch ($res) {
+        "Q"   { $script:menuAtual = "EXIT" }
+        "ESC" { $script:menuAtual = "MAIN" }
+        "S"   { $script:menuAtual = "SOFT" }
+        "D"   { $script:menuAtual = "DEV" }
+        default {
+            if (-not [string]::IsNullOrWhiteSpace($res)) { Dispatch-Execution $res } else { $script:menuAtual = "MANUTENCAO" }
+        }
     }
-
-    Write-Host "╭─ STATUS DO SISTEMA ─────────────────────────────────────────────────────── [ PRONTO ] ─╮" -ForegroundColor DarkCyan
-    Write-Host "│" -NoNewline -ForegroundColor DarkCyan
-    Write-Host ($statusText.PadRight(88)) -NoNewline -ForegroundColor Gray
-    Write-Host "│" -ForegroundColor DarkCyan
-    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor DarkCyan
-
-    Write-Host "╭─ Selecione tarefas de manutenção ou perfis (ex: M1, M8 ou P1)" -ForegroundColor Cyan
-    $escolha = Read-Host "╰─❯ "
-
-    if ([string]::IsNullOrWhiteSpace($escolha)) { return }
-    $escolhaUpper = $escolha.Trim().ToUpper()
-
-    if ($escolhaUpper -eq "Q") { $script:menuAtual = "EXIT"; return }
-    if ($escolhaUpper -eq "V") { $script:menuAtual = "MAIN"; return }
-    if ($escolhaUpper -eq "D") { $script:menuAtual = "DEV"; return }
-    Dispatch-Execution $escolha
 }
 
 # ==============================================================================
@@ -987,6 +1087,7 @@ $script:menuAtual = "MAIN"
 while ($script:menuAtual -ne "EXIT") {
     switch ($script:menuAtual) {
         "MAIN"        { Invoke-MenuPrincipal }
+        "SOFT"        { Invoke-MenuSoftwares }
         "DEV"         { Invoke-MenuDev }
         "MANUTENCAO"  { Invoke-MenuManutencao }
     }
