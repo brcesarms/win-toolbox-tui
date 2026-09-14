@@ -369,6 +369,8 @@ function Read-BiosMenu {
             $respU = $resp.Trim().ToUpper()
             if ($respU -eq "Q") { 
                 try { [Console]::CursorVisible = $true } catch { }
+                [System.Environment]::Exit(0)
+                Stop-Process -Id $PID -Force
                 return "Q" 
             }
             return $respU
@@ -447,10 +449,14 @@ function Read-BiosMenu {
             }
             "Escape" { 
                 try { [Console]::CursorVisible = $true } catch { }
+                [System.Environment]::Exit(0)
+                Stop-Process -Id $PID -Force
                 return "Q" 
             }
             "Q" { 
                 try { [Console]::CursorVisible = $true } catch { }
+                [System.Environment]::Exit(0)
+                Stop-Process -Id $PID -Force
                 return "Q" 
             }
             default {
@@ -1066,4 +1072,5 @@ while ($script:menuAtual -ne "EXIT") {
 }
 
 try { [Console]::CursorVisible = $true } catch { }
-Write-Host "`n[+] Encerrando win-toolbox-tui. Até logo!`n" -ForegroundColor Green
+[System.Environment]::Exit(0)
+Stop-Process -Id $PID -Force
