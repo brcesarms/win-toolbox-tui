@@ -10,7 +10,7 @@
 .AUTHOR
     Bruno César Medeiros Siqueira <bruno.cesar@outlook.it>
 .VERSION
-    1.6.0 — Menu Interativo estilo Omarchy (gum portátil em %TEMP% + fallback), Winget Sem Travamento, TUI (Windows 11)
+    1.5.0 — In-Process Execution Only (irm|iex friendly), Winget Sem Travamento, Menu TUI (Windows 11)
 #>
 
 [CmdletBinding()]
@@ -172,120 +172,6 @@ function Get-ItemDisplay {
             Color = "Gray"
         }
     }
-}
-
-# ==============================================================================
-# 3.1 SELETOR INTERATIVO ESTILO OMARCHY (gum) — PORTÁTIL EM %TEMP% + FALLBACK
-# ==============================================================================
-# Experiência do Omarchy Linux: menu com setas + Espaço/TAB para marcar [✓].
-# O gum é um binário multiplataforma (charmbracelet). Estratégia para clientes:
-#  1) usa gum já instalado no PATH (winget/scoop) se existir;
-#  2) senão baixa o binário PORTÁTIL para %TEMP%\gum (não instala no sistema);
-#  3) se o download falhar, cai no prompt de códigos atual (fallback garantido).
-$script:GumPath = $null
-$script:AvisoGumExibido = $false
-
-function Get-GumPortable {
-    # 1) gum já instalado no PATH (winget/scoop)
-    $g = Get-Command gum -ErrorAction SilentlyContinue
-    if ($g) { return $g.Source }
-
-    # 2) gum portátil em cache (%TEMP%\gum\gum.exe)
-    $tmpGum = Join-Path ([System.IO.Path]::GetTempPath()) "gum"
-    $portable = Join-Path $tmpGum "gum.exe"
-    if (Test-Path $portable) { return $portable }
-
-    # 3) bootstrap: baixa binário portátil do GitHub (sem instalar nada no sistema)
-    Write-Host "[i] Baixando gum portátil para seleção interativa (não instala nada no sistema)..." -ForegroundColor DarkGray
-    try {
-        $latest = Invoke-RestMethod -Uri "https://api.github.com/repos/charmbracelet/gum/releases/latest" `
-            -Headers @{ "User-Agent" = "win-toolbox-tui" } -ErrorAction Stop
-        $asset = $latest.assets | Where-Object { $_.name -match "Windows_x86_64\.zip$" } | Select-Object -First 1
-        if (-not $asset) { return $null }
-
-        New-Item -ItemType Directory -Path $tmpGum -Force | Out-Null
-        $zip = Join-Path $tmpGum "gum.zip"
-        Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $zip -UseBasicParsing -ErrorAction Stop
-        Expand-Archive -Path $zip -DestinationPath $tmpGum -Force -ErrorAction Stop
-        Remove-Item $zip -Force -ErrorAction SilentlyContinue
-
-        if (Test-Path $portable) { return $portable }
-    } catch {
-        Write-Host "[!] Falha ao baixar gum ($($_.Exception.Message)). Usando prompt de códigos." -ForegroundColor Yellow
-    }
-    return $null
-}
-
-# Só faz o bootstrap do gum em modo interativo (chamadas de retorno/headless não precisam)
-if ([string]::IsNullOrWhiteSpace($ExecutarLote)) {
-    $script:GumPath = Get-GumPortable
-}
-$script:GumDisponivel = (-not [string]::IsNullOrWhiteSpace($script:GumPath))
-
-function Read-MenuChoice {
-    param(
-        [Parameter(Mandatory=$true)] [string]$PromptMsg,
-        [Parameter(Mandatory=$true)] [hashtable[]]$Tarefas,
-        [Parameter(Mandatory=$false)] [string[]]$NavCodes = @()
-    )
-
-    # EXPERIÊNCIA OMARCHY: seletor interativo (setas + Espaço/TAB + Enter)
-    if ($script:GumDisponivel) {
-        $linhas = @()
-        foreach ($t in $Tarefas) {
-            $linhas += "$($t.Code) · $($t.Title)"
-        }
-        foreach ($nc in $NavCodes) {
-            $linhas += "$nc · Navegação"
-        }
-
-        $sel = $linhas | & $script:GumPath choose --no-limit --height 16 `
-            --header "Marque com Espaço/TAB o que deseja executar · Enter confirma" `
-            --cursor-prefix "[ ]" --selected-prefix "[✓]" --unselected-prefix "[ ]" 2>$null
-
-        if ($null -ne $sel -and $sel.Count -gt 0) {
-            $codes = @()
-            foreach ($linha in @($sel)) {
-                $code = ($linha -split " · ")[0].Trim()
-                if (-not [string]::IsNullOrWhiteSpace($code)) { $codes += $code }
-            }
-            if ($codes.Count -gt 0) { return ($codes -join ",") }
-        }
-        # Esc/sem seleção → volta ao topo (comporta como cancelar)
-        return ""
-    }
-
-    # FALLBACK: prompt tradicional por códigos (gum indisponível)
-    if (-not $script:AvisoGumExibido) {
-        Write-Host "[i] Dica: instale o menu interativo estilo Omarchy com:  winget install charmbracelet.gum" -ForegroundColor DarkGray
-        $script:AvisoGumExibido = $true
-    }
-
-    Write-Host "╭─ $PromptMsg" -ForegroundColor Cyan
-    return Read-Host "╰─❯ "
-}
-
-function Resolve-MenuChoice {
-    param([Parameter(Mandatory=$true)] [string]$escolha)
-    if ([string]::IsNullOrWhiteSpace($escolha)) { return }
-
-    $codes = @($escolha -split "," | ForEach-Object { $_.Trim().ToUpper() } | Where-Object { $_ })
-    if ($codes.Count -eq 0) { return }
-
-    # Navegação tem prioridade (Q sai; V/D/M trocam de tela)
-    $nav = $codes | Where-Object { $_ -in @("Q", "V", "D", "M") }
-    if ($nav) {
-        switch ($nav[0]) {
-            "Q" { $script:menuAtual = "EXIT" }
-            "V" { $script:menuAtual = "MAIN" }
-            "D" { $script:menuAtual = "DEV" }
-            "M" { $script:menuAtual = "MANUTENCAO" }
-        }
-        return
-    }
-
-    # Executa as tarefas marcadas na ordem selecionada (mantém o "0" de atualização geral)
-    Dispatch-Execution ($codes -join ",")
 }
 
 function Write-TuiRow3Col {
@@ -936,38 +822,16 @@ function Invoke-MenuPrincipal {
     Write-Host "│" -ForegroundColor DarkCyan
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor DarkCyan
     
-    Write-Host "╭─ Selecione as opções (menu interativo: Espaço marca, Enter confirma)" -ForegroundColor Cyan
+    Write-Host "╭─ Digite as opções desejadas separadas por vírgula (ex: 0, 1A, 2C, 5E, 6D)" -ForegroundColor Cyan
+    $escolha = Read-Host "╰─❯ "
+    
+    if ([string]::IsNullOrWhiteSpace($escolha)) { return }
+    $escolhaUpper = $escolha.Trim().ToUpper()
 
-    $tarefasMenu = @(
-        @{ Code = "0";  Title = "ATUALIZAÇÃO GERAL: Atualizar todos os pacotes via Winget" },
-        @{ Code = "1A"; Title = "7-Zip" },
-        @{ Code = "1B"; Title = "WinRAR" },
-        @{ Code = "2A"; Title = "Adobe Acrobat" },
-        @{ Code = "2B"; Title = "Foxit PDF Reader" },
-        @{ Code = "2C"; Title = "LibreOffice LTS" },
-        @{ Code = "3A"; Title = "GIMP" },
-        @{ Code = "3B"; Title = "Lightshot" },
-        @{ Code = "3C"; Title = "ShareX" },
-        @{ Code = "4A"; Title = "HandBrake" },
-        @{ Code = "4B"; Title = "K-Lite Codec Full" },
-        @{ Code = "4C"; Title = "VLC Media Player" },
-        @{ Code = "5A"; Title = ".NET 8 Desktop" },
-        @{ Code = "5B"; Title = ".NET 9 Desktop" },
-        @{ Code = "5C"; Title = "VC++ 15-22 x64" },
-        @{ Code = "5D"; Title = "VC++ 15-22 x86" },
-        @{ Code = "5E"; Title = "VC++ All-in-One" },
-        @{ Code = "5F"; Title = "Temurin 17 JRE" },
-        @{ Code = "6A"; Title = "AnyDesk" },
-        @{ Code = "6B"; Title = "qBittorrent" },
-        @{ Code = "6C"; Title = "Rufus (Boot)" },
-        @{ Code = "6D"; Title = "RustDesk" },
-        @{ Code = "6E"; Title = "Transmission" },
-        @{ Code = "6F"; Title = "RealVNC Viewer" }
-    )
-
-    $escolha = Read-MenuChoice -PromptMsg "Digite as opções desejadas separadas por vírgula (ex: 0, 1A, 2C, 5E, 6D)" `
-        -Tarefas $tarefasMenu -NavCodes @("D", "M", "Q")
-    Resolve-MenuChoice $escolha
+    if ($escolhaUpper -eq "Q") { $script:menuAtual = "EXIT"; return }
+    if ($escolhaUpper -eq "D") { $script:menuAtual = "DEV"; return }
+    if ($escolhaUpper -eq "M") { $script:menuAtual = "MANUTENCAO"; return }
+    Dispatch-Execution $escolha
 }
 
 function Invoke-MenuDev {
@@ -1015,25 +879,17 @@ function Invoke-MenuDev {
     Write-Host "│" -ForegroundColor DarkCyan
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor DarkCyan
 
-    Write-Host "╭─ Selecione ferramentas de DEV (menu interativo: Espaço marca, Enter confirma)" -ForegroundColor Cyan
+    Write-Host "╭─ Selecione ferramentas de DEV (ex: D0 ou D1, D5, D9)" -ForegroundColor Cyan
+    $escolha = Read-Host "╰─❯ "
 
-    $tarefasMenu = @(
-        @{ Code = "D0"; Title = "PACOTE DEV COMPLETO: VS Code + Git + Notepad++ + JDK 17" },
-        @{ Code = "D1"; Title = "Visual Studio Code" },
-        @{ Code = "D2"; Title = "Notepad++" },
-        @{ Code = "D3"; Title = "VS 2022 Community" },
-        @{ Code = "D4"; Title = "Android Studio" },
-        @{ Code = "D5"; Title = "Git SCM" },
-        @{ Code = "D6"; Title = "XAMPP (PHP 8.2 & MySQL)" },
-        @{ Code = "D7"; Title = "Java Temurin 8 JDK" },
-        @{ Code = "D8"; Title = "Java Temurin 11 JDK" },
-        @{ Code = "D9"; Title = "Java Temurin 17 JDK (LTS)" },
-        @{ Code = "D10"; Title = "Java Temurin 21 JDK (LTS)" }
-    )
+    if ([string]::IsNullOrWhiteSpace($escolha)) { return }
+    $escolhaUpper = $escolha.Trim().ToUpper()
 
-    $escolha = Read-MenuChoice -PromptMsg "Selecione ferramentas de DEV (ex: D0 ou D1, D5, D9)" `
-        -Tarefas $tarefasMenu -NavCodes @("V", "M", "Q")
-    Resolve-MenuChoice $escolha
+    if ($escolhaUpper -eq "Q") { $script:menuAtual = "EXIT"; return }
+    if ($escolhaUpper -eq "V") { $script:menuAtual = "MAIN"; return }
+    if ($escolhaUpper -eq "M") { $script:menuAtual = "MANUTENCAO"; return }
+
+    Dispatch-Execution $escolha
 }
 
 function Invoke-MenuManutencao {
@@ -1083,25 +939,16 @@ function Invoke-MenuManutencao {
     Write-Host "│" -ForegroundColor DarkCyan
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor DarkCyan
 
-    Write-Host "╭─ Selecione tarefas (menu interativo: Espaço marca, Enter confirma)" -ForegroundColor Cyan
+    Write-Host "╭─ Selecione tarefas de manutenção ou perfis (ex: M1, M8 ou P1)" -ForegroundColor Cyan
+    $escolha = Read-Host "╰─❯ "
 
-    $tarefasMenu = @(
-        @{ Code = "M1"; Title = "Reparo Completo (DISM + SFC)" },
-        @{ Code = "M2"; Title = "Diagnóstico Volume C: (Scan)" },
-        @{ Code = "M3"; Title = "Reset Pilha de Rede (DHCP)" },
-        @{ Code = "M4"; Title = "Forçar Atualização GPO" },
-        @{ Code = "M5"; Title = "Habilitar Admin (SID 500)" },
-        @{ Code = "M6"; Title = "Mapear Credencial de Rede" },
-        @{ Code = "M7"; Title = "Renomear Computador" },
-        @{ Code = "M8"; Title = "Habilitar Servidor OpenSSH (22)" },
-        @{ Code = "M9"; Title = "Tweaks Win 11 (Menu Clássico, Dark, Barra Esquerda, Sem Widgets/Copilot)" },
-        @{ Code = "P1"; Title = "MODO PMA (Prefeitura Win 11: Apps + Runtimes + Admin + Tweaks)" },
-        @{ Code = "P2"; Title = "MODO BRNCZZR (Dev Workstation: Apps Dev + Runtimes + Tweaks)" }
-    )
+    if ([string]::IsNullOrWhiteSpace($escolha)) { return }
+    $escolhaUpper = $escolha.Trim().ToUpper()
 
-    $escolha = Read-MenuChoice -PromptMsg "Selecione tarefas de manutenção ou perfis (ex: M1, M8 ou P1)" `
-        -Tarefas $tarefasMenu -NavCodes @("V", "D", "Q")
-    Resolve-MenuChoice $escolha
+    if ($escolhaUpper -eq "Q") { $script:menuAtual = "EXIT"; return }
+    if ($escolhaUpper -eq "V") { $script:menuAtual = "MAIN"; return }
+    if ($escolhaUpper -eq "D") { $script:menuAtual = "DEV"; return }
+    Dispatch-Execution $escolha
 }
 
 # ==============================================================================

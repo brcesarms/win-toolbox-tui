@@ -26,8 +26,6 @@ powershell -ExecutionPolicy Bypass -File .\win-toolbox-gui.ps1
 > irm https://raw.githubusercontent.com/brcesarms/win-toolbox-tui/main/win-toolbox.ps1 | iex
 > ```
 
-> 🎯 **Menu interativo estilo Omarchy:** o TUI detecta o `gum` (charmbracelet) e oferece seleção com setas + Espaço/TAB + `[✓]`. Se não estiver instalado, baixa um **binário portátil para `%TEMP%`** (não instala nada no sistema); se o download falhar, cai no prompt de códigos normalmente.
-
 ---
 
 ## 💎 Destaques da GUI (padrão)
