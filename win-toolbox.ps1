@@ -4,18 +4,18 @@
 .DESCRIPTION
     Script interativo com interface TUI moderna (Unicode Box Drawing), múltiplos menus,
     status dinâmico de instalação em tempo real ([✓] Verde / [ ] Branco), títulos em negrito ANSI,
-    janela de execução desacoplada (sem poluir o menu), telemetria de rede e suporte nativo ao Windows Terminal.
+    execução 100% in-process (padrão da indústria, compatível com o one-liner irm | iex),
+    telemetria de rede e suporte nativo ao Windows Terminal.
     Exclusivo para Windows 11 (Build 22000+).
 .AUTHOR
     Bruno César Medeiros Siqueira <bruno.cesar@outlook.it>
 .VERSION
-    1.4.0 — Decoupled Execution Window, Zero-Scroll Menu & Native Progress (Windows 11)
+    1.5.0 — In-Process Execution Only (irm|iex friendly), Winget Sem Travamento, Menu TUI (Windows 11)
 #>
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory=$false)] [string]$ExecutarLote = "",
-    [Parameter(Mandatory=$false)] [switch]$JanelaFilha
+    [Parameter(Mandatory=$false)] [string]$ExecutarLote = ""
 )
 
 # Configuração de codificação UTF-8 para suporte a caracteres Unicode
@@ -38,7 +38,6 @@ if (-not $isAdmin) {
     Write-Host "[*] Reiniciando com elevação de privilégios...`n" -ForegroundColor Cyan
     $argList = "-NoProfile -ExecutionPolicy Bypass -File `"$PSCommandPath`""
     if (-not [string]::IsNullOrEmpty($ExecutarLote)) { $argList += " -ExecutarLote `"$ExecutarLote`"" }
-    if ($JanelaFilha) { $argList += " -JanelaFilha" }
     Start-Process powershell.exe $argList -Verb RunAs
     Exit
 }
@@ -733,45 +732,18 @@ function Dispatch-Execution {
     param([Parameter(Mandatory=$true)] [string]$escolha)
     if ([string]::IsNullOrWhiteSpace($escolha)) { return }
     
-    $isSSH = (-not [string]::IsNullOrEmpty($env:SSH_CONNECTION)) -or (-not [string]::IsNullOrEmpty($env:SSH_CLIENT))
+    # Execução sempre in-process (padrão da indústria: WinUtil, MAS, winget-install).
+    # Sem Start-Process/janela filha — um único caminho, robusto no one-liner irm | iex.
+    Clear-Host
+    Write-Host ("╭─ EXECUTANDO TAREFAS SELECIONADAS " + ("─" * 39) + " [ PROCESSO ATUAL ] ─╮") -ForegroundColor Cyan
+    Write-Host "│" -NoNewline -ForegroundColor Cyan
+    Write-Host (" Lote em andamento: $escolha".PadRight(88)) -NoNewline -ForegroundColor Yellow
+    Write-Host "│" -ForegroundColor Cyan
+    Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
+    Write-Host ""
     
-    # Resolve o caminho do script (vazio no modo one-liner "irm | iex" — sem arquivo local)
-    $scriptPath = $PSCommandPath
-    if ([string]::IsNullOrWhiteSpace($scriptPath)) {
-        $scriptPath = $MyInvocation.PSCommandPath
-    }
-    if ([string]::IsNullOrWhiteSpace($scriptPath) -and $PSScriptRoot) {
-        $scriptPath = Join-Path $PSScriptRoot "win-toolbox.ps1"
-    }
-    if ([string]::IsNullOrWhiteSpace($scriptPath)) {
-        $scriptPath = (Get-Item "win-toolbox.ps1" -ErrorAction SilentlyContinue).FullName
-    }
-    $temArquivoLocal = (-not [string]::IsNullOrWhiteSpace($scriptPath)) -and (Test-Path $scriptPath -PathType Leaf)
-    
-    if ($isSSH -or (-not $temArquivoLocal)) {
-        # Execução no processo atual: modo SSH ou one-liner (irm | iex) sem arquivo para re-executar.
-        # Sem isso, o Start-Process tentaria abrir "-File """ e a seleção pareceria "não fazer nada".
-        Clear-Host
-        Write-Host ("╭─ EXECUTANDO TAREFAS SELECIONADAS " + ("─" * 39) + " [ PROCESSO ATUAL ] ─╮") -ForegroundColor Cyan
-        Write-Host "│" -NoNewline -ForegroundColor Cyan
-        Write-Host (" Lote em andamento: $escolha".PadRight(88)) -NoNewline -ForegroundColor Yellow
-        Write-Host "│" -ForegroundColor Cyan
-        Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
-        Write-Host ""
-        Execute-BatchOptions $escolha
-        Wait-User
-    } else {
-        # Janela filha desacoplada (modo arquivo local): executa sem poluir o menu
-        try {
-            $procArgs = "-NoProfile -ExecutionPolicy Bypass -File `"$scriptPath`" -ExecutarLote `"$escolha`" -JanelaFilha"
-            Start-Process powershell.exe -ArgumentList $procArgs -Wait
-        } catch {
-            Write-Host "[!] Não foi possível abrir a janela de execução desacoplada ($_)" -ForegroundColor Yellow
-            Write-Host "[*] Executando as tarefas no processo atual..." -ForegroundColor Cyan
-            Execute-BatchOptions $escolha
-            Wait-User
-        }
-    }
+    Execute-BatchOptions $escolha
+    Wait-User
     
     $script:InstalledCache.Clear()
 }
@@ -989,9 +961,6 @@ if (-not [string]::IsNullOrWhiteSpace($ExecutarLote)) {
     Write-Host "│" -NoNewline -ForegroundColor Cyan
     Write-Host (" Lote em andamento: $ExecutarLote".PadRight(88)) -NoNewline -ForegroundColor Yellow
     Write-Host "│" -ForegroundColor Cyan
-    Write-Host "│" -NoNewline -ForegroundColor Cyan
-    Write-Host (" Esta janela exibirá o progresso real e fechará automaticamente ao término.".PadRight(88)) -NoNewline -ForegroundColor Gray
-    Write-Host "│" -ForegroundColor Cyan
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Cyan
     Write-Host ""
     
@@ -1004,14 +973,13 @@ if (-not [string]::IsNullOrWhiteSpace($ExecutarLote)) {
     Write-Host "│" -ForegroundColor Green
     Write-Host "╰────────────────────────────────────────────────────────────────────────────────────────╯" -ForegroundColor Green
     
-    if ($JanelaFilha) {
-        Write-Host "`n[+] Fechando esta janela em 2 segundos..." -ForegroundColor Gray
-        Start-Sleep -Seconds 2
-        exit 0
-    } else {
+    # Modo automático (-ExecutarLote): interativo aguarda ENTER; headless (Task Scheduler/RMM) sai direto.
+    if ([Environment]::UserInteractive) {
         Wait-User
-        exit 0
+    } else {
+        Write-Host "`n[+] Modo não-interativo (headless): encerrando." -ForegroundColor Gray
     }
+    exit 0
 }
 
 $script:menuAtual = "MAIN"
