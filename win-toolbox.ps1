@@ -776,12 +776,73 @@ function Set-MachineName {
     }
 }
 
+function Add-SSHPublicKey {
+    param(
+        [string]$ChavePublica = ""
+    )
+    Write-Host "`n--------------------------------------------------------" -ForegroundColor Cyan
+    Write-Host "[*] CONFIGURAÇÃO DE CHAVE PÚBLICA SSH (AUTHORIZED_KEYS)" -ForegroundColor Cyan
+    Write-Host "--------------------------------------------------------" -ForegroundColor Cyan
+
+    $chavePadrao = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAILiS0LKTWLy0WVbY7O515TKpR9yxxDrJjXH0c3zcWELZ brcesarms@gmail.com"
+
+    if ([string]::IsNullOrWhiteSpace($ChavePublica)) {
+        Write-Host "Cole a chave pública SSH autorizada." -ForegroundColor Gray
+        Write-Host "Pressione [ENTER] para usar a chave padrão do ecossistema Archimedes:" -ForegroundColor Gray
+        Write-Host "  $chavePadrao" -ForegroundColor DarkGray
+        $inputKey = Read-Host "Chave SSH [Padrão: Archimedes/Bruno]"
+        if ([string]::IsNullOrWhiteSpace($inputKey)) {
+            $ChavePublica = $chavePadrao
+        } else {
+            $ChavePublica = $inputKey.Trim()
+        }
+    }
+
+    if ([string]::IsNullOrWhiteSpace($ChavePublica)) {
+        Write-Host "[!] Nenhuma chave fornecida. Etapa de authorized_keys ignorada." -ForegroundColor Yellow
+        return
+    }
+
+    Write-Host "[+] Configurando authorized_keys para o usuário '$env:USERNAME'..." -ForegroundColor Gray
+    $userSshDir = Join-Path $HOME ".ssh"
+    if (-not (Test-Path $userSshDir)) {
+        New-Item -ItemType Directory -Path $userSshDir -Force | Out-Null
+    }
+    $userAuthKeys = Join-Path $userSshDir "authorized_keys"
+
+    $conteudoExistente = if (Test-Path $userAuthKeys) { Get-Content -Path $userAuthKeys -Raw } else { "" }
+    if ($conteudoExistente -notmatch [regex]::Escape($ChavePublica)) {
+        Add-Content -Path $userAuthKeys -Value $ChavePublica -Force
+    }
+    # Permissões NTFS estritas: apenas o próprio usuário e SYSTEM (sem herança)
+    icacls $userAuthKeys /inheritance:r /grant "$($env:USERNAME):(F)" /grant "SYSTEM:(F)" | Out-Null
+    Write-Host "[✓] Chave autorizada em: $userAuthKeys" -ForegroundColor Green
+
+    # Para administradores locais (OpenSSH no Windows lê administrators_authorized_keys)
+    $sshProgramData = Join-Path $env:ProgramData "ssh"
+    if (-not (Test-Path $sshProgramData)) {
+        New-Item -ItemType Directory -Path $sshProgramData -Force | Out-Null
+    }
+    $adminAuthKeys = Join-Path $sshProgramData "administrators_authorized_keys"
+    $adminConteudo = if (Test-Path $adminAuthKeys) { Get-Content -Path $adminAuthKeys -Raw } else { "" }
+    if ($adminConteudo -notmatch [regex]::Escape($ChavePublica)) {
+        Add-Content -Path $adminAuthKeys -Value $ChavePublica -Force
+    }
+    # Permissões NTFS estritas: apenas Administrators e SYSTEM
+    icacls $adminAuthKeys /inheritance:r /grant "Administrators:(F)" /grant "SYSTEM:(F)" | Out-Null
+    Write-Host "[✓] Chave autorizada em: $adminAuthKeys" -ForegroundColor Green
+
+    # Reinicia o serviço para recarregar as credenciais
+    Restart-Service sshd -ErrorAction SilentlyContinue
+    Write-Host "[✓] Serviço sshd reiniciado com chaves atualizadas!" -ForegroundColor Green
+}
+
 function Enable-OpenSSHServer {
     Write-Host "`n========================================================" -ForegroundColor Cyan
     Write-Host "[*] HABILITANDO SERVIDOR OPENSSH NO WINDOWS 11" -ForegroundColor Cyan
     Write-Host "========================================================" -ForegroundColor Cyan
 
-    Write-Host "[1/3] Verificando capacidade nativa OpenSSH.Server..." -ForegroundColor Gray
+    Write-Host "[1/4] Verificando capacidade nativa OpenSSH.Server..." -ForegroundColor Gray
     $sshCap = Get-WindowsCapability -Online | Where-Object Name -like 'OpenSSH.Server*'
     if ($sshCap.State -ne 'Installed') {
         Write-Host "[+] Instalando OpenSSH.Server (aguarde alguns instantes)..." -ForegroundColor Yellow
@@ -791,7 +852,7 @@ function Enable-OpenSSHServer {
         Write-Host "[✓] Recurso OpenSSH Server já está instalado." -ForegroundColor Green
     }
 
-    Write-Host "[2/3] Configurando serviço sshd para inicialização automática..." -ForegroundColor Gray
+    Write-Host "[2/4] Configurando serviço sshd para inicialização automática..." -ForegroundColor Gray
     Start-Service sshd -ErrorAction SilentlyContinue
     Set-Service -Name sshd -StartupType 'Automatic'
     
@@ -799,7 +860,7 @@ function Enable-OpenSSHServer {
     Set-Service -Name ssh-agent -StartupType 'Automatic'
     Write-Host "[✓] Serviço sshd em execução e configurado como Automático!" -ForegroundColor Green
 
-    Write-Host "[3/3] Configurando regra de Firewall (Porta 22 TCP)..." -ForegroundColor Gray
+    Write-Host "[3/4] Configurando regra de Firewall (Porta 22 TCP)..." -ForegroundColor Gray
     $regraExiste = Get-NetFirewallRule -Name "OpenSSH-Server-In-TCP" -ErrorAction SilentlyContinue
     if (-not $regraExiste) {
         New-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -DisplayName 'OpenSSH Server (sshd)' `
@@ -810,6 +871,14 @@ function Enable-OpenSSHServer {
         netsh advfirewall firewall add rule name="OpenSSH-Server-In-TCP" dir=in action=allow protocol=TCP localport=22 | Out-Null
     }
     Write-Host "[✓] Porta 22 liberada no Firewall para todos os perfis de rede!" -ForegroundColor Green
+
+    Write-Host "[4/4] Configurando Chaves Públicas Autorizadas (authorized_keys)..." -ForegroundColor Gray
+    $respKey = Read-Host "Deseja configurar chave pública SSH agora? (S/N) [Padrão: S]"
+    if ([string]::IsNullOrWhiteSpace($respKey) -or $respKey -match '^[SsYy]') {
+        Add-SSHPublicKey
+    } else {
+        Write-Host "[*] Etapa de chave pública ignorada. O acesso utilizará autenticação por senha/PIN." -ForegroundColor Yellow
+    }
 
     $ip = (Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue | Where-Object { 
         $_.IPAddress -ne "127.0.0.1" -and 
@@ -1050,6 +1119,8 @@ function Execute-SingleOption {
         "M7"  { Set-MachineName }
         "M8"  { Enable-OpenSSHServer }
         "M9"  { Apply-Win11Tweaks }
+        "M10" { Add-SSHPublicKey }
+        "KEY" { Add-SSHPublicKey }
         "P1"  { Invoke-ModoPMA }
         "P2"  { Invoke-ModoBRNCZZR }
         
@@ -1400,7 +1471,7 @@ function Invoke-MenuConfig {
             -Instalado (Test-IsInstalled "admin500")),
 
         (New-BiosItem "C4" "Habilitar Servidor OpenSSH (Porta 22)" `
-            -Desc "Instala o serviço OpenSSH Server, configura inicialização automática e libera a porta 22 no Firewall." `
+            -Desc "Instala OpenSSH Server, configura inicialização automática, libera porta 22 e autoriza chaves públicas (authorized_keys)." `
             -PackageId "Nativo (OpenSSH.Server)" `
             -Category "Acesso Remoto / SSH" `
             -Instalado (Test-IsInstalled "sshd")),

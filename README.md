@@ -90,7 +90,7 @@ A interface apresenta uma barra de menus superior sempre visível com **4 abas d
   * `C1`: Diagnóstico Volume C: (Repair-Volume sem reiniciar)
   * `C2`: Forçar Atualização de Diretivas GPO (`gpupdate /force`)
   * `C3`: Habilitar Admin Local nativo (Detecção por SID `*-500`)
-  * `C4`: 🚀 **Habilitar Servidor OpenSSH** (Porta 22 TCP, serviço sshd/ssh-agent e firewall)
+  * `C4`: 🚀 **Habilitar Servidor OpenSSH** (Porta 22 TCP, serviço sshd/ssh-agent, firewall e chaves públicas autorizadas `authorized_keys`)
   * `C5`: Mapear Credencial de Rede no Windows Credential Manager
   * `C6`: Renomear Computador
   * `C7`: Reparo Completo do Sistema (DISM RestoreHealth primeiro + SFC Scannow)
