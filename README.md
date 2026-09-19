@@ -86,7 +86,7 @@ A interface apresenta uma barra de menus superior sempre visível com **4 abas d
 * **Navegação**: `← / →` ou `Tab` alternam abas · `3` ou `D` para esta aba · `Q` Sair
 
 ### 4️⃣ [ Configurações ]
-* **FERRAMENTAS EM ORDEM ALFABÉTICA (`C1–C9`)**:
+* **FERRAMENTAS EM ORDEM ALFABÉTICA (`C1–C10`)**:
   * `C1`: Diagnóstico Volume C: (Repair-Volume sem reiniciar)
   * `C2`: Forçar Atualização de Diretivas GPO (`gpupdate /force`)
   * `C3`: Habilitar Admin Local nativo (Detecção por SID `*-500`)
