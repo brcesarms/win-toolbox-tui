@@ -138,6 +138,7 @@ function Test-IsInstalled {
             # Manutenção & Configurações
             "admin500"        { $result = ((Get-LocalUser -ErrorAction SilentlyContinue | Where-Object { $_.SID -like "*-500" -and $_.Enabled -eq $true }) -ne $null) }
             "sshd"            { $result = ((Get-Service sshd -ErrorAction SilentlyContinue | Where-Object { $_.Status -eq 'Running' }) -ne $null) }
+            "ssh_key"         { $result = ((Test-Path "$HOME\.ssh\authorized_keys") -or (Test-Path "$env:ProgramData\ssh\administrators_authorized_keys")) }
             "win11_tweaks"    { $result = (Test-Path "HKCU:\Software\Classes\CLSID\{86ca1aa0-34aa-4e8b-a509-50c905bae2a2}\InprocServer32") }
             default           { $result = $false }
         }
@@ -1108,6 +1109,7 @@ function Execute-SingleOption {
         "C7"  { Invoke-SystemRepair }
         "C8"  { Invoke-NetworkReset }
         "C9"  { Apply-Win11Tweaks }
+        "C10" { Add-SSHPublicKey }
 
         # Mapeamentos legados e utilitários
         "M1"  { Invoke-SystemRepair }
@@ -1505,6 +1507,12 @@ function Invoke-MenuConfig {
             -PackageId "Nativo (Registry Tweaks)" `
             -Category "Otimização / Interface" `
             -Instalado (Test-IsInstalled "win11_tweaks")),
+
+        (New-BiosItem "C10" "Autorizar Chave SSH (authorized_keys)" `
+            -Desc "Configura chave pública SSH autorizada no perfil do usuário e Administradores com permissões NTFS estritas (icacls)." `
+            -PackageId "Nativo (authorized_keys)" `
+            -Category "Acesso Remoto / SSH" `
+            -Instalado (Test-IsInstalled "ssh_key")),
 
         (New-BiosItem "P1" "MODO PMA — Prefeitura Win 11" `
             -Desc "Perfil automatizado para computadores da Prefeitura: Apps essenciais, Runtimes, Admin ativo e Tweaks Win 11." `

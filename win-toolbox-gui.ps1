@@ -482,6 +482,7 @@ $cardM1 = Add-InfoCard -Parent $pnlMant -Title "Tarefas de Manutenção" -Y $yMa
     "Mapear Credencial de Rede",
     "Renomear Computador",
     "Habilitar Servidor OpenSSH (22)",
+    "Autorizar Chave SSH (authorized_keys)",
     "Tweaks Win 11 (Menu Clássico, Dark, Sem Widgets/Copilot)"
 )
 $yMant += $cardM1.Height + 12

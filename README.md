@@ -96,6 +96,7 @@ A interface apresenta uma barra de menus superior sempre visível com **4 abas d
   * `C7`: Reparo Completo do Sistema (DISM RestoreHealth primeiro + SFC Scannow)
   * `C8`: Reset Pilha de Rede (Flush DNS, DHCP Release/Renew, reinício dinâmico de adaptadores)
   * `C9`: Tweaks Win 11 (Menu Clássico, Dark, Barra Esquerda, Sem Widgets/Copilot)
+  * `C10`: 🔑 **Autorizar Chave SSH** (Injeção de `authorized_keys` no perfil e Administradores com ACLs `icacls` estritas)
 * **PERFIS AUTOMATIZADOS (`P1–P2`)**:
   * `P1`: 🏛️ **MODO PMA** (Padrão corporativo Prefeitura: Apps + Runtimes + Admin + Tweaks Win 11)
   * `P2`: 🚀 **MODO BRNCZZR** (Padrão Dev Workstation + Produtividade + Runtimes + Tweaks)
