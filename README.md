@@ -53,8 +53,8 @@ A interface apresenta uma barra de menus superior sempre visível com **4 abas d
 ### 1️⃣ [ Apps ]
 * **`0`**: 🚀 **Atualização Geral** — atualizar todos os pacotes instalados via Winget
 * **SOFTWARES EM ORDEM ALFABÉTICA (`1–19`)**:
-  * `1` 7-Zip · `2` Adobe Acrobat Reader · `3` AnyDesk · `4` **Brave Browser** · `5` Foxit PDF Reader
-  * `6` GIMP · `7` **Google Chrome** · `8` HandBrake · `9` K-Lite Codec Pack Full · `10` LibreOffice LTS
+  * `1` 7-Zip · `2` Adobe Acrobat Reader · `3` AnyDesk · `4` Brave Browser · `5` Foxit PDF Reader
+  * `6` GIMP · `7` Google Chrome · `8` HandBrake · `9` K-Lite Codec Pack Full · `10` LibreOffice
   * `11` Lightshot · `12` qBittorrent · `13` RealVNC Viewer · `14` Rufus (Boot) · `15` RustDesk
   * `16` ShareX · `17` Transmission · `18` VLC Media Player · `19` WinRAR
 * **Navegação**: `← / →` ou `Tab` alternam abas · `1` ou `A` para esta aba · `Q` Sair
