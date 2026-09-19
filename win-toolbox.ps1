@@ -953,7 +953,7 @@ function Invoke-ModoPMA {
     Install-WingetApp "Mozilla.Firefox" "Mozilla Firefox"
     Install-WingetApp "Google.Chrome" "Google Chrome"
     Install-WingetApp "Foxit.FoxitReader" "Foxit PDF Reader" "foxit"
-    Install-WingetApp "TheDocumentFoundation.LibreOffice.LTS" "LibreOffice LTS" "libreoffice"
+    Install-WingetApp "TheDocumentFoundation.LibreOffice" "LibreOffice LTS" "libreoffice"
     Install-WingetApp "Skillbrains.Lightshot" "Lightshot (Captura)" "lightshot"
     Install-WingetApp "RustDesk.RustDesk" "RustDesk (Acesso Remoto)" "rustdesk"
     Install-WingetApp "VideoLAN.VLC" "VLC Media Player" "vlc"
@@ -981,7 +981,7 @@ function Invoke-ModoBRNCZZR {
     Install-WingetApp "7zip.7zip" "7-Zip" "7zip"
     Install-WingetApp "Google.Chrome" "Google Chrome"
     Install-WingetApp "Mozilla.Firefox" "Mozilla Firefox"
-    Install-WingetApp "TheDocumentFoundation.LibreOffice.LTS" "LibreOffice LTS" "libreoffice"
+    Install-WingetApp "TheDocumentFoundation.LibreOffice" "LibreOffice LTS" "libreoffice"
     Install-WingetApp "RustDesk.RustDesk" "RustDesk" "rustdesk"
     Install-WingetApp "VideoLAN.VLC" "VLC Media Player" "vlc"
     Install-WingetApp "Microsoft.DotNet.DesktopRuntime.8" ".NET 8 Desktop Runtime (LTS)" "dotnet8"
@@ -1033,8 +1033,8 @@ function Execute-SingleOption {
         "9"   { Install-WingetApp "CodecGuide.K-LiteCodecPack.Full" "K-Lite Codec Pack Full" "klite" }
         "4B"  { Install-WingetApp "CodecGuide.K-LiteCodecPack.Full" "K-Lite Codec Pack Full" "klite" }
         
-        "10"  { Install-WingetApp "TheDocumentFoundation.LibreOffice.LTS" "LibreOffice LTS" "libreoffice" }
-        "2C"  { Install-WingetApp "TheDocumentFoundation.LibreOffice.LTS" "LibreOffice LTS" "libreoffice" }
+        "10"  { Install-WingetApp "TheDocumentFoundation.LibreOffice" "LibreOffice LTS" "libreoffice" }
+        "2C"  { Install-WingetApp "TheDocumentFoundation.LibreOffice" "LibreOffice LTS" "libreoffice" }
         
         "11"  { Install-WingetApp "Skillbrains.Lightshot" "Lightshot" "lightshot" }
         "3B"  { Install-WingetApp "Skillbrains.Lightshot" "Lightshot" "lightshot" }
@@ -1240,7 +1240,7 @@ function Invoke-MenuApps {
 
         (New-BiosItem "10" "LibreOffice LTS" `
             -Desc "Suíte de escritório completa (Writer, Calc, Impress) compatível com Word, Excel e PowerPoint." `
-            -PackageId "TheDocumentFoundation.LibreOffice.LTS" `
+            -PackageId "TheDocumentFoundation.LibreOffice" `
             -Category "Produtividade / Escritório" `
             -Instalado (Test-IsInstalled "libreoffice")),
 

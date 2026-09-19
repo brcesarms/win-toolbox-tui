@@ -387,7 +387,7 @@ $sectionsSoft = @(
         Title = "Documentos"
         Apps  = @(
             @{ Id = "Adobe.Acrobat.Reader.64-bit";    Nome = "Adobe Acrobat Reader" },
-            @{ Id = "TheDocumentFoundation.LibreOffice.LTS"; Nome = "LibreOffice LTS" }
+            @{ Id = "TheDocumentFoundation.LibreOffice"; Nome = "LibreOffice LTS" }
         )
     },
     @{
